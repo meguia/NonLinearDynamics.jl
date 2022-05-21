@@ -1,0 +1,12 @@
+name = "NonLinearDynamics"
+uuid = "11c07cc8-78c6-4ce4-a9cf-bf2be0a45f25"
+authors = ["meguia <eguiamc@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
+Distances = "b4f34e82-e78d-54a5-968a-f98e89d6e8f7"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+IntervalRootFinding = "d2bf35a9-74e0-55ec-b149-d360ff49b807"
+Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
