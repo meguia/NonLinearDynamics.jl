@@ -357,14 +357,14 @@ function flow2d_manifolds!(p1,f,f_jac,u0_array,p;
     plot(p1;legend=false,xlims=xlims,ylims=ylims,size=size,plotops...)
 end
 
-function flow2d_manifolds(f::Function,f_jac::Function,u0_array::Vector{Vector{Float64}},p::Vector{Float64};
+function flow2d_manifolds(f::Function,f_jac::Function,u0_array::Vector{Vector{Float64}},p;
     tmax=30,delta=0.001,repulsor=false,xlims=[-1.0,1.0],ylims=[-1.0,1.0],size=(700,500),plotops...)
 
     p1=plot(xlabel="x",ylabel="y",fmt=:png)
     flow2d_manifolds!(p1,f,f_jac,u0_array,p;tmax=tmax,delta=delta,repulsor=repulsor,xlims=xlims,ylims=ylims,size=size,plotops...)
 end
 
-function phase_portrait(f::Function,p::Vector{Float64};
+function phase_portrait(f::Function,p;
     tmax=50,delta=0.001,xlims=[-1.0,1.0],ylims=[-1.0,1.0],size=(700,500),plotops...)
     # Find fixedpoints in interval 
     function fsv((x,y))
@@ -380,7 +380,7 @@ function phase_portrait(f::Function,p::Vector{Float64};
     flow2d_manifolds!(p1,f,f_jac,u0_arr,p;tmax=tmax,delta=delta,repulsor=true,xlims=xlims,ylims=ylims,size=size,plotops...)
 end    
     
-function attractor_basin(f::Function,p::Vector{Float64},attractors::Vector{Vector{Float64}},maxdist::Float64;
+function attractor_basin(f::Function,p,attractors::Vector{Vector{Float64}},maxdist::Float64;
     delta=0.1,tmax=1000.0,xlims=(-1.0,1.0),ylims=(-1.0,1.0),size=(900,600),plotops...)
 
     natt = length(attractors)
@@ -411,7 +411,7 @@ function attractor_basin(f::Function,p::Vector{Float64},attractors::Vector{Vecto
     contourf(x,y,M',c=clist[1:natt+1],linewidth=0,legend=false,xlabel="x",ylabel="y";size=size,fmt=:png,plotops...)    
 end    
 
-function flow2d_forced(f::Function,u0::Vector{Float64},p::Vector{Float64},period::Float64; 
+function flow2d_forced(f::Function,u0::Vector{Float64},p,period::Float64; 
     tcycles=0, npts=100,ncycles=10,size=(900,400),xlims=false,ylims=false,plotops...)
     # Assume that the 3rd variable (z) is periodic and plot x,y as a function of z modulo period
     # skip trans period of the forcing
@@ -467,14 +467,14 @@ function poincare_forced!(p1,f, u0, p, period;
     p1
 end   
 
-function poincare_forced(f::Function,u0::Vector{Float64},p::Vector{Float64},period::Float64;
+function poincare_forced(f::Function,u0::Vector{Float64},p,period::Float64;
     tcycles=0, ncycles=10,size=(500,500),msize=0.5,col=:blue,xlims=false,ylims=false,plotops...)
 
     p1=plot(xlabel="x",ylabel="y",size=size,fmt=:png)
     poincare_forced!(p1,f, u0, p, period; tcycles=tcycles,ncycles=ncycles,msize=msize,col=col,xlims=xlims,ylims=ylims,plotops...)
 end    
 
-function poincare_forced_zoom(f::Function,u0::Vector{Float64},p::Vector{Float64},period::Float64;
+function poincare_forced_zoom(f::Function,u0::Vector{Float64},p,period::Float64;
     npts=1000,maxiter=1000,size=(600,600),xlims=[-1,1],ylims=[-1,1],plotops...)
     # Assume that the 3rd variable (z) is periodic and plot x,y as a function of z modulo period
     # skip trans period of the forcing
@@ -502,7 +502,7 @@ function poincare_forced_zoom(f::Function,u0::Vector{Float64},p::Vector{Float64}
     p1
 end     
 
-function recurrence_plot(f::Function,u0::Vector{Float64},p::Vector{Float64},period::Float64;
+function recurrence_plot(f::Function,u0::Vector{Float64},p,period::Float64;
     dd=0.002,steps=10,tcycles=0,npts=300,ncycles=10,size=(900,450),plotops...)
 
     trans = solve(ODEProblem(f,u0,(0.0,tcycles*period),p))
@@ -523,7 +523,7 @@ function recurrence_plot(f::Function,u0::Vector{Float64},p::Vector{Float64},peri
     plot(p1,p2,layout=(1,2);size=size,fmt=:png,plotops...)
 end    
 
-function saddle_orbit2D(f::Function,u0::Vector{Float64},p::Vector{Float64},period::Float64;
+function saddle_orbit2D(f::Function,u0::Vector{Float64},p,period::Float64;
     λ=0.001,maxiter=10000, disttol=1e-9, inftol=10)
     # funcion que mapea un ciclo (extrender a N ciclos)
     function map_period(f,u0,p,period)
@@ -558,7 +558,7 @@ function saddle_orbit2D(f::Function,u0::Vector{Float64},p::Vector{Float64},perio
 end
 
 
-function saddle_manifolds_forced(f::Function,f_jac::Function,us::Vector{Float64},p::Vector{Float64},period::Float64;
+function saddle_manifolds_forced(f::Function,f_jac::Function,us::Vector{Float64},p,period::Float64;
     ncycles=[10,3],npts=300,delta=0.01,xlims=(-1.0,1.0),ylims=(-1.0,1.0),size=(900,600),plotops...)
     # Asume que us es la orbita saddle en el plano 
     xrange = xlims[2]-xlims[1]
@@ -597,7 +597,7 @@ function saddle_manifolds_forced(f::Function,f_jac::Function,us::Vector{Float64}
 end    
 
 
-function butterfly(f::Function,u0::Vector{Float64},p::Vector{Float64}; 
+function butterfly(f::Function,u0::Vector{Float64},p; 
     delta=1e-12,size=(900,400),xlims=false,ylims=false,plotops...)
     
     u1=u0
@@ -615,7 +615,7 @@ function butterfly(f::Function,u0::Vector{Float64},p::Vector{Float64};
     plot(p1,p2,layout=(1,2);size=size,plotops...)
 end
 
-function butterfly(f::Function,u0::Vector{Float64},p::Vector{Float64},tmax::Float64; 
+function butterfly(f::Function,u0::Vector{Float64},p,tmax::Float64; 
     dim=3,dt=0.001,delta=1e-12,size=(900,400),xlims=false,ylims=false,plotops...)    
     
     u1=copy(u0)
