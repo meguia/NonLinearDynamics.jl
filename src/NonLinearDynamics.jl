@@ -1,19 +1,18 @@
 module NonLinearDynamics
 
     using Plots
-    using LinearAlgebra
     using DifferentialEquations
     using ForwardDiff
     using IntervalRootFinding
     using StaticArrays 
 
-    export  flux1D,
+    export  flow1D,
             potential1D,
-            flux2d_vectorfield,
-            flux2d_nullclines,
-            flux2d_animated,
-            flux2d_manifolds,
-            flux2d_forced,
+            flow2d_vectorfield,
+            flow2d_nullclines,
+            flow2d_animated,
+            flow2d_manifolds,
+            flow2d_forced,
             classification_linear,
             phase_portrait,
             attractor_basin,
@@ -24,6 +23,6 @@ module NonLinearDynamics
             saddle_manifolds_forced,
             butterfly
 
-    include("DNL_utils.jl")
+    include("NLD_utils.jl")
 
 end

@@ -18,7 +18,7 @@ end
 using Pkg; Pkg.activate("../..")
 
 # ╔═╡ 38c4e220-d708-11ec-3968-fbbd41c26155
-using PlutoUI, Plots, DifferentialEquations, NonLinearDynamicsCourse
+using PlutoUI, Plots, DifferentialEquations, NonLinearDynamics
 
 # ╔═╡ 2ac364c2-cbdd-49b4-9f26-9fe89382be5e
 TableOfContents(title="📚 Table of Contents", indent=true, depth=4, aside=true)
@@ -59,7 +59,7 @@ logistic(x,p,t)=p[1]*x*(1.0-x/p[2])
 )
 
 # ╔═╡ 16a156b5-92ab-4e1c-ab70-c3b348186c57
-flux1D(logistic,pars2[3],100.0,pars2;xlims=[-0.1,2.0],title="Logistic")
+flow1D(logistic,pars2[3],100.0,pars2;xlims=[-0.1,2.0],title="Logistic")
 
 # ╔═╡ ce4da9bf-316b-45d2-8504-f2a63cdda247
 md"""
