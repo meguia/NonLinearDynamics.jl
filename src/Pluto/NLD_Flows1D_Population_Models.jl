@@ -84,7 +84,7 @@ logharvest1(x,p,t)=p[1]*x*(1.0-x/p[2])-p[3]
 )
 
 # ╔═╡ 794936ae-d9ae-4319-994f-4282c99c4238
-flux1D(logharvest1,pars_harvest[4],300.0,pars_harvest,(u)->(u<0);xlims=[0.0,2.0],title="Logistic with Harvest")
+flow1D(logharvest1,pars_harvest[4],300.0,pars_harvest,(u)->(u<0);xlims=[0.0,2.0],title="Logistic with Harvest")
 
 # ╔═╡ b13d261e-1c1b-41b0-ae86-e20cd2304727
 md"""
@@ -102,7 +102,7 @@ md"""
 )
 
 # ╔═╡ f1f04dd4-0447-4e48-9bab-f34058a6a0f1
-flux1D(logharvest1,0.5+sqrt(0.25-pars_csd[1]),200.0,[1.0,1.0,pars_csd[1]],10.0,pars_csd[2],(u)->(u<0);xlims=[0.0,1.0],title="Log whith Harvest perturbed")
+flow1D(logharvest1,0.5+sqrt(0.25-pars_csd[1]),200.0,[1.0,1.0,pars_csd[1]],10.0,pars_csd[2],(u)->(u<0);xlims=[0.0,1.0],title="Log whith Harvest perturbed")
 
 # ╔═╡ c803ed90-958c-4d0e-84d5-3e8cc9c8fbfe
 md"""
@@ -128,7 +128,7 @@ consumer(x,p,t)=p[1]*x*(1.0-x/p[2])-p[3]*x
 )
 
 # ╔═╡ 5018d342-0a51-4275-8c0f-1b5d253c2ec0
-flux1D(consumer,pars_consumer[4],300.0,pars_consumer,xlims=[0.0,2.0],title="Consumer Equation")
+flow1D(consumer,pars_consumer[4],300.0,pars_consumer,xlims=[0.0,2.0],title="Consumer Equation")
 
 # ╔═╡ 84a596c1-3a0a-4edd-a7ea-f3fcd8839c2a
 md"""
@@ -149,16 +149,16 @@ logoutbreak(x,p,t)=p[1]*x*(1.0-x/p[2])-p[3]*x*x/(1+x*x)
 @bind pars_outbreak (
 	PlutoUI.combine() do bind
 		md"""
-		R: $(bind(Slider(0:0.02:2.0,default=0.1;show_value=true))) \
-		K: $(bind(Slider(0.01:0.02:10.0,default=0.1;show_value=true))) \
-		P: $(bind(Slider(0.0:0.01:1.0,default=0.1;show_value=true))) \
+		R: $(bind(Slider(0:0.02:2.0,default=0.25;show_value=true))) \
+		K: $(bind(Slider(0.01:0.02:10.0,default=8.71;show_value=true))) \
+		P: $(bind(Slider(0.0:0.01:1.0,default=0.48;show_value=true))) \
 		x0: $(bind(Slider(0:0.02:8.0,default=0.1;show_value=true)))
 		"""
 	end
 )
 
 # ╔═╡ a3270d8b-f167-4fb9-bcc5-c62c91b39649
-flux1D(logoutbreak,pars_outbreak[4],300.0,pars_outbreak;xlims=[-0.2,8.0],title="Log with Outbreak")
+flow1D(logoutbreak,pars_outbreak[4],300.0,pars_outbreak;xlims=[-0.2,8.0],title="Log with Outbreak")
 
 # ╔═╡ 0d0d6d2f-56b2-4e01-b9a4-6e469eac90ad
 html"""
@@ -176,7 +176,7 @@ html"""
 """
 
 # ╔═╡ Cell order:
-# ╠═7c860884-5afd-4b4a-b358-4f2bce8bd395
+# ╟─7c860884-5afd-4b4a-b358-4f2bce8bd395
 # ╠═38c4e220-d708-11ec-3968-fbbd41c26155
 # ╟─2ac364c2-cbdd-49b4-9f26-9fe89382be5e
 # ╟─6b6a5e19-5298-4969-b1c9-699aa1cb2996
