@@ -51,6 +51,9 @@ function fvdp!(du,u,p,t)
     du
 end    
 
+# ╔═╡ 7fbb3faa-1f3c-4c3e-bc58-90e50eaf6e7c
+gr()
+
 # ╔═╡ 6282f7e6-4831-45ef-9b1d-3f077fdd74a4
 @bind pvdp (
 	PlutoUI.combine() do bind
@@ -168,6 +171,7 @@ poincare_forced(duffing_forced!,[0.5,0.5,0],par,2*pi; tcycles=30,ncycles=par[5],
 # ╟─1f7f958e-b0c3-433f-bae9-3bf63da3de7a
 # ╟─4237b1cb-075a-49be-8f2c-a6eb9c5c9901
 # ╠═906dd4e2-b975-4eb4-8469-a25ea89668dc
+# ╟─7fbb3faa-1f3c-4c3e-bc58-90e50eaf6e7c
 # ╠═2d29b217-fe25-4bb1-9282-51b4932356cf
 # ╟─6282f7e6-4831-45ef-9b1d-3f077fdd74a4
 # ╟─6b52504e-805e-417e-8fb2-6473b47b0ad0

@@ -412,7 +412,7 @@ function attractor_basin(f::Function,p,attractors::Vector{Vector{Float64}},maxdi
 end    
 
 function flow2d_forced(f::Function,u0::Vector{Float64},p,period::Float64; 
-    tcycles=0, npts=100,ncycles=10,size=(900,400),xlims=false,ylims=false,plotops...)
+    tcycles=0, npts=100,ncycles=10,size=(900,400),xlims=false,ylims=false,twoplots=true,plotops...)
     # Assume that the 3rd variable (z) is periodic and plot x,y as a function of z modulo period
     # skip trans period of the forcing
     tmax = min(ncycles*period,100000)
@@ -437,7 +437,11 @@ function flow2d_forced(f::Function,u0::Vector{Float64},p,period::Float64;
         ylims!(p1,ylims)
         ylims!(p2,ylims)
     end    
-    plot(p1,p2,layout=(1,2);size=size,plotops...)
+    if (twoplots)
+        plot(p1,p2,layout=(1,2);size=size,plotops...)
+    else
+        plot(p1;size=size,plotops...)    # for plotly()
+    end    
 end        
 
 function poincare_forced!(p1,f, u0, p, period; 
@@ -515,7 +519,7 @@ function recurrence_plot(f::Function,u0::Vector{Float64},p,period::Float64;
     sol = solve(ODEProblem(f,u0,(0,tmax),p));
     ts = range(0,tmax,length=npts)
     xy=hcat(sol(ts,idxs=1).u,sol(ts,idxs=2).u,mod.(sol(ts,idxs=2).u,period))
-    dist = pairwise(Euclidean(),xy,dims=1)
+    dist = Distances.pairwise(Euclidean(),xy,dims=1)
     dst = floor.(dist/dd)/steps
     dst[dst.>steps] .= steps
     p1 = plot(sol,vars=(1,2),xlabel="x",ylabel="y")
@@ -635,3 +639,28 @@ function butterfly(f::Function,u0::Vector{Float64},p,tmax::Float64;
     p2 = plot(ts,log10.(norm.(x0-x1)),xlabel="t",ylabel="log10(d)",label="")
     plot(p1,p2,layout=(1,2);size=size,plotops...)
 end        
+
+function flow3d(f::Function,u0::Vector{Float64},tmax::Float64,p; 
+    size=(900,400),xlims=false,ylims=false,zlims=false,twoplots=true,plotops...)
+    
+    sol = solve(ODEProblem(f,u0,(0.0,tmax),p))
+    p1 = plot(sol,vars=(1,2,3),legend=false,plotops...)
+	p2 = plot(sol,vars=(0,1),label="x")
+	p3 = plot(sol,vars=(0,2),label="y")
+	p4 = plot(sol,vars=(0,3),label="z")
+	plot(p1,p2,p3,p4,layout=@layout [a{0.5w} grid(3,1)])
+    if xlims isa Tuple
+        xlims!(p1,xlims)
+    end    
+    if ylims isa Tuple
+        ylims!(p1,ylims)
+    end    
+    if zlims isa Tuple
+        zlims!(p1,zlims)
+    end    
+    if (twoplots)
+        plot(p1,p2,p3,layout=layout=@layout[a{0.6w} grid(3,1)];size=size)
+    else
+        plot(p1;size=size)    # for plotly()
+    end    
+end      
