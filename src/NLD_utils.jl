@@ -3,7 +3,6 @@ using DifferentialEquations
 using ForwardDiff
 using IntervalRootFinding
 using StaticArrays
-using Distances
 
 # utilities
 
@@ -505,27 +504,7 @@ function poincare_forced_zoom(f::Function,u0::Vector{Float64},p,period::Float64;
     println(kiter)
     p1
 end     
-
-function recurrence_plot(f::Function,u0::Vector{Float64},p,period::Float64;
-    dd=0.002,steps=10,tcycles=0,npts=300,ncycles=10,size=(900,450),plotops...)
-
-    trans = solve(ODEProblem(f,u0,(0.0,tcycles*period),p))
-    u0=trans.u[end]
-    if period>1000
-        tmax=min(ncycles*period,10000)
-    else
-        tmax=ncycles*period
-    end  
-    sol = solve(ODEProblem(f,u0,(0,tmax),p));
-    ts = range(0,tmax,length=npts)
-    xy=hcat(sol(ts,idxs=1).u,sol(ts,idxs=2).u,mod.(sol(ts,idxs=2).u,period))
-    dist = Distances.pairwise(Euclidean(),xy,dims=1)
-    dst = floor.(dist/dd)/steps
-    dst[dst.>steps] .= steps
-    p1 = plot(sol,vars=(1,2),xlabel="x",ylabel="y")
-    p2 = heatmap(ts,ts,dst,c=cgrad([:blue,:white]),legend=false,size=size)
-    plot(p1,p2,layout=(1,2);size=size,fmt=:png,plotops...)
-end    
+   
 
 function saddle_orbit2D(f::Function,u0::Vector{Float64},p,period::Float64;
     λ=0.001,maxiter=10000, disttol=1e-9, inftol=10)
@@ -663,4 +642,5 @@ function flow3d(f::Function,u0::Vector{Float64},tmax::Float64,p;
     else
         plot(p1;size=size)    # for plotly()
     end    
-end      
+end    
+;  

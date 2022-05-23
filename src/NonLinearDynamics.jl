@@ -18,7 +18,6 @@ module NonLinearDynamics
             attractor_basin,
             poincare_forced,
             poincare_forced_zoom,
-            recurrence_plot,
             saddle_orbit2D,
             saddle_manifolds_forced,
             butterfly
