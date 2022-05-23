@@ -4,9 +4,6 @@
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ 94d7d7a2-d9ee-11ec-344c-0f555ffdf705
-using Pkg; Pkg.activate("../..")
-
 # ╔═╡ 6a3d6236-a28d-4040-aa15-d5ef8ddbe3ed
 using PlutoUI, Plots, DifferentialEquations, NonLinearDynamics
 
@@ -78,7 +75,16 @@ end
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
+DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
 NonLinearDynamics = "11c07cc8-78c6-4ce4-a9cf-bf2be0a45f25"
+Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+
+[compat]
+DifferentialEquations = "~7.1.0"
+NonLinearDynamics = "~0.1.0"
+Plots = "~1.29.0"
+PlutoUI = "~0.7.39"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -1797,17 +1803,16 @@ version = "0.9.1+5"
 """
 
 # ╔═╡ Cell order:
-# ╠═94d7d7a2-d9ee-11ec-344c-0f555ffdf705
 # ╠═6a3d6236-a28d-4040-aa15-d5ef8ddbe3ed
 # ╟─5b2eef3e-cd79-4989-8c94-e2dcc215bc2a
 # ╟─d7c7c3dd-8eab-4a9d-b372-804a8b2c9477
 # ╟─c74fb54e-b49b-4687-8c0d-5ada8769ddbf
 # ╠═80630ff0-64d2-49c0-b879-cf5de0d8fad0
 # ╠═c2338e97-1c4c-4b61-bb83-794a54db455f
-# ╠═4de8b3eb-4a77-47d1-b7cc-7a2d5c5bfd8d
+# ╟─4de8b3eb-4a77-47d1-b7cc-7a2d5c5bfd8d
 # ╠═40597d23-a13c-4954-8fca-d6423e6b36a0
-# ╠═7ab51dfc-d044-47f3-a725-695ece51653b
-# ╠═3592613a-538c-49cd-a27e-65d41b8b9f5d
+# ╟─7ab51dfc-d044-47f3-a725-695ece51653b
+# ╟─3592613a-538c-49cd-a27e-65d41b8b9f5d
 # ╠═e82494b8-3ace-4bb9-851a-0be8336233ad
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
