@@ -15,22 +15,13 @@ macro bind(def, element)
 end
 
 # ╔═╡ 8601d8d7-d4df-473f-b65d-0f03aeb8f5f4
-using PlutoUI, Plots, DifferentialEquations, NonLinearDynamics
+using PlutoUI, Plots, DifferentialEquations, ForwardDiff, IntervalRootFinding, StaticArrays
 
-# ╔═╡ c7399360-fad1-466a-9324-f830b20b07a7
-TableOfContents(title="📚 Table of Contents", indent=true, depth=4, aside=true)
-
-# ╔═╡ 1f7f958e-b0c3-433f-bae9-3bf63da3de7a
-html"""
-<style>
-input[type*="range"] {
-	width: 50%;
-}
-</style>
-"""
+# ╔═╡ 09b22c30-bb22-4633-9939-2e97bb0beb5e
+include("../NLD_utils.jl")
 
 # ╔═╡ 1f49c325-fc99-4b15-81ee-dc1c5bbe6f08
-gr()
+gr();
 
 # ╔═╡ 4237b1cb-075a-49be-8f2c-a6eb9c5c9901
 md"""
@@ -49,7 +40,7 @@ function fvdp!(du,u,p,t)
     du[2] = p[1]*(1.0-u[1]*u[1])*u[2]-u[1]+p[2]*cos(u[3])
     du[3] = p[3]
     du
-end    
+end;    
 
 # ╔═╡ 7fbb3faa-1f3c-4c3e-bc58-90e50eaf6e7c
 gr()
@@ -61,7 +52,7 @@ gr()
 		μ: $(bind(Slider(0:0.02:4.0,default=0.1;show_value=true))) \
 		A: $(bind(Slider(0.0:0.02:3.0,default=0.0;show_value=true))) \
 		ω: $(bind(Slider(0:0.02:3.0,default=1.0;show_value=true))) \
-		ncycles: $(bind(Slider(1:10:200,default=12;show_value=true)))
+		ncycles: $(bind(Slider(12:10:200,default=12;show_value=true)))
 		"""
 	end
 )	
@@ -101,18 +92,18 @@ function duffing_forced!(du,u,p,t)
     du[2] = -μ*u[2]+u[1]*(β-u[1]*u[1])+A*cos(u[3])
     du[3] = ω
     du
-end  
+end;  
 
 # ╔═╡ 4ee77c37-0347-45c0-b101-b96fcb7e004d
 @bind pduff (
 	PlutoUI.combine() do bind
 		md"""
-		μ: $(bind(Slider(0:0.02:4.0,default=0.8;show_value=true))) \
+		μ: $(bind(Slider(0:0.01:1.0,default=0.8;show_value=true))) \
 		β: $(bind(Slider(-2.0:0.02:2.0,default=1.0;show_value=true))) \
 		A: $(bind(Slider(0.0:0.02:3.0,default=0.0;show_value=true))) \
 		ω: $(bind(Slider(0:0.02:3.0,default=1.0;show_value=true))) \
 		x0: $(bind(Slider(-2.0:0.02:2.0,default=1.0;show_value=true))) \
-		ncycles: $(bind(Slider(1:200,default=1;show_value=true)))
+		ncycles: $(bind(Slider(1:10:200,default=1;show_value=true)))
 		"""
 	end
 )	
@@ -131,15 +122,13 @@ The basin of attraction of a certain attractor (for example a limit cycle that i
 To determine the basins it is necessary to evolve a grid of several thousand initial conditions over several cycles, therefore the graphs that follow can be very demanding. Run first with a low value of delta (the grid resolution) and make sure that Julia is taking in Threads.nthreads() the full number of processors in order to parallelize the problem.
 """
 
-# ╔═╡ 851d8073-e583-4c08-b53a-838dbe19eaf8
-# Select One
-#p = [0.14,1.0,0.1,1.0]; attractors=[[1.0,0.0],[-1.0,0.0],[-1,0.7],[0.3,0.3]];
-p = [0.14,1.0,0.14,1.0]; attractors=[[1.1,0.0],[-0.8,0.0]];
-# p = [0.14,1.0,0.2,1.0]; attractors=[[1.2,0.0],[-0.7,0.0]];
-# p = [0.14,1.0,0.24,1.0]; attractors=[[1.2,0.0],[-0.7,0.0],[0.1,1.1]];
+# ╔═╡ 0a270882-fde3-4dcc-8cef-291e86a4f8c2
+md"""
+Select one: $(@bind sel1 Select([([0.14,1.0,0.1,1.0],[[1.0,0.0],[-1.0,0.0],[-1,0.7],[0.3,0.3]])=>"μ=0.14,β=1,A=0.1,ω=1",([0.14,1.0,0.14,1.0],[[1.1,0.0],[-0.8,0.0]])=>"μ=0.14,β=1,A=0.14,ω=1",([0.14,1.0,0.2,1.0],[[1.2,0.0],[-0.9,0.0]])=>"μ=0.14,β=1,A=0.2,ω=1",([0.14,1.0,0.24,1.0],[[1.2,0.0],[-0.9,0.0],[0.1,1.1]])=>"μ=0.14,β=1,A=0.24,ω=1"]))
+"""
 
 # ╔═╡ dc6e3382-7239-48f1-a88d-bc12fda7cb73
-p1=attractor_basin(duffing_forced!,p,attractors,0.3;delta=0.01,tmax=30*pi,xlims=(-2.5,2.5),ylims=(-2.0,2.0))
+attractor_basin(duffing_forced!,sel1[1],sel1[2],0.3;delta=0.01,tmax=30*pi,xlims=(-2.5,2.5),ylims=(-2.0,2.0))
 
 # ╔═╡ 3078878b-a2f8-40f5-9398-401682ebb2f5
 md"""
@@ -156,7 +145,7 @@ For greater values of $A$, the trajectories no longer converge to limit cycles b
 		β: $(bind(Slider(-2.0:0.02:2.0,default=1.0;show_value=true))) \
 		A: $(bind(Slider(0.0:0.02:3.0,default=0.0;show_value=true))) \
 		ω: $(bind(Slider(0:0.02:3.0,default=1.0;show_value=true))) \
-		ncycles: $(bind(Slider(1000:1000:100000,default=10000;show_value=true)))
+		ncycles: $(bind(Slider(1000:1000:90000,default=10000;show_value=true)))
 		"""
 	end
 )	
@@ -164,18 +153,35 @@ For greater values of $A$, the trajectories no longer converge to limit cycles b
 # ╔═╡ 64e04ff2-6662-4775-93cd-85a915487478
 poincare_forced(duffing_forced!,[0.5,0.5,0],par,2*pi/par[4]; tcycles=30,ncycles=par[5],size=(900,600))
 
+# ╔═╡ c7399360-fad1-466a-9324-f830b20b07a7
+TableOfContents(title="📚 Table of Contents", indent=true, depth=4, aside=true)
+
+# ╔═╡ 1f7f958e-b0c3-433f-bae9-3bf63da3de7a
+html"""
+<style>
+input[type*="range"] {
+	width: 50%;
+}
+</style>
+"""
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
-NonLinearDynamics = "11c07cc8-78c6-4ce4-a9cf-bf2be0a45f25"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+IntervalRootFinding = "d2bf35a9-74e0-55ec-b149-d360ff49b807"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
 DifferentialEquations = "~7.1.0"
+ForwardDiff = "~0.10.30"
+IntervalRootFinding = "~0.5.10"
 Plots = "~1.29.0"
 PlutoUI = "~0.7.39"
+StaticArrays = "~1.4.4"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -202,21 +208,9 @@ uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
 
 [[deps.ArnoldiMethod]]
 deps = ["LinearAlgebra", "Random", "StaticArrays"]
-git-tree-sha1 = "f87e559f87a45bece9c9ed97458d3afe98b1ebb9"
+git-tree-sha1 = "62e51b39331de8911e4a7ff6f5aaf38a5f4cc0ae"
 uuid = "ec485272-7323-5ecc-a04f-4719b315124d"
-version = "0.1.0"
-
-[[deps.Arpack]]
-deps = ["Arpack_jll", "Libdl", "LinearAlgebra", "Logging"]
-git-tree-sha1 = "91ca22c4b8437da89b030f08d71db55a379ce958"
-uuid = "7d9fca2a-8960-54d3-9f78-7d1dccf2cb97"
-version = "0.5.3"
-
-[[deps.Arpack_jll]]
-deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "OpenBLAS_jll", "Pkg"]
-git-tree-sha1 = "5ba6c757e8feccf03a1554dfaf3e26b3cfc7fd5e"
-uuid = "68821587-b530-5797-8361-c406ea357684"
-version = "3.5.1+1"
+version = "0.2.0"
 
 [[deps.ArrayInterface]]
 deps = ["ArrayInterfaceCore", "Compat", "IfElse", "LinearAlgebra", "Static"]
@@ -229,6 +223,12 @@ deps = ["LinearAlgebra", "SparseArrays", "SuiteSparse"]
 git-tree-sha1 = "8a9c02f9d323d4dd8a47245abb106355bf7b45e6"
 uuid = "30b0a656-2188-435a-8636-2ec0e6a096e2"
 version = "0.1.2"
+
+[[deps.ArrayInterfaceGPUArrays]]
+deps = ["Adapt", "ArrayInterfaceCore", "GPUArrays", "LinearAlgebra"]
+git-tree-sha1 = "2b6bf6e383302e0eb71e76c6fb7bd24e0e582f4d"
+uuid = "6ba088a2-8465-4c0a-af30-387133b534db"
+version = "0.1.0"
 
 [[deps.ArrayInterfaceOffsetArrays]]
 deps = ["ArrayInterface", "OffsetArrays", "Static"]
@@ -253,18 +253,12 @@ uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
 
 [[deps.BandedMatrices]]
 deps = ["ArrayLayouts", "FillArrays", "LinearAlgebra", "Random", "SparseArrays"]
-git-tree-sha1 = "019aa88766e2493c59cbd0a9955e1bac683ffbcd"
+git-tree-sha1 = "960ad9a4b34380595500f60add129e178740c3a6"
 uuid = "aae01518-5342-5314-be14-df237901396f"
-version = "0.16.13"
+version = "0.17.0"
 
 [[deps.Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
-
-[[deps.BifurcationKit]]
-deps = ["ArnoldiMethod", "Arpack", "BlockArrays", "DataStructures", "Dates", "DocStringExtensions", "FastGaussQuadrature", "ForwardDiff", "IterativeSolvers", "KrylovKit", "LinearAlgebra", "LinearMaps", "Parameters", "Printf", "RecipesBase", "RecursiveArrayTools", "Requires", "SciMLBase", "Setfield", "SparseArrays", "StructArrays"]
-git-tree-sha1 = "64e8317f13fb14d00c308dd482e582c1ca535309"
-uuid = "0f109fa4-8a5d-4b75-95aa-f515264e7665"
-version = "0.1.11"
 
 [[deps.BitTwiddlingConvenienceFunctions]]
 deps = ["Static"]
@@ -272,17 +266,11 @@ git-tree-sha1 = "28bbdbf0354959db89358d1d79d421ff31ef0b5e"
 uuid = "62783981-4cbd-42fc-bca8-16325de8dc4b"
 version = "0.1.3"
 
-[[deps.BlockArrays]]
-deps = ["ArrayLayouts", "FillArrays", "LinearAlgebra"]
-git-tree-sha1 = "18f1eda0090a516927c5bede54c1ea36b5bf13d5"
-uuid = "8e7c35d0-a365-5155-bbbb-fb81a777f24e"
-version = "0.16.16"
-
 [[deps.BoundaryValueDiffEq]]
 deps = ["BandedMatrices", "DiffEqBase", "FiniteDiff", "ForwardDiff", "LinearAlgebra", "NLsolve", "Reexport", "SparseArrays"]
-git-tree-sha1 = "fe34902ac0c3a35d016617ab7032742865756d7d"
+git-tree-sha1 = "d6a331230022493b704e1d5c11f928e2cce2d058"
 uuid = "764a87c0-6b3e-53db-9096-fe964310641d"
-version = "2.7.1"
+version = "2.8.0"
 
 [[deps.Bzip2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -327,9 +315,9 @@ version = "0.5.1"
 
 [[deps.ChainRulesCore]]
 deps = ["Compat", "LinearAlgebra", "SparseArrays"]
-git-tree-sha1 = "9950387274246d08af38f6eef8cb5480862a435f"
+git-tree-sha1 = "9489214b993cd42d17f44c36e359bf6a7c919abf"
 uuid = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-version = "1.14.0"
+version = "1.15.0"
 
 [[deps.ChangesOfVariables]]
 deps = ["ChainRulesCore", "LinearAlgebra", "Test"]
@@ -387,12 +375,6 @@ version = "3.43.0"
 [[deps.CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
-
-[[deps.Configurations]]
-deps = ["ExproniconLite", "OrderedCollections", "TOML"]
-git-tree-sha1 = "ab9b7c51e8acdd20c769bccde050b5615921c533"
-uuid = "5218b696-f38b-4ac9-8b61-a12ec717816d"
-version = "0.17.3"
 
 [[deps.ConstructionBase]]
 deps = ["LinearAlgebra"]
@@ -556,11 +538,6 @@ git-tree-sha1 = "56559bbef6ca5ea0c0818fa5c90320398a6fbf8d"
 uuid = "e2ba6199-217a-4e67-a87a-7c52f15ade04"
 version = "0.1.8"
 
-[[deps.ExproniconLite]]
-git-tree-sha1 = "8b08cc88844e4d01db5a2405a08e9178e19e479e"
-uuid = "55351af7-c7e9-48d6-89ff-24e801d99491"
-version = "0.6.13"
-
 [[deps.FFMPEG]]
 deps = ["FFMPEG_jll"]
 git-tree-sha1 = "b57e3acbe22f8484b4b5ff66a7499717fe1a9cc8"
@@ -584,20 +561,11 @@ git-tree-sha1 = "acebe244d53ee1b461970f8910c235b259e772ef"
 uuid = "9aa1b823-49e4-5ca5-8b0f-3971ec8bab6a"
 version = "0.3.2"
 
-[[deps.FastGaussQuadrature]]
-deps = ["LinearAlgebra", "SpecialFunctions", "StaticArrays"]
-git-tree-sha1 = "58d83dd5a78a36205bdfddb82b1bb67682e64487"
-uuid = "442a2c76-b920-505d-bb47-c5924d526838"
-version = "0.4.9"
-
 [[deps.FastRounding]]
 deps = ["ErrorfreeArithmetic", "LinearAlgebra"]
 git-tree-sha1 = "6344aa18f654196be82e62816935225b3b9abe44"
 uuid = "fa42c844-2597-5d31-933b-ebd51ab2693f"
 version = "0.3.1"
-
-[[deps.FileWatching]]
-uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
 
 [[deps.FillArrays]]
 deps = ["LinearAlgebra", "Random", "SparseArrays", "Statistics"]
@@ -656,12 +624,6 @@ version = "1.1.2"
 deps = ["Random"]
 uuid = "9fa8497b-333b-5362-9e8d-4d0656e87820"
 
-[[deps.FuzzyCompletions]]
-deps = ["REPL"]
-git-tree-sha1 = "efd6c064e15e92fcce436977c825d2117bf8ce76"
-uuid = "fb4132e2-a121-4a70-b8a1-d5b831dcdcc2"
-version = "0.5.0"
-
 [[deps.GLFW_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libglvnd_jll", "Pkg", "Xorg_libXcursor_jll", "Xorg_libXi_jll", "Xorg_libXinerama_jll", "Xorg_libXrandr_jll"]
 git-tree-sha1 = "51d2dfe8e590fbd74e7a842cf6d13d8a2f45dc01"
@@ -694,9 +656,9 @@ version = "0.5.3"
 
 [[deps.GeometryBasics]]
 deps = ["EarCut_jll", "IterTools", "LinearAlgebra", "StaticArrays", "StructArrays", "Tables"]
-git-tree-sha1 = "82853ebc70db4f5a3084853738c68fd497b22c7c"
+git-tree-sha1 = "83ea630384a13fc4f002b77690bc0afeb4255ac9"
 uuid = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
-version = "0.3.10"
+version = "0.4.2"
 
 [[deps.Gettext_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Libiconv_jll", "Pkg", "XML2_jll"]
@@ -1015,12 +977,6 @@ version = "7.1.1"
 deps = ["Libdl", "libblastrampoline_jll"]
 uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
-[[deps.LinearMaps]]
-deps = ["LinearAlgebra", "SparseArrays", "Statistics"]
-git-tree-sha1 = "9e9c3fa4de0b4f146d97eed3485711928789865b"
-uuid = "7a12625a-238d-50fd-b39a-03d52299707e"
-version = "3.6.2"
-
 [[deps.LinearSolve]]
 deps = ["ArrayInterfaceCore", "DocStringExtensions", "GPUArrays", "IterativeSolvers", "KLU", "Krylov", "KrylovKit", "LinearAlgebra", "RecursiveFactorization", "Reexport", "SciMLBase", "Setfield", "SparseArrays", "SuiteSparse", "UnPack"]
 git-tree-sha1 = "5b095894601b8d53b025f8a8235a75e4b21c49e4"
@@ -1041,11 +997,6 @@ deps = ["ArrayInterface", "ArrayInterfaceOffsetArrays", "ArrayInterfaceStaticArr
 git-tree-sha1 = "4e4f18eaeb9631442bb6745b1e21d0742944632f"
 uuid = "bdcacae8-1622-11e9-2a5c-532679323890"
 version = "0.12.111"
-
-[[deps.MIMEs]]
-git-tree-sha1 = "65f28ad4b594aebe22157d6fac869786a255b7eb"
-uuid = "6c6e2e6c-3030-632d-7369-2d6c69616d65"
-version = "0.1.4"
 
 [[deps.MacroTools]]
 deps = ["Markdown", "Random"]
@@ -1095,12 +1046,6 @@ version = "0.7.3"
 [[deps.MozillaCACerts_jll]]
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
 
-[[deps.MsgPack]]
-deps = ["Serialization"]
-git-tree-sha1 = "a8cbf066b54d793b9a48c5daa5d586cf2b5bd43d"
-uuid = "99f44e22-a591-53d1-9472-aa23ef4bd671"
-version = "1.1.0"
-
 [[deps.MuladdMacro]]
 git-tree-sha1 = "c6190f9a7fc5d9d5915ab29f2134421b12d24a68"
 uuid = "46d2c3a1-f734-5fdb-9937-b9b9aeba4221"
@@ -1132,19 +1077,11 @@ version = "0.3.7"
 [[deps.NetworkOptions]]
 uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
 
-[[deps.NonLinearDynamics]]
-deps = ["BifurcationKit", "DifferentialEquations", "Distances", "ForwardDiff", "IntervalRootFinding", "Parameters", "Plots", "Pluto", "PlutoUI", "Setfield", "StaticArrays"]
-git-tree-sha1 = "84e8426b5657dfc740ac62bd021f022d7311515c"
-repo-rev = "main"
-repo-url = "https://github.com/meguia/NonLinearDynamics.jl"
-uuid = "11c07cc8-78c6-4ce4-a9cf-bf2be0a45f25"
-version = "0.1.0"
-
 [[deps.NonlinearSolve]]
 deps = ["ArrayInterfaceCore", "FiniteDiff", "ForwardDiff", "IterativeSolvers", "LinearAlgebra", "RecursiveArrayTools", "RecursiveFactorization", "Reexport", "SciMLBase", "Setfield", "StaticArrays", "UnPack"]
-git-tree-sha1 = "8c8adff74b454811063fce860e31adb286e298c2"
+git-tree-sha1 = "dc684be9454e41fcecaba06839969d23ad1ebc70"
 uuid = "8913a72c-1f9b-4ce2-8d82-65094dcecaec"
-version = "0.3.17"
+version = "0.3.18"
 
 [[deps.OffsetArrays]]
 deps = ["Adapt"]
@@ -1196,10 +1133,10 @@ uuid = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
 version = "1.4.1"
 
 [[deps.OrdinaryDiffEq]]
-deps = ["Adapt", "ArrayInterface", "DataStructures", "DiffEqBase", "DocStringExtensions", "ExponentialUtilities", "FastClosures", "FiniteDiff", "ForwardDiff", "LinearAlgebra", "LinearSolve", "Logging", "LoopVectorization", "MacroTools", "MuladdMacro", "NLsolve", "NonlinearSolve", "Polyester", "PreallocationTools", "RecursiveArrayTools", "Reexport", "SciMLBase", "SparseArrays", "SparseDiffTools", "StaticArrays", "UnPack"]
-git-tree-sha1 = "c3e2ca6b6d9ec57439c2669a9932d885262767f0"
+deps = ["Adapt", "ArrayInterface", "ArrayInterfaceGPUArrays", "ArrayInterfaceStaticArrays", "DataStructures", "DiffEqBase", "DocStringExtensions", "ExponentialUtilities", "FastClosures", "FiniteDiff", "ForwardDiff", "LinearAlgebra", "LinearSolve", "Logging", "LoopVectorization", "MacroTools", "MuladdMacro", "NLsolve", "NonlinearSolve", "Polyester", "PreallocationTools", "RecursiveArrayTools", "Reexport", "SciMLBase", "SparseArrays", "SparseDiffTools", "StaticArrays", "UnPack"]
+git-tree-sha1 = "f4e502a13ec5610bf5b12a8e5c376c00d96ff0d4"
 uuid = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
-version = "6.11.1"
+version = "6.12.0"
 
 [[deps.PCRE_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1253,12 +1190,6 @@ git-tree-sha1 = "d457f881ea56bbfa18222642de51e0abf67b9027"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 version = "1.29.0"
 
-[[deps.Pluto]]
-deps = ["Base64", "Configurations", "Dates", "Distributed", "FileWatching", "FuzzyCompletions", "HTTP", "HypertextLiteral", "InteractiveUtils", "Logging", "MIMEs", "Markdown", "MsgPack", "Pkg", "PrecompileSignatures", "REPL", "RelocatableFolders", "Sockets", "TOML", "Tables", "UUIDs"]
-git-tree-sha1 = "c2d65c0fbb49b5b316605c3700b1fb2df5a1a969"
-uuid = "c3e4b0f8-55cb-11ea-2926-15256bba5781"
-version = "0.19.5"
-
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "Markdown", "Random", "Reexport", "UUIDs"]
 git-tree-sha1 = "8d1f54886b9037091edf146b517989fc4a09efec"
@@ -1300,11 +1231,6 @@ deps = ["Adapt", "ArrayInterfaceCore", "ForwardDiff", "LabelledArrays"]
 git-tree-sha1 = "ae8a080dfc68e5615654591d8db5d53ac382353e"
 uuid = "d236fae5-4411-538c-8e31-a6e3d9e00b46"
 version = "0.3.1"
-
-[[deps.PrecompileSignatures]]
-git-tree-sha1 = "18ef344185f25ee9d51d80e179f8dad33dc48eb1"
-uuid = "91cefc8d-f054-46dc-8f8c-26e11d7c5411"
-version = "3.0.3"
 
 [[deps.Preferences]]
 deps = ["TOML"]
@@ -1551,10 +1477,10 @@ uuid = "7792a7ef-975c-4747-a70f-980b88e8d1da"
 version = "0.3.7"
 
 [[deps.StructArrays]]
-deps = ["DataAPI", "Tables"]
-git-tree-sha1 = "ad1f5fd155426dcc879ec6ede9f74eb3a2d582df"
+deps = ["Adapt", "DataAPI", "StaticArrays", "Tables"]
+git-tree-sha1 = "e75d82493681dfd884a357952bbd7ab0608e1dc3"
 uuid = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
-version = "0.4.2"
+version = "0.6.7"
 
 [[deps.SuiteSparse]]
 deps = ["Libdl", "LinearAlgebra", "Serialization", "SparseArrays"]
@@ -1898,23 +1824,24 @@ version = "0.9.1+5"
 
 # ╔═╡ Cell order:
 # ╠═8601d8d7-d4df-473f-b65d-0f03aeb8f5f4
-# ╟─c7399360-fad1-466a-9324-f830b20b07a7
-# ╟─1f7f958e-b0c3-433f-bae9-3bf63da3de7a
+# ╠═09b22c30-bb22-4633-9939-2e97bb0beb5e
 # ╟─1f49c325-fc99-4b15-81ee-dc1c5bbe6f08
 # ╟─4237b1cb-075a-49be-8f2c-a6eb9c5c9901
 # ╠═906dd4e2-b975-4eb4-8469-a25ea89668dc
 # ╟─7fbb3faa-1f3c-4c3e-bc58-90e50eaf6e7c
-# ╠═2d29b217-fe25-4bb1-9282-51b4932356cf
+# ╟─2d29b217-fe25-4bb1-9282-51b4932356cf
 # ╟─6282f7e6-4831-45ef-9b1d-3f077fdd74a4
 # ╟─6b52504e-805e-417e-8fb2-6473b47b0ad0
 # ╠═4c3108b9-2328-42b7-9c69-bee0647e94b8
-# ╠═37ddd39f-4de1-4eb0-a230-46181c7e64db
+# ╟─37ddd39f-4de1-4eb0-a230-46181c7e64db
 # ╟─4ee77c37-0347-45c0-b101-b96fcb7e004d
 # ╟─8b29c214-4b49-4f44-9eb5-230899ec7321
-# ╠═851d8073-e583-4c08-b53a-838dbe19eaf8
-# ╠═dc6e3382-7239-48f1-a88d-bc12fda7cb73
+# ╟─0a270882-fde3-4dcc-8cef-291e86a4f8c2
+# ╟─dc6e3382-7239-48f1-a88d-bc12fda7cb73
 # ╟─3078878b-a2f8-40f5-9398-401682ebb2f5
-# ╠═64e04ff2-6662-4775-93cd-85a915487478
+# ╟─64e04ff2-6662-4775-93cd-85a915487478
 # ╟─59c6b45e-3959-45ff-be82-4c0409d17589
+# ╟─c7399360-fad1-466a-9324-f830b20b07a7
+# ╟─1f7f958e-b0c3-433f-bae9-3bf63da3de7a
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

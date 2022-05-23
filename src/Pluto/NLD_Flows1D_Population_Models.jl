@@ -33,7 +33,7 @@ html"""
 """
 
 # ╔═╡ 4dc32b5a-5794-4d2d-844e-cdb80bec2e7b
-logistic(x,p,t)=p[1]*x*(1.0-x/p[2])
+logistic(x,p,t)=p[1]*x*(1.0-x/p[2]);
 
 # ╔═╡ 77766c99-4142-4acb-a855-ab133e67aa66
 @bind pars2 (
@@ -57,7 +57,7 @@ $\dot{x}=Rx\left(1-\frac{x}{K}\right)-H$
 """
 
 # ╔═╡ 29474ca0-839b-45de-a7bf-7d91c5ea59aa
-logharvest1(x,p,t)=p[1]*x*(1.0-x/p[2])-p[3]
+logharvest1(x,p,t)=p[1]*x*(1.0-x/p[2])-p[3];
 
 # ╔═╡ 8fc407f4-a242-4cdc-b7e0-062c8f5782d1
 @bind pars_harvest (
@@ -101,7 +101,7 @@ $\dot{x} = Rx\left(1-\frac{x}{K}\right) - Px$
 
 # ╔═╡ b4ea8364-a582-443c-bdb1-46e75a5c4d4e
 # Consumer Equation
-consumer(x,p,t)=p[1]*x*(1.0-x/p[2])-p[3]*x
+consumer(x,p,t)=p[1]*x*(1.0-x/p[2])-p[3]*x;
 
 # ╔═╡ 5afa3aff-af15-429b-a0fb-9a0dfcad740d
 @bind pars_consumer (
@@ -131,7 +131,7 @@ html"""
 """
 
 # ╔═╡ 5a0b156e-b0b2-43b8-b15e-bcdb65c154bf
-logoutbreak(x,p,t)=p[1]*x*(1.0-x/p[2])-p[3]*x*x/(1+x*x)
+logoutbreak(x,p,t)=p[1]*x*(1.0-x/p[2])-p[3]*x*x/(1+x*x);
 
 # ╔═╡ 6528501f-3bb2-48a7-b24e-d32400033538
 @bind pars_outbreak (
