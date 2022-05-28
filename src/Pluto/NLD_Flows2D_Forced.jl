@@ -27,6 +27,36 @@ gr();
 md"""
 # Forced van der Pol
 
+
+$\dot{x} = y$
+
+$\dot{y} = -\mu y - kx$
+
+Recall that $y$ represents the velocity of the oscillator, $\dot{y}$ the acceleration which is equal to the applied force (we assume a mass equal to 1) which appears in the right member of the second equation. In this equation $-kx$ represents the linear elastic force, while $-\mu y$ is the *friction*: a force that always opposes the velocity ( 𝜇>0 ) and that always slows down the oscillator. In the following, we are going to study different general forms for this friction, that in a general way we are going to express as a function of the position $x$ and the velocity $y$:
+
+$\dot{x} = y$
+
+$\dot{y} = -F(x,y)y - kx$
+
+Linear Friction:
+
+$F(x,y)=\mu$
+
+We may now wonder what would happen if we were to apply a "negative friction" for small values of the amplitude of oscillation.
+
+Why? Because in this way we can prevent the oscillations from "dying". If the amplitude of the oscillation $x$ becomes very small (the system is slowed down by friction) a force appears that goes **in favor** of the velocity, injecting energy to the system, still for large oscillation amplitudes the dissipation that slows down the system wins. 
+
+In this way an equilibrium is reached in which self-oscillations are produced which are not extinguished. These oscillations in phase space are known as **limit cycles** and are invariant sets (attractors or repulsors) like fixed points. Note the difference with the oscillations and concentric orbits of the frictionless harmonic oscillator. Unlike the latter, relaxation oscillations (or limit cycles in general) are attractors, i.e. any nearby condition ends up converging to them. 
+
+How can we write this friction inversion for values of $x$ close to zero? 
+The simplest way is to use a quadratic nolinearity. A sinking parabola on the axis has negative values near $x=0$ and positive values for large values of $x$ (both positive and negative). Therefore we can replace linear friction by $\mu(x^2-1)$ . The resistance (or friction) as a function of the position of the oscillator would be:
+
+van der Pol's Friction:
+
+$F(x,y) = \mu(x^2-1)$
+
+And the system of differential equations is written:
+
 $\dot{x} = y$
 
 $\dot{y} = \mu (1 -x^2)y - x + A cos(\phi)$
@@ -224,12 +254,6 @@ git-tree-sha1 = "8a9c02f9d323d4dd8a47245abb106355bf7b45e6"
 uuid = "30b0a656-2188-435a-8636-2ec0e6a096e2"
 version = "0.1.2"
 
-[[deps.ArrayInterfaceGPUArrays]]
-deps = ["Adapt", "ArrayInterfaceCore", "GPUArrays", "LinearAlgebra"]
-git-tree-sha1 = "2b6bf6e383302e0eb71e76c6fb7bd24e0e582f4d"
-uuid = "6ba088a2-8465-4c0a-af30-387133b534db"
-version = "0.1.0"
-
 [[deps.ArrayInterfaceOffsetArrays]]
 deps = ["ArrayInterface", "OffsetArrays", "Static"]
 git-tree-sha1 = "3cbe45d8cc9cff51f302df1f87df64095423fd96"
@@ -253,9 +277,9 @@ uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
 
 [[deps.BandedMatrices]]
 deps = ["ArrayLayouts", "FillArrays", "LinearAlgebra", "Random", "SparseArrays"]
-git-tree-sha1 = "960ad9a4b34380595500f60add129e178740c3a6"
+git-tree-sha1 = "019aa88766e2493c59cbd0a9955e1bac683ffbcd"
 uuid = "aae01518-5342-5314-be14-df237901396f"
-version = "0.17.0"
+version = "0.16.13"
 
 [[deps.Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
@@ -268,9 +292,9 @@ version = "0.1.3"
 
 [[deps.BoundaryValueDiffEq]]
 deps = ["BandedMatrices", "DiffEqBase", "FiniteDiff", "ForwardDiff", "LinearAlgebra", "NLsolve", "Reexport", "SparseArrays"]
-git-tree-sha1 = "d6a331230022493b704e1d5c11f928e2cce2d058"
+git-tree-sha1 = "fe34902ac0c3a35d016617ab7032742865756d7d"
 uuid = "764a87c0-6b3e-53db-9096-fe964310641d"
-version = "2.8.0"
+version = "2.7.1"
 
 [[deps.Bzip2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -315,9 +339,9 @@ version = "0.5.1"
 
 [[deps.ChainRulesCore]]
 deps = ["Compat", "LinearAlgebra", "SparseArrays"]
-git-tree-sha1 = "9489214b993cd42d17f44c36e359bf6a7c919abf"
+git-tree-sha1 = "9950387274246d08af38f6eef8cb5480862a435f"
 uuid = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-version = "1.15.0"
+version = "1.14.0"
 
 [[deps.ChangesOfVariables]]
 deps = ["ChainRulesCore", "LinearAlgebra", "Test"]
@@ -1079,9 +1103,9 @@ uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
 
 [[deps.NonlinearSolve]]
 deps = ["ArrayInterfaceCore", "FiniteDiff", "ForwardDiff", "IterativeSolvers", "LinearAlgebra", "RecursiveArrayTools", "RecursiveFactorization", "Reexport", "SciMLBase", "Setfield", "StaticArrays", "UnPack"]
-git-tree-sha1 = "dc684be9454e41fcecaba06839969d23ad1ebc70"
+git-tree-sha1 = "8c8adff74b454811063fce860e31adb286e298c2"
 uuid = "8913a72c-1f9b-4ce2-8d82-65094dcecaec"
-version = "0.3.18"
+version = "0.3.17"
 
 [[deps.OffsetArrays]]
 deps = ["Adapt"]
@@ -1133,10 +1157,10 @@ uuid = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
 version = "1.4.1"
 
 [[deps.OrdinaryDiffEq]]
-deps = ["Adapt", "ArrayInterface", "ArrayInterfaceGPUArrays", "ArrayInterfaceStaticArrays", "DataStructures", "DiffEqBase", "DocStringExtensions", "ExponentialUtilities", "FastClosures", "FiniteDiff", "ForwardDiff", "LinearAlgebra", "LinearSolve", "Logging", "LoopVectorization", "MacroTools", "MuladdMacro", "NLsolve", "NonlinearSolve", "Polyester", "PreallocationTools", "RecursiveArrayTools", "Reexport", "SciMLBase", "SparseArrays", "SparseDiffTools", "StaticArrays", "UnPack"]
-git-tree-sha1 = "f4e502a13ec5610bf5b12a8e5c376c00d96ff0d4"
+deps = ["Adapt", "ArrayInterface", "DataStructures", "DiffEqBase", "DocStringExtensions", "ExponentialUtilities", "FastClosures", "FiniteDiff", "ForwardDiff", "LinearAlgebra", "LinearSolve", "Logging", "LoopVectorization", "MacroTools", "MuladdMacro", "NLsolve", "NonlinearSolve", "Polyester", "PreallocationTools", "RecursiveArrayTools", "Reexport", "SciMLBase", "SparseArrays", "SparseDiffTools", "StaticArrays", "UnPack"]
+git-tree-sha1 = "c3e2ca6b6d9ec57439c2669a9932d885262767f0"
 uuid = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
-version = "6.12.0"
+version = "6.11.1"
 
 [[deps.PCRE_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
