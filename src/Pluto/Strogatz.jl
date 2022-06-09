@@ -33,7 +33,7 @@ end
 
 # ╔═╡ f2d9a169-2f22-4083-9934-bc9b45c246eb
 md"""
-K $(@bind K Slider(0.0:0.05:1.0,default=0.5;show_value=true)) \
+mi parametro K $(@bind K Slider(0.0:0.05:1.0,default=0.5;show_value=true)) \
 ω0 $(@bind ω0 Slider(0:0.05:2.0,default=1.0;show_value=true)) \
 ω1 $(@bind ω1 Slider(0:0.05:2.0,default=0.0;show_value=true)) 
 """
@@ -51,7 +51,7 @@ prob = ODEProblem(strogatz,u0,(0,100.0),par);
 sol = solve(prob);
 
 # ╔═╡ 65856268-6506-482d-bcc4-edae26e804be
-plot(sol,vars=(0,1),legend=false)
+plot(sol,legend=false)
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """

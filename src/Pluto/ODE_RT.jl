@@ -4,8 +4,18 @@
 using Markdown
 using InteractiveUtils
 
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+end
+
 # ╔═╡ 13585b60-e78f-11ec-3735-f96536ec952e
-using DifferentialEquations, PlutoUI, Plots
+using DifferentialEquations, PlutoUI, Plots, OpenSoundControl, Sockets
 
 # ╔═╡ 0f5e36fd-3814-4d4d-ba78-d3093204b256
 Threads.nthreads()
@@ -14,7 +24,8 @@ Threads.nthreads()
 gr(show = true)
 
 # ╔═╡ 31e1babb-a9bb-438f-be68-a2730e8b9da5
-mutable struct ODE_struct{T}
+mutable struct ODE_source{T}
+	active::Bool
     timescale::Float64
     time::Float64
     dt::Float64
@@ -24,20 +35,20 @@ mutable struct ODE_struct{T}
 end
 
 # ╔═╡ da546bf7-d2fe-4033-87bf-bd29bf3c422e
-function ODE_create(eltype, system::Function, timescale::Number, start_point::Array, pars::Array)
+function source_create(eltype, system::Function, timescale::Number, start_point::Array, pars::Array)
     time = 0.0
     tspan = (0.0, 100.0)
-    dt = 1/timescale
+    dt = 1.0/timescale
     uini = start_point
     problem = ODEProblem(system,start_point,tspan,pars)
-    ODE_struct{eltype}(Float64(timescale), time, dt, uini, pars, problem)
+    ODE_source{eltype}(true,Float64(timescale), time, dt, uini, pars, problem)
 end
 
 # ╔═╡ 8edc1e05-dc83-4712-ba83-1e7cc8bd2e0a
-Base.eltype(::ODE_struct{T}) where T = T
+Base.eltype(::ODE_source{T}) where T = T
 
 # ╔═╡ 9a3a3c2f-e7d4-4f44-89a2-f58e46aac6d0
-function ODE_step!(source::ODE_struct, framecount)
+function source_step!(source::ODE_source, framecount)
     tend = source.time+framecount*source.dt
     seq = hcat(solve(remake(source.problem;u0=source.uini,tspan=(source.time,tend),p=source.pars),Tsit5(),saveat=source.dt).u...)'
     buf = seq[1:framecount,:]
@@ -54,31 +65,71 @@ function fvdp!(du,u,p,t)
 end
 
 # ╔═╡ 8a2f6125-d1e5-4097-96b3-da72fa4beeb3
-ode = ODE_create(Float64, fvdp!, 500.0, [0.1,0.1],[2.0,0.0,1.0])
+ode = source_create(Float64, fvdp!, 500.0, [0.1,0.1],[2.0,0.0,1.0])
 
-# ╔═╡ ff469d58-8c1a-4237-9429-921bbe68b052
-scatter!(plt,ODE_step!(ode,1))
+# ╔═╡ fb32b9b4-83e4-438d-bb46-43396a98e7cd
+source_step!(ode,1)
+
+# ╔═╡ f839b4f4-59f7-4022-a319-78faedd823cf
+ode.dt
+
+# ╔═╡ 469c9f2b-cad5-462e-86f8-d30ab1490464
+sock1 = UDPSocket()
 
 # ╔═╡ d045ce3a-48e0-45cc-bf4c-e45bef85baca
+# ╠═╡ disabled = true
+#=╠═╡
 ode_stream = Threads.@spawn begin
-    while ode.timescale>0.1
-		push!(plt,1,scatter(ODE_step!(ode,1)))
-		gui()
-    end
+	ode.active = true
+	while ode.active
+		u = source_step!(ode,1)
+		msg1 = OpenSoundControl.message("/ode1", "dd",u[1],u[2])
+		send(sock1, ip"127.0.0.1", 7777, msg1.data)
+		sleep(0.01) # borrar esto esta solo para monitorear
+	end
 end
+  ╠═╡ =#
+
+# ╔═╡ 18b3f995-2483-411c-8135-38a20ff9a934
+md"""
+μ $(@bind μ Slider(0.01:0.05:1.0,default=0.5;show_value=true)) \
+A $(@bind A Slider(0:0.05:2.0,default=0.0;show_value=true)) \
+ω $(@bind ω Slider(0:0.05:5.0,default=1.0;show_value=true)) \
+Δt $(@bind Δt Slider(0.001:0.001:0.02,default=0.01;show_value=true)) 
+"""
+
+# ╔═╡ 1953d442-8938-4b44-8522-042c086542dd
+#=╠═╡
+ode_stream
+  ╠═╡ =#
+
+# ╔═╡ ed2e89cc-6abf-44f0-a826-b53c434e5f2d
+#=╠═╡
+begin
+	stop
+	ode.active = false
+	println(ode_stream)
+end	
+  ╠═╡ =#
 
 # ╔═╡ 550e79ed-42e5-4be2-9aec-0c8a9179ed00
-ode.timescale = 0.1
+begin
+	ode.pars=[μ,A,ω]
+	ode.dt=Δt
+end	
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
+OpenSoundControl = "2ff8ee2d-9747-4b2b-b699-45d473b7b9df"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+Sockets = "6462fe0b-24de-5631-8697-dd941f90decc"
 
 [compat]
 DifferentialEquations = "~7.1.0"
+OpenSoundControl = "~1.0.0"
 Plots = "~1.29.1"
 PlutoUI = "~0.7.39"
 """
@@ -941,6 +992,12 @@ git-tree-sha1 = "ab05aa4cc89736e95915b01e7279e61b1bfe33b8"
 uuid = "458c3c95-2e84-50aa-8efc-19380b2a3a95"
 version = "1.1.14+0"
 
+[[deps.OpenSoundControl]]
+deps = ["Printf", "Test"]
+git-tree-sha1 = "891f8602af7af6324354601e726ae7b48c41fdab"
+uuid = "2ff8ee2d-9747-4b2b-b699-45d473b7b9df"
+version = "1.0.0"
+
 [[deps.OpenSpecFun_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "13652491f6856acfd2db29360e1bbcd4565d04f1"
@@ -1642,8 +1699,13 @@ version = "0.9.1+5"
 # ╠═9a3a3c2f-e7d4-4f44-89a2-f58e46aac6d0
 # ╠═75fd1ac8-dcf0-4791-91b8-de3cb46611e7
 # ╠═8a2f6125-d1e5-4097-96b3-da72fa4beeb3
-# ╠═ff469d58-8c1a-4237-9429-921bbe68b052
+# ╠═fb32b9b4-83e4-438d-bb46-43396a98e7cd
+# ╠═f839b4f4-59f7-4022-a319-78faedd823cf
+# ╠═469c9f2b-cad5-462e-86f8-d30ab1490464
 # ╠═d045ce3a-48e0-45cc-bf4c-e45bef85baca
+# ╠═18b3f995-2483-411c-8135-38a20ff9a934
+# ╠═1953d442-8938-4b44-8522-042c086542dd
+# ╠═ed2e89cc-6abf-44f0-a826-b53c434e5f2d
 # ╠═550e79ed-42e5-4be2-9aec-0c8a9179ed00
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
