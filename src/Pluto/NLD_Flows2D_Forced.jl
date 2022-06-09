@@ -32,7 +32,7 @@ $\dot{x} = y$
 
 $\dot{y} = -\mu y - kx$
 
-Recall that $y$ represents the velocity of the oscillator, $\dot{y}$ the acceleration which is equal to the applied force (we assume a mass equal to 1) which appears in the right member of the second equation. In this equation $-kx$ represents the linear elastic force, while $-\mu y$ is the *friction*: a force that always opposes the velocity ( 𝜇>0 ) and that always slows down the oscillator. In the following, we are going to study different general forms for this friction, that in a general way we are going to express as a function of the position $x$ and the velocity $y$:
+Remember that $y$ represents the velocity of the oscillator, $\dot{y}$ the acceleration which is equal to the applied force (we assume a mass equal to 1) which appears in the right member of the second equation. In this equation $-kx$ represents the linear elastic force, while $-\mu y$ is the *friction*: a force that always opposes the velocity ( 𝜇>0 ) and that always slows down the oscillator. In the following, we are going to study different general forms for this friction, that in a general way we are going to express as a function of the position $x$ and the velocity $y$:
 
 $\dot{x} = y$
 
@@ -171,7 +171,7 @@ For greater values of $A$, the trajectories no longer converge to limit cycles b
 @bind par (
 	PlutoUI.combine() do bind
 		md"""
-		μ: $(bind(Slider(0:0.02:0.5,default=0.14;show_value=true))) \
+		μ: $(bind(Slider(0:0.01:0.3,default=0.14;show_value=true))) \
 		β: $(bind(Slider(-2.0:0.02:2.0,default=1.0;show_value=true))) \
 		A: $(bind(Slider(0.0:0.02:3.0,default=0.0;show_value=true))) \
 		ω: $(bind(Slider(0:0.02:3.0,default=1.0;show_value=true))) \
@@ -218,7 +218,7 @@ StaticArrays = "~1.4.4"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.7.2"
+julia_version = "1.7.3"
 manifest_format = "2.0"
 
 [[deps.AbstractPlutoDingetjes]]
@@ -525,7 +525,7 @@ uuid = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 version = "0.8.6"
 
 [[deps.Downloads]]
-deps = ["ArgTools", "LibCURL", "NetworkOptions"]
+deps = ["ArgTools", "FileWatching", "LibCURL", "NetworkOptions"]
 uuid = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
 
 [[deps.DualNumbers]]
@@ -590,6 +590,9 @@ deps = ["ErrorfreeArithmetic", "LinearAlgebra"]
 git-tree-sha1 = "6344aa18f654196be82e62816935225b3b9abe44"
 uuid = "fa42c844-2597-5d31-933b-ebd51ab2693f"
 version = "0.3.1"
+
+[[deps.FileWatching]]
+uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
 
 [[deps.FillArrays]]
 deps = ["LinearAlgebra", "Random", "SparseArrays", "Statistics"]
