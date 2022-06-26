@@ -14,223 +14,209 @@ macro bind(def, element)
     end
 end
 
-# ╔═╡ 38c4e220-d708-11ec-3968-fbbd41c26155
-using PlutoUI, Plots, DifferentialEquations, ForwardDiff, IntervalRootFinding, StaticArrays
+# ╔═╡ f527ceca-f2d1-11ec-3cc5-bd33fdb53d6e
+using DifferentialEquations, Plots, ForwardDiff,IntervalRootFinding, StaticArrays, PlutoUI
 
-# ╔═╡ 3eca675f-4243-47b5-8bd0-b34f774b73d3
+# ╔═╡ cf2a4cec-ea32-4bd1-a56d-8fde23d3e31c
 include("../NLD_utils.jl")
 
-# ╔═╡ e2271efe-9a67-4496-891b-46f076b367f3
-theme(:default)
-
-# ╔═╡ 62cba86d-4406-4d16-8715-b29bee7d3178
+# ╔═╡ d777dcf0-600c-4bce-b6cf-da7e57b1c1ae
 md"""
-# Logistic Equation
+# Nonlinear Dynamics of Love Affairs 💘
 
-In what follows we will work with simple population dynamics models where the continuous variable can represent the density of a population (i.e. both the variable and time evolve continuously). In this context it is usual to denote the growth rate as $R$ (rate). Therefore the equation:
+## Classic Linear model of Romantic Love 👫
 
+Based on the one-page influential work of Strogatz (1988) of the Shakespearean love affair of Romeo and Juliet. Here $R$ is Romeo’s love (or hate if negative) for Juliet and $J$ is Juliet’s love for Romeo. The simplest model is linear with:
 
-$\dot{x} = Rx$
-$\dot{x}=Rx\left(1-\frac{x}{K}\right)$
+$\dot{R}= aR+bJ$
 
-corresponds to the unlimited exponential growth of the population density at rate $R$. 
+$\dot{J}= cR+dJ$
 
-But exponential growth cannot be maintained forever, so if we want to model in a more realistic way a magnitude that grows with limited resources we must limit the growth rate $R$. One possible way (the simplest) is to limit $R$ with a linear function becoming zero when the population reaches the maximum capacity $K$. That is, let our variable growth rate be: $R(x)=R(1-x/K)$. Replacing this rate in the original equation we obtain the logistic equation 
+where $a$ and $b$ specify Romeo’s “romantic style,” and $c$ and $d$ specify Juliet’s style. The parameter $a$($c$) describes the extent to which Romeo (Juliet) is encouraged by his(her) own feelings, and $b$($d$) is the extent to which he is encouraged by his(her) partner feelings.
 
-$\dot{x}=Rx\left(1-\frac{x}{K}\right)$
-
-wuth $K>0$ and $R>0$.
-
-This is the simplest system that models the growth of a population with K capacity.
+The resulting dynamics is
+two-dimensional, governed by the initial conditions and the four
+parameters, which may be positive or negative.
 """
 
-# ╔═╡ 6d64cc27-1059-4dd7-8f17-1c6fd9a2eca0
-html"""
-<div style="position: relative; right: 0; top: 0; z-index: 300;"><iframe src="https://www.youtube.com/embed/JwYhhnuuINk" width=500 height=250  frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
-"""
 
-# ╔═╡ 4dc32b5a-5794-4d2d-844e-cdb80bec2e7b
-logistic(x,p,t)=p[1]*x*(1.0-x/p[2]);
+# ╔═╡ 42638d65-5778-4776-b7f6-20550c515289
+function lovelinear!(du,u,p,t)
+	(a,b,c,d) = p
+	du[1] = a*u[1]+b*u[2]
+	du[2] = c*u[1]+d*u[2]
+end
 
-# ╔═╡ aa22c728-662c-4fdb-aae9-b3b411e311e2
+# ╔═╡ 0f57818a-9608-4f24-84a0-b5579e72fc2d
 md"""
-Now we are going to plot, in addition to the time evolution, the function $f(x)$ in order to visualize the fixed points and the flow on the line.
+Romeo can exhibit one of four romantic styles depending on the signs of a and b, with names adapted from those suggested by Strogatz and his students:
 
-In order to do this, we are going to use the function of the course package `flux1D` whose arguments are (for the basic method)
+1. Eager beaver: $a > 0$, $b > 0$ (Romeo is encouraged by his own feelings as well as Juliet’s.)
+2. Narcissistic nerd: $a > 0$, $b < 0$ (Romeo wants more of what he feels but retreats from Juliet’s feelings.)
+3. Cautious (or secure) lover: $a < 0$, $b > 0$ (Romeo retreats from his own feelings but is encouraged by Juliet’s.)
+4. Hermit: $a < 0$, $b < 0$ (Romeo retreats from his own feelings as well as Juliet’s.) 
 
-`flux1D(f,x0,tmax,p;xlims)`
-- f is a function f(x,p,t) that defines the flow (returns the time derivative).
-- x0 is a scalar which gives the initial condition
-- tmax is a scalar that gives the final time of integration (always starts from t=0)
-- p is a vector (1D array) with the parameters of the system. Even if we have only one parameter we have to pass it as an array of only one element
-- the tuple xlims=(xmin,xmax) limits the graph of f(x) between the interval (xmin,xmax). This parameter is optional so it is after the semicolon.
+The same four styles applies for Juliet following the sign of the parametes $c$ and $d$
+"""	
+
+# ╔═╡ dc301dcf-2b27-431d-8604-1c94f6c6d353
+@bind pars1 (
+	PlutoUI.combine() do bind
+		md"""
+		a: $(bind(Slider(-1.0:0.02:1.0,default=0.1;show_value=true))) 
+		b: $(bind(Slider(-1.0:0.02:1.0,default=0.1;show_value=true))) \
+		c: $(bind(Slider(-1.0:0.02:1.0,default=0.1;show_value=true))) 
+		d: $(bind(Slider(-1.0:0.02:1.0,default=0.1;show_value=true))) \
+		"""
+	end
+)
+
+# ╔═╡ 7eaf2748-335c-4c5b-a3b7-7942470fa29c
+# Classification of Romantic Styles for R&J
+begin
+	(a,b,c,d)=pars1
+	if (a>0)
+		if (b>0)
+			rtitle = "Romeo: Eager Beaver"
+		else
+			rtitle = "Romeo: Narcissistic"
+		end
+	else
+		if (b>0)
+			rtitle = "Romeo: Cautious"
+		else
+			rtitle = "Romeo: Hermit"
+		end
+	end
+	if (c>0)
+		if (d>0)
+			jtitle = "Juliet: Eager Beaver"
+		else
+			jtitle = "Juliet: Narcissistic"
+		end
+	else
+		if (d>0)
+			jtitle = "Juliet: Cautious"
+		else
+			jtitle = "Juliet: Hermit"
+		end
+	end
+	title1 = string(rtitle," | ",jtitle)
+end
+
+# ╔═╡ 59d4e977-7d25-4ef1-98de-9a2a712dfa6c
+@bind u1 (
+	PlutoUI.combine() do bind
+		md"""
+		x$0$: $(bind(Slider(-1.0:0.02:1.0,default=0.1;show_value=true))) 
+		y0: $(bind(Slider(-1.0:0.02:1.0,default=0.1;show_value=true))) \
+		"""
+	end
+)
+
+# ╔═╡ 86eb471e-cedf-4e5e-bcac-84476eb21274
+function flow2d(f::Function,u0::Vector{Float64},tmax::Float64,p;
+    xlims=[-1.0,1.0],ylims=[-1.0,1.0],size=(700,500),plotops...)
+    xrange = xlims[2]-xlims[1]
+    yrange = ylims[2]-ylims[1]
+    condition(u,t,integrator) = (u[1]*u[1]+u[2]*u[2]) > max(xrange*xrange,yrange*yrange)
+    affect!(integrator) = terminate!(integrator)
+    sol = solve(ODEProblem(f,u0,(0.0,tmax),p),callback=DiscreteCallback(condition,affect!))
+    p1 = plot(sol,vars=(0,1:2))
+    p2 = plot(sol,vars=(1,2),c=:black,arrow=true,xlims=xlims,ylims=ylims,labels="",xlabel="x",ylabel="y")
+    plot(p1,p2,layout=(1,2),size = size)
+end 
+
+# ╔═╡ 5db59da7-984a-4f90-9a90-6a35cb61778e
+flow2d(lovelinear!,collect(u1),200.0,pars1;size=(800,400))
+
+# ╔═╡ ad546f0a-fdfa-422c-8ed5-3e2b59f9cbfb
+md"""
+
+Although Strogatz’s model was originally intended more to motivate students than
+as a serious description of love affairs, it makes several interesting and
+plausible predictions and suggests extensions that produce an even wider
+range of behavior.
 
 
-We can see that $f(x)$ is an inverted parabola that cuts the horizontal axis always in the fixed points $x=0$ and $x=K$
-and always with the same stability. That is, there are no topological changes (no bifurcations).
-Why inverted? How would it be the other way around in the positives?
 """
 
-# ╔═╡ 77766c99-4142-4acb-a855-ab133e67aa66
+# ╔═╡ d2008fc9-dd22-4725-9355-dacb7ff5821b
+function lovenlinear1!(du,u,p,t)
+	(a,b,c,d,ϵ) = p
+	du[1] = a*u[1]+b*u[2]*(1-ϵ*u[2]*u[2])
+	du[2] = d*u[2]+c*u[1]*(1-ϵ*u[1]*u[1])
+end
+
+# ╔═╡ 40ae473c-3362-468d-a988-0e0c1d85b5ea
 @bind pars2 (
 	PlutoUI.combine() do bind
 		md"""
-		R: $(bind(Slider(0:0.02:2.0,default=0.5;show_value=true))) \
-		K: $(bind(Slider(0.02:0.02:2.0,default=1.0;show_value=true))) \
-		x0: $(bind(Slider(0:0.01:2.0,default=0.01;show_value=true)))
+		a: $(bind(Slider(-1.0:0.02:1.0,default=0.1;show_value=true))) 
+		b: $(bind(Slider(-1.0:0.02:1.0,default=0.1;show_value=true))) \
+		c: $(bind(Slider(-1.0:0.02:1.0,default=0.1;show_value=true))) 
+		d: $(bind(Slider(-1.0:0.02:1.0,default=0.1;show_value=true))) \
+		ϵ: $(bind(Slider(-0.5:0.001:0.5,default=0.0;show_value=true))) 
+		tmax : $(bind(Slider(0:10.0:1000.0,default=100.0;show_value=true)))
 		"""
 	end
 )
 
-# ╔═╡ 16a156b5-92ab-4e1c-ab70-c3b348186c57
-flow1D(logistic,pars2[3],100.0,pars2;xlims=[-0.1,2.0],title="Logistic")
+# ╔═╡ d622eafe-f2d5-4992-ac3f-fabb392bb12a
+# Classification of Romantic Styles for R&J
+begin
+	(a2,b2,c2,d2,ϵ,_)=pars2
+	if (a2>0)
+		if (b2>0)
+			rtitle2 = "Romeo: Eager Beaver"
+		else
+			rtitle2 = "Romeo: Narcissistic"
+		end
+	else
+		if (b2>0)
+			rtitle2 = "Romeo: Cautious"
+		else
+			rtitle2 = "Romeo: Hermit"
+		end
+	end
+	if (c2>0)
+		if (d2>0)
+			jtitle2 = "Juliet: Eager Beaver"
+		else
+			jtitle2 = "Juliet: Narcissistic"
+		end
+	else
+		if (d2>0)
+			jtitle2 = "Juliet: Cautious"
+		else
+			jtitle2 = "Juliet: Hermit"
+		end
+	end
+	if (ϵ>0)
+		title2 = string(rtitle2," | ",jtitle2," | Positive Nonlinearity")
+	elseif (ϵ<0)
+		title2 = string(rtitle2," | ",jtitle2," | Negative Nonlinearity")
+	else
+		title2 = string(rtitle2," | ",jtitle2," | Zero Nonlinearity")
+	end	
+		
+end
 
-# ╔═╡ ad67a3cb-a42f-451d-92a5-301559322c30
-md"""
-## Math addendum 
-
-This equation has two fixed points. One at $x=0$ and the other at $x=K$. To evaluate its stability we calculate the derivative of the vector field $f(x)=Rx(1-x/K)$, which is equal to $f'(x)=R-2Rx/K$, and evaluate it at the fixed points.
-
-- Fixed point $x_*=0$ : $f'(0)=R$ is always positive $\rightarrow$ the fixed point is unstable (repulsive). In its neighborhood, for a small positive population there is an exponential growth with rate R since 1 is much larger than $x/K$.
-
-- Fixed point $x_*=K$: $f'(K)=-R$ is always negative $\rightarrow$ the fixed point is stable (attractor). It represents the maximum population that reaches growth.  If $x$ is slightly less than $K$ then $(1-x/K)$ is positive, the derivative is positive and the population grows. If instead $x$ is slightly higher than $K$ then $(1-x/K)$ is negative, the derivative is negative and the population decreases until reaching equilibrium at $x=K$.
-"""
-
-# ╔═╡ ce4da9bf-316b-45d2-8504-f2a63cdda247
-md"""
-# Logistic Equation with Harvest
-
-Now, we will take a look at a simple population model that traverses an attractor-repeller (or Saddle-Node in 1D) bifurcation. 
-
-All the population models that we will see below are based on the logistic model and add an additional term that accounts for predation, either by another species or by exploitation of the species as a resource. In its simplest version, a constant decreasing term is added to represent harvesting (harvesting, hunting, fishing)
-
-$\dot{x} = Rx\left(1-\frac{x}{K}\right) - H$ 
-
-Warning: this is not a realistic model for a population because it may give negative x values. Because of this we must introduce a cut-off condition when the variable becomes negative: $(u)->(u<0)$.
-
-"""
-
-# ╔═╡ 29474ca0-839b-45de-a7bf-7d91c5ea59aa
-logharvest1(x,p,t)=p[1]*x*(1.0-x/p[2])-p[3];
-
-# ╔═╡ 8fc407f4-a242-4cdc-b7e0-062c8f5782d1
-@bind pars_harvest (
+# ╔═╡ 7862b57f-93c1-4293-8e83-57b7c18dc3fc
+@bind u2 (
 	PlutoUI.combine() do bind
 		md"""
-		R: $(bind(Slider(0:0.02:2.0,default=0.5;show_value=true))) \
-		K: $(bind(Slider(0.02:0.02:2.0,default=1.0;show_value=true))) \
-		H: $(bind(Slider(0.0:0.02:2.0,default=0.1;show_value=true))) \
-		x0: $(bind(Slider(0:0.02:2.0,default=0.5;show_value=true)))
+		x$0$: $(bind(Slider(-1.0:0.02:1.0,default=0.1;show_value=true))) 
+		y0: $(bind(Slider(-1.0:0.02:1.0,default=0.1;show_value=true))) \
 		"""
 	end
 )
 
-# ╔═╡ 794936ae-d9ae-4319-994f-4282c99c4238
-flow1D(logharvest1,pars_harvest[4],300.0,pars_harvest,(u)->(u<0);xlims=[0.0,2.0],title="Logistic with Harvest")
+# ╔═╡ a0662db2-84d5-473c-88a7-19066f8f9de6
+flow2d(lovenlinear1!,collect(u2),pars2[6],pars2;size=(800,400),xlims=[-5,5],ylims=[-5,5])
 
-# ╔═╡ b13d261e-1c1b-41b0-ae86-e20cd2304727
-md"""
-## Critical Slowing Down
-"""
+# ╔═╡ 19903b9c-9d0a-438c-8dec-9488a69ba4be
 
-# ╔═╡ c3757398-060c-412c-997b-58331b2dee04
-@bind pars_csd (
-	PlutoUI.combine() do bind
-		md"""
-		H: $(bind(Slider(0.2:0.002:0.25,default=0.1;show_value=true))) \
-		S: $(bind(Slider(0:0.001:0.1,default=0.0;show_value=true)))
-		"""
-	end
-)
-
-# ╔═╡ f1f04dd4-0447-4e48-9bab-f34058a6a0f1
-flow1D(logharvest1,0.5+sqrt(0.25-pars_csd[1]),200.0,[1.0,1.0,pars_csd[1]],10.0,pars_csd[2],(u)->(u<0);xlims=[0.0,1.0],title="Log whith Harvest perturbed")
-
-# ╔═╡ c803ed90-958c-4d0e-84d5-3e8cc9c8fbfe
-md"""
-# Consumer Equation
-
-The next population model is a bit more realistic and is known as the **consumer equation**. It is a model that appears in macroeconomics as a simplification of the dynamics of consumption of a renewable resource and is made by the logistic equation with a harvest or consumption term that is directly proportional to the abundance of the resource $Px$. The parameter $P$ corresponds to the rate of consumption of the resource and $R$ can be reinterpreted as the rate of production or generation of the renewable resource.  
-
-
-$\dot{x} = Rx\left(1-\frac{x}{K}\right) - Px$ 
-"""
-
-# ╔═╡ b4ea8364-a582-443c-bdb1-46e75a5c4d4e
-# Consumer Equation
-consumer(x,p,t)=p[1]*x*(1.0-x/p[2])-p[3]*x;
-
-# ╔═╡ 5afa3aff-af15-429b-a0fb-9a0dfcad740d
-@bind pars_consumer (
-	PlutoUI.combine() do bind
-		md"""
-		R: $(bind(Slider(0:0.02:1.0,default=0.5;show_value=true))) \
-		K: $(bind(Slider(0.02:0.02:2.0,default=1.0;show_value=true))) \
-		P: $(bind(Slider(0.0:0.01:0.5,default=0.0;show_value=true))) \
-		x0: $(bind(Slider(0:0.02:2.0,default=0.5;show_value=true)))
-		"""
-	end
-)
-
-# ╔═╡ 5018d342-0a51-4275-8c0f-1b5d253c2ec0
-flow1D(consumer,pars_consumer[4],300.0,pars_consumer,xlims=[0.0,2.0],title="Consumer Equation")
-
-# ╔═╡ 84a596c1-3a0a-4edd-a7ea-f3fcd8839c2a
-md"""
-# Logistic Equation with Outbreak
-
-$\dot{x} = Rx\left(1-\displaystyle\frac{x}{K}\right)-P\displaystyle\frac{x^2}{1+x^2}$
-"""
-
-# ╔═╡ 91b2718a-a921-4bae-99c0-91ec9c7e6479
-html"""
-<div style="position: relative; right: 0; top: 0; z-index: 300;"><iframe src="https://www.youtube.com/embed/1CSKTCS6st8" width=500 height=250  frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
-"""
-
-# ╔═╡ 5a0b156e-b0b2-43b8-b15e-bcdb65c154bf
-logoutbreak(x,p,t)=p[1]*x*(1.0-x/p[2])-p[3]*x*x/(1+x*x);
-
-# ╔═╡ 6528501f-3bb2-48a7-b24e-d32400033538
-@bind pars_outbreak (
-	PlutoUI.combine() do bind
-		md"""
-		R: $(bind(Slider(0:0.02:2.0,default=0.25;show_value=true))) \
-		K: $(bind(Slider(0.01:0.02:10.0,default=8.71;show_value=true))) \
-		P: $(bind(Slider(0.0:0.01:1.0,default=0.48;show_value=true))) \
-		x0: $(bind(Slider(0:0.02:8.0,default=0.1;show_value=true)))
-		"""
-	end
-)
-
-# ╔═╡ a3270d8b-f167-4fb9-bcc5-c62c91b39649
-flow1D(logoutbreak,pars_outbreak[4],300.0,pars_outbreak;xlims=[-0.2,8.0],title="Log with Outbreak")
-
-# ╔═╡ 0d0d6d2f-56b2-4e01-b9a4-6e469eac90ad
-html"""
-<div style="position: relative; right: 0; top: 0; z-index: 300;"><iframe src="https://www.youtube.com/embed/MlwAI3BlDsU" width=500 height=250  frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
-"""
-
-# ╔═╡ 76cfd5c8-6298-4ae2-9d2d-9e60deb12f49
-html"""
-<div style="position: relative; right: 0; top: 0; z-index: 300;"><iframe src="https://www.youtube.com/embed/yUEXpUyi404" width=500 height=250  frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
-"""
-
-# ╔═╡ 0bf40552-b627-4fa7-b3ba-1d8c7ed4a568
-html"""
-<div style="position: relative; right: 0; top: 0; z-index: 250;"><iframe src="https://www.youtube.com/embed/Vu9oNWXv4Uk" width=500 height=250  frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
-"""
-
-# ╔═╡ 2ac364c2-cbdd-49b4-9f26-9fe89382be5e
-TableOfContents(title="📚 Table of Contents", indent=true, depth=4, aside=true)
-
-# ╔═╡ 6b6a5e19-5298-4969-b1c9-699aa1cb2996
-html"""
-<style>
-input[type*="range"] {
-	width: 50%;
-}
-</style>
-"""
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -246,9 +232,9 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 DifferentialEquations = "~7.1.0"
 ForwardDiff = "~0.10.30"
 IntervalRootFinding = "~0.5.10"
-Plots = "~1.29.0"
+Plots = "~1.30.1"
 PlutoUI = "~0.7.39"
-StaticArrays = "~1.4.4"
+StaticArrays = "~1.4.7"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -1250,9 +1236,9 @@ version = "1.2.0"
 
 [[deps.Plots]]
 deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers", "GR", "GeometryBasics", "JSON", "Latexify", "LinearAlgebra", "Measures", "NaNMath", "Pkg", "PlotThemes", "PlotUtils", "Printf", "REPL", "Random", "RecipesBase", "RecipesPipeline", "Reexport", "Requires", "Scratch", "Showoff", "SparseArrays", "Statistics", "StatsBase", "UUIDs", "UnicodeFun", "Unzip"]
-git-tree-sha1 = "9e42de869561d6bdf8602c57ec557d43538a92f0"
+git-tree-sha1 = "2402dffcbc5bb1631fb4f10cb5c3698acdce29ea"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
-version = "1.29.1"
+version = "1.30.1"
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "Markdown", "Random", "Reexport", "UUIDs"]
@@ -1887,36 +1873,22 @@ version = "0.9.1+5"
 """
 
 # ╔═╡ Cell order:
-# ╠═38c4e220-d708-11ec-3968-fbbd41c26155
-# ╟─3eca675f-4243-47b5-8bd0-b34f774b73d3
-# ╟─e2271efe-9a67-4496-891b-46f076b367f3
-# ╟─62cba86d-4406-4d16-8715-b29bee7d3178
-# ╟─6d64cc27-1059-4dd7-8f17-1c6fd9a2eca0
-# ╠═4dc32b5a-5794-4d2d-844e-cdb80bec2e7b
-# ╟─aa22c728-662c-4fdb-aae9-b3b411e311e2
-# ╠═16a156b5-92ab-4e1c-ab70-c3b348186c57
-# ╠═77766c99-4142-4acb-a855-ab133e67aa66
-# ╟─ad67a3cb-a42f-451d-92a5-301559322c30
-# ╟─ce4da9bf-316b-45d2-8504-f2a63cdda247
-# ╠═29474ca0-839b-45de-a7bf-7d91c5ea59aa
-# ╟─794936ae-d9ae-4319-994f-4282c99c4238
-# ╟─8fc407f4-a242-4cdc-b7e0-062c8f5782d1
-# ╟─b13d261e-1c1b-41b0-ae86-e20cd2304727
-# ╟─f1f04dd4-0447-4e48-9bab-f34058a6a0f1
-# ╟─c3757398-060c-412c-997b-58331b2dee04
-# ╟─c803ed90-958c-4d0e-84d5-3e8cc9c8fbfe
-# ╠═b4ea8364-a582-443c-bdb1-46e75a5c4d4e
-# ╟─5018d342-0a51-4275-8c0f-1b5d253c2ec0
-# ╟─5afa3aff-af15-429b-a0fb-9a0dfcad740d
-# ╟─84a596c1-3a0a-4edd-a7ea-f3fcd8839c2a
-# ╟─91b2718a-a921-4bae-99c0-91ec9c7e6479
-# ╠═5a0b156e-b0b2-43b8-b15e-bcdb65c154bf
-# ╟─a3270d8b-f167-4fb9-bcc5-c62c91b39649
-# ╟─6528501f-3bb2-48a7-b24e-d32400033538
-# ╟─0d0d6d2f-56b2-4e01-b9a4-6e469eac90ad
-# ╟─76cfd5c8-6298-4ae2-9d2d-9e60deb12f49
-# ╟─0bf40552-b627-4fa7-b3ba-1d8c7ed4a568
-# ╟─2ac364c2-cbdd-49b4-9f26-9fe89382be5e
-# ╟─6b6a5e19-5298-4969-b1c9-699aa1cb2996
+# ╠═f527ceca-f2d1-11ec-3cc5-bd33fdb53d6e
+# ╠═cf2a4cec-ea32-4bd1-a56d-8fde23d3e31c
+# ╟─d777dcf0-600c-4bce-b6cf-da7e57b1c1ae
+# ╠═42638d65-5778-4776-b7f6-20550c515289
+# ╟─0f57818a-9608-4f24-84a0-b5579e72fc2d
+# ╟─7eaf2748-335c-4c5b-a3b7-7942470fa29c
+# ╠═5db59da7-984a-4f90-9a90-6a35cb61778e
+# ╟─dc301dcf-2b27-431d-8604-1c94f6c6d353
+# ╟─59d4e977-7d25-4ef1-98de-9a2a712dfa6c
+# ╟─86eb471e-cedf-4e5e-bcac-84476eb21274
+# ╟─ad546f0a-fdfa-422c-8ed5-3e2b59f9cbfb
+# ╠═d2008fc9-dd22-4725-9355-dacb7ff5821b
+# ╟─d622eafe-f2d5-4992-ac3f-fabb392bb12a
+# ╟─a0662db2-84d5-473c-88a7-19066f8f9de6
+# ╟─40ae473c-3362-468d-a988-0e0c1d85b5ea
+# ╟─7862b57f-93c1-4293-8e83-57b7c18dc3fc
+# ╠═19903b9c-9d0a-438c-8dec-9488a69ba4be
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
