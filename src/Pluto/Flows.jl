@@ -84,11 +84,11 @@ end;
 md"""
 # Logistic Equation (Flows)
 
-Analogously to what we did with the maps, we can limit the population growth by considering an instantaneous growth rate that takes a positive maximum value for a population value $x=0$, that becomes zero for an optimal population value and that becomes negative for larger values:
+Analogously to what we did with the maps, we can limit the population growth by considering an instantaneous growth rate that takes a maximum positive value ($r=r_0$) for zero population, becomes zero ($r=0$) for an optimal population size ($x=1$) and becomes negative for larger values of $x$:
 
 $r = r_0(1-x)$
 
-and the dynamical system (flow) is defined then by the logistic equation with continuous time:
+and the dynamical system (flow) is then defined then by the logistic equation with continuous time:
 
 $\dot{x}=r_0x(1-x)$
 """
@@ -113,6 +113,8 @@ end;
 
 # ╔═╡ 54d209de-d485-44f8-911d-d988792b1057
 md"""
+# Newton's Cooling Law
+
 In this case the variable is the temperature of the object and R is its heat exchange rate (which depends on the specific heat and the contact area). is the ambient temperature. The temperature evolution is given by
 """
 
@@ -136,13 +138,6 @@ begin
 	reset2
 	f2=Flow(logistic,x02,0.0,[])
 	p1b = plot(legend=false);
-end;
-
-# ╔═╡ 2f3f5e94-434e-46bc-94f2-0c4f8eda284d
-function plot_state!(p1,x,t;alpha=1.0)
-	title = "t=$t   xₜ = $(round(x,digits=8))"
-	scatter!(p1,[x],[0],c=:red,alpha=alpha)
-	title!(p1,title)
 end;
 
 # ╔═╡ f480e291-b67c-4a2f-9f44-914a340df81e
@@ -1776,24 +1771,23 @@ version = "0.9.1+5"
 # ╟─4ad5df20-f85d-11ec-3803-a7ed7ed8f2f3
 # ╟─157c155f-241e-4d39-93f7-35997d83191d
 # ╟─9490e7f8-668e-4acc-8efd-dcc4d355acb9
-# ╠═d9bb5aa8-2708-40c3-8d42-3b21e6d634c0
-# ╠═936816f9-5a79-474c-8847-96a1f0cb9a6a
+# ╟─d9bb5aa8-2708-40c3-8d42-3b21e6d634c0
+# ╟─936816f9-5a79-474c-8847-96a1f0cb9a6a
 # ╟─dd1af6a9-c048-4845-8858-8051d23f6bee
-# ╠═75d2969a-b83c-406d-90d5-42e4236042e4
-# ╠═a204c1f9-8fd9-4feb-971d-4cf008730641
-# ╠═9b3a5d92-6f53-486d-aa14-d648c7330869
-# ╠═6a97c988-3ec8-4271-b61c-47c40b1deee6
-# ╠═7e7239c2-2edf-4005-94be-90c85b282b01
+# ╟─75d2969a-b83c-406d-90d5-42e4236042e4
+# ╟─a204c1f9-8fd9-4feb-971d-4cf008730641
+# ╟─9b3a5d92-6f53-486d-aa14-d648c7330869
+# ╟─6a97c988-3ec8-4271-b61c-47c40b1deee6
+# ╟─7e7239c2-2edf-4005-94be-90c85b282b01
 # ╟─1115e7e3-06f2-4f51-a71d-85ada76ce3a9
-# ╠═807c6201-c455-473d-96e1-9d99dfaa7c55
-# ╠═50153c10-d204-4e8b-8bcf-007e22f287ee
-# ╠═60c21a51-ce49-418d-8a7e-9a2c339af6e2
-# ╠═5dfedd16-77be-4350-9e75-afae14684fe2
+# ╟─807c6201-c455-473d-96e1-9d99dfaa7c55
+# ╟─50153c10-d204-4e8b-8bcf-007e22f287ee
+# ╟─60c21a51-ce49-418d-8a7e-9a2c339af6e2
+# ╟─5dfedd16-77be-4350-9e75-afae14684fe2
 # ╠═54d209de-d485-44f8-911d-d988792b1057
-# ╠═3a6821d7-392a-4dd4-b5c8-c247edf9132f
-# ╠═2f3f5e94-434e-46bc-94f2-0c4f8eda284d
-# ╠═f480e291-b67c-4a2f-9f44-914a340df81e
-# ╠═e1e02db0-de4b-4349-af8e-acac7bf046f5
-# ╠═f1d2afd0-e6b4-4272-91f7-1b225759534f
+# ╟─3a6821d7-392a-4dd4-b5c8-c247edf9132f
+# ╟─f480e291-b67c-4a2f-9f44-914a340df81e
+# ╟─e1e02db0-de4b-4349-af8e-acac7bf046f5
+# ╟─f1d2afd0-e6b4-4272-91f7-1b225759534f
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
