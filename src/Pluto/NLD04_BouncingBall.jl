@@ -14,196 +14,176 @@ macro bind(def, element)
     end
 end
 
-# ╔═╡ 1097d874-4468-4e76-bdbc-c893a5dbfdc0
-using Plots, PlutoUI, DifferentialEquations
+# ╔═╡ 794bf502-f9e9-11ec-03c5-ad174a6ccd59
+using Plots, PlutoUI, DifferentialEquations, ForwardDiff, StaticArrays, IntervalRootFinding
 
-# ╔═╡ 18a83e00-0dd4-4fe7-a5be-644361f875d3
+# ╔═╡ a830882a-8a52-4171-a0da-0449d4f5c901
+include("../NLD_utils.jl")
+
+# ╔═╡ 69c47e84-0bb9-425a-8cc8-3c50e2ffa2b3
 TableOfContents()
 
-# ╔═╡ 4ad5df20-f85d-11ec-3803-a7ed7ed8f2f3
+# ╔═╡ 9969e088-322f-455b-8f3c-edb0ba8faed1
 md"""
-# Dynamical Systems. Flows in 1D
+# Bouncing Ball
+This system is simpler than the previous one because the acceleration is constant and negative. The system for a ball falling by the action of gravity can be written simply as follows
 
-A **flow** is a dynamical system that evolves continuosly over time. 
+$\dot{h} = v$
 
-A **trajectory** follows a continuous path in the space of states.
+$\dot{v} = -g -\gamma v$
 
-For one-dimensional flows the trajectory is given by the evolution of the single variable as a function of time: $x(t)$
+where $h$ is the heigth of the ball from the ground, $v$ its vertical velocity and $g$ is the gravity acceleration. We also add dissipation, a drag force or air resistance that is always present and acting against the velocity with controled by the parameter $\gamma$ (we can turn it off later). 
 
-The deterministic rule for the time evolution is given by the **instantaneous rate of change in time** of the variable, expressed as the time derivative: $\frac{dx}{dt}$, also abbreviated as $\dot{x}$.
+However, we have to add a condition of bouncing on the ground. Let us consider two cases: Elastic rebound (Ball Soft) and rigid rebound (Ball Hard).
 
-Therefore as the evolution rule depends only on the state of the system $x$, a one-dimensional flow is fully characterized by the equation:
+For the elastic rebound case we assume that when the height reaches zero it collides with a spring of elastic constant $k$ that makes it go back up (in this case the heigth of the ball can take negative values because of the deformation), this implies that we have to evaluate the sign of $h$ and apply the vector field written above only for $h>0$ and add a term with the elastic force for $h\leq 0$.
 
-$\dot{x}=f(x)$
+### Ball Soft
 
-The function $f$ is known as the **vector field** of the flow (the reason for this name will become clear later).
-"""
 
-# ╔═╡ 157c155f-241e-4d39-93f7-35997d83191d
-md"""
-# Simplest example: Continuous population with continuous time
+$\dot{h} = v$
 
-As in the continuous population discrete time example, the variable $x$ corresponds to the size of the population, expressed as a continuous value after some normalization, but now the time evolution is also continuous. Therefore, the growth rate is given by its instantaneous value $r$, and the equation for the flow is written as:
+$\dot{v} = -g  -\gamma v\quad [if \quad h>0]$
 
-$\dot{x}=rx$
-
-In the animated graphic below we can set the initial value of the population $x(0)$ and the instantaneous rate of growth $r$ with the sliders. The thirds slider control the refresh rate of the graphics.
-"""
-
-# ╔═╡ 9490e7f8-668e-4acc-8efd-dcc4d355acb9
-md"""
-$(@bind ticks Clock(1))
-$(@bind reset Button("Reset"))
-"""
-
-# ╔═╡ d9bb5aa8-2708-40c3-8d42-3b21e6d634c0
-md"""
-x($0$) : $(@bind x0 Slider(0.0:0.02:1.0,default=0.1;show_value=true)) \
-r : $(@bind R Slider(-0.1:0.001:0.1,default=-0.001;show_value=true)) \
-t\_refresh : $(@bind tail Slider(0.001:0.001:1.0,default=0.1;show_value=true)) \
-"""
-
-# ╔═╡ dd1af6a9-c048-4845-8858-8051d23f6bee
-md"""
-The upper graphics displays snapshots (with time intervals *t_refresh*) of the states of the dynamical system given by the variable $x$ as red dots in the state space (black line). 
-
-For small values of *t_refresh* the dots draw a continuos red line that corresponds to the **trajectory** of the dynamical system. 
-
-The lower graph displays the value of the variable $x$ as a function of time $t$ as a continuous blue line. This is the **solution** of the system.
-
-Starting from $x(0)$ at time $t=0$, the population evolves in time either growing without bounds (for $r>0$) or decreasing toward zero (for $r<0$). A marginal case occurs when $r=0$ and the population remains fixed at the initial value.
+$\dot{v} = -g - kh -\gamma v \quad [if \quad h\leq 0]$
 
 """
 
-# ╔═╡ 75d2969a-b83c-406d-90d5-42e4236042e4
-function linear(u,p,t)
-	p[1]*u[1]
-end;	
+# ╔═╡ 6527dc0e-6c30-4d84-8f41-5ec3e42eaf86
+function ballsoft!(du,u,p,t)
+    (g,K,γ) = p
+    du[1] = u[2]
+    if (u[1]>0)
+        du[2] = -g - γ*u[2]
+    else
+        du[2] = -g-K*u[1] - γ*u[2]
+    end      
+end
 
-# ╔═╡ 6a97c988-3ec8-4271-b61c-47c40b1deee6
+# ╔═╡ 65bafd81-f8ff-49d4-a882-3007c8c8a71a
 md"""
-# Logistic Equation (Flows)
-
-Analogously to what we did with the maps, we can limit the population growth by considering an instantaneous growth rate that takes a maximum positive value ($r=r_0$) for zero population, becomes zero ($r=0$) for an optimal population size ($x=1$) and becomes negative for larger values of $x$:
-
-$r = r_0(1-x)$
-
-and the dynamical system (flow) is then defined then by the logistic equation with continuous time:
-
-$\dot{x}=r_0x(1-x)$
+h(0) $(@bind h0 Slider(0.5:1:50,default=30.0;show_value=true)) 
+K : $(@bind K Slider(10.0:5.0:50.0,default=20.0;show_value=true)) \
+γ : $(@bind γ2 Slider(0.0:0.001:0.2,default=0.1;show_value=true))
+tmax : $(@bind tmax1 Slider(0.5:0.5:40.0,default=10.0;show_value=true))
 """
 
-# ╔═╡ 7e7239c2-2edf-4005-94be-90c85b282b01
-md"""
-$(@bind ticks2 Clock(1))
-$(@bind reset2 Button("Reset"))
-"""
+# ╔═╡ 507ddd8e-9609-40d0-bd4f-682f72475f93
+flow2d_vectorfield(ballsoft!,[h0,0],tmax1,[9.8,K,γ2];title="Ball Soft",xlims=[-10,50.1],ylims=[-30,30])
 
-# ╔═╡ 1115e7e3-06f2-4f51-a71d-85ada76ce3a9
-md"""
-x($0$) : $(@bind x02 Slider(0.0:0.02:2.0,default=0.1;show_value=true)) \
-r₀ : $(@bind r0 Slider(0.01:0.01:4.0,default=1.0;show_value=true)) \
-t\_refresh : $(@bind tail2 Slider(0.001:0.001:1.0,default=0.1;show_value=true)) \
-"""
-
-# ╔═╡ 50153c10-d204-4e8b-8bcf-007e22f287ee
-function logistic(u,p,t)
-	p[1]*u[1]*(1.0-u[1])
-end;	
-
-# ╔═╡ 54d209de-d485-44f8-911d-d988792b1057
-md"""
-# Newton's Cooling Law
-
-In this case the variable is the temperature of the object and R is its heat exchange rate (which depends on the specific heat and the contact area). is the ambient temperature. The temperature evolution is given by
-"""
-
-# ╔═╡ 3a6821d7-392a-4dd4-b5c8-c247edf9132f
-mutable struct Flow
-	f
-	x0 
-	t
-	xv 
+# ╔═╡ 6e3ebd5c-b797-44f9-82ba-8ad9a18152eb
+begin
+	sol3 = solve(ODEProblem(ballsoft!, [h0,0], (0,tmax1), [9.8,K,γ2]))
+	pa3 = plot(sol3,vars=(0,1),legend=false,xlabel="t",ylabel="x")
+	pb3 = plot(sol3,vars=(0,2),legend=false,xlabel="t",ylabel="v")
+	plot!(pa3,[0,tmax1],[0,0],c=:black)
+	plot!(pb3,[0,tmax1],[0,0],c=:black)
+	plot(pa3,pb3,layout=(2,1),size=(900,400))
 end	
 
-# ╔═╡ 9b3a5d92-6f53-486d-aa14-d648c7330869
-begin
-	reset
-	f1=Flow(linear,x0,0.0,[])
-	p0b = plot(legend=false);
-end;
+# ╔═╡ 8826d6ea-a2cb-430a-9e03-5fd459df24b6
+md"""
+# Bouncing Ball in a Bowl
 
-# ╔═╡ 5dfedd16-77be-4350-9e75-afae14684fe2
-begin
-	reset2
-	f2=Flow(logistic,x02,0.0,[])
-	p1b = plot(legend=false);
-end;
+This is one of the simplest physical systems that exhibits chaos:
 
-# ╔═╡ f480e291-b67c-4a2f-9f44-914a340df81e
-html"""
-<style>
-input[type*="range"] {
-	width: 60%;
-}
-</style>
+It is a ball bouncing inside a circular cavity. Unlike the original bouncing ball that occurred in one dimension, this physical system is two dimensional, so we need four variables to describe it: the position ($x,y$) , and the velocity components ($v_x,v_y$). The equations are the same as the original bouncing ball without dissipation in the coordinate and in fact the system seems overly simple:
+
+$\dot{x}=v_x$
+
+$\dot{y}=v_y$
+
+$\dot{v_x}=0$
+
+$\dot{v_y}=-g$
+
+
+The main complication here comes from the boundary conditions, we will consider a "hard" collision, which if we assume the origin of coordinates in the center of the cavity and the radius of the same equal to will be when the condition is met:
+
+$x^2+y^2=1$
+
+In that case we suppose a perfectly elastic collision first and the effect of the reflection is to **invert the normal component of the velocity** and to **conserve the tangential one**.
+Written in cartesian components, this seems a bit complicated but it is not difficult to compute.
+
+$v_x \rightarrow v_x(y^2-x^2)-2xyv_y$
+
+$v_y \rightarrow v_y(x^2-y^2)-2xyv_x$
+
+
+We write the equations of the system, the condition for the collision and the function bounce! to change the direction of the velocity using the formulae above.
 """
 
-# ╔═╡ e1e02db0-de4b-4349-af8e-acac7bf046f5
-function plot_state_flow(x,xrange,t)
-	title = "t=$(round(x,digits=4))  x(t) = $(round(x,digits=8))"
-	p1 = plot(xlims=xrange,ylims=(-0.1,0.1),size=(800,100),yaxis=false,yticks=false,title=title,legend=false)
-	plot!(p1,[xrange[1],xrange[2]],[0,0],c=:black)
-	#scatter!(p1,[x],[0],c=:red)
-end;
+# ╔═╡ 85011323-6e1b-4f28-8e94-9c9d2e3ae686
+function ballcirclehard!(du,u,p,t)
+  du[1] = u[3]
+  du[2] = u[4]
+  du[3] = 0  
+  du[4] = -p[1]
+  du  
+end
 
-# ╔═╡ a204c1f9-8fd9-4feb-971d-4cf008730641
-p0 = plot_state_flow(f1.x0,[0,2.0],0.0);
+# ╔═╡ 295c9623-7657-4ec4-ab35-af8d068adacc
+function collision(u,t,integrator)
+  1.0-sqrt(u[1]*u[1]+u[2]*u[2])
+end
 
-# ╔═╡ 60c21a51-ce49-418d-8a7e-9a2c339af6e2
-p1 = plot_state_flow(f2.x0,[0,2.0],0.0);
+# ╔═╡ 55a5f7f0-e0fe-41dd-891a-9d733862dc9f
+function bounce!(integrator)
+  (x,y,vx,vy) = integrator.u
+  integrator.u[3] = vx*(y*y-x*x)-2*x*y*vy
+  integrator.u[4] = vy*(x*x-y*y)-2*x*y*vx
+end
 
-# ╔═╡ f1d2afd0-e6b4-4272-91f7-1b225759534f
-function plot_state_flow!(p1,x,t;alpha=1.0)
-	title = "t=$(round(x,digits=4))   x(t) = $(round(x,digits=8))"
-	scatter!(p1,[x],[0],c=:red,alpha=alpha)
-	title!(p1,title)
-end;
+# ╔═╡ d18add15-daa9-4a46-9a1a-9304e74459fe
+md"""
+δ : $(@bind δ Slider(-8:0.5:-2,default=-3;show_value=true)) 
+tmax : $(@bind tmax Slider(0.1:0.1:40,default=10;show_value=true)) \
+"""
 
-
-# ╔═╡ 936816f9-5a79-474c-8847-96a1f0cb9a6a
+# ╔═╡ fa92921c-0d13-4e2f-ae97-37af89acb500
 begin
-	ticks
-	sol = solve(ODEProblem(f1.f,f1.x0,(f1.t,f1.t+tail),[R]))
-	f1.x0 = sol.u[end]
-	f1.t = sol.t[end]
-	plot_state_flow!(p0,f1.x0,f1.t;alpha=0.3)
-	plot!(p0b,sol.t,getindex.(sol.u,1),c=:blue)
-	plot(p0,p0b,layout=grid(2,1,heights=[0.2 ,0.8]))
+	u1 = [0.5,0.85,0.0,0.0]
+	u2 = [0.5-10^δ,0.85,0.0,0.0]
+	tspan = (0.0,tmax)
+	g = 1.0
+	sol1 = solve(ODEProblem(ballcirclehard!,u1,tspan,[g]), callback=ContinuousCallback(collision,bounce!);)
+	sol2 = solve(ODEProblem(ballcirclehard!,u2,tspan,[g]), callback=ContinuousCallback(collision,bounce!);)
+end;
+
+# ╔═╡ 3a3ad2f0-bfa8-47cb-9d07-1d4215dcad18
+begin
+	plot(sol1,vars=(1,2),plotdensity=5000,xlims=(-1,1),ylims=(-1,1),label="u1")
+	plot!(sol2,vars=(1,2),plotdensity=5000,xlims=(-1,1),ylims=(-1,1),label="u2")
+	plot!(cos.(2*pi*(0:0.001:1)),sin.(2*pi*(0:0.001:1)),label="",size=(600,600))
+	scatter!(sol1.u[end][1:1],sol1.u[end][2:2], 
+	color=:blue,markersize=10,alpha=0.5,label="1")
+	scatter!(sol2.u[end][1:1],sol2.u[end][2:2], color=:red,markersize=10,alpha=0.5,label="2")
 end	
 
-# ╔═╡ 807c6201-c455-473d-96e1-9d99dfaa7c55
+# ╔═╡ a5fcf13e-7ff9-4cd4-920d-e892e5f48a0c
 begin
-	ticks2
-	sol2 = solve(ODEProblem(f2.f,f2.x0,(f2.t,f2.t+tail2),[r0]))
-	f2.x0 = sol2.u[end]
-	f2.t = sol2.t[end]
-	plot_state_flow!(p1,f2.x0,f2.t;alpha=0.3)
-	plot!(p1b,sol2.t,getindex.(sol2.u,1),c=:blue)
-	plot(p1,p1b,layout=grid(2,1,heights=[0.2 ,0.8]))
+	ts = range(0, stop=tmax, length=5000)
+	dd = (sol1(ts,idxs=2)-sol2(ts,idxs=2)).^2+(sol1(ts,idxs=1)-sol2(ts,idxs=1)).^2
+	plot(ts,0.5*log10.(dd),size=(800,300),legend=false,xlabel="time",ylabel="log₁₀  distance")
 end	
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+IntervalRootFinding = "d2bf35a9-74e0-55ec-b149-d360ff49b807"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
 DifferentialEquations = "~7.2.0"
+ForwardDiff = "~0.10.30"
+IntervalRootFinding = "~0.5.10"
 Plots = "~1.31.1"
 PlutoUI = "~0.7.39"
+StaticArrays = "~1.5.0"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -212,7 +192,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.0-rc1"
 manifest_format = "2.0"
-project_hash = "c3257bab2ed7893223ae2ea634cec3b9b8c224f9"
+project_hash = "df42c3d26c6e01443d80f1628fde4be91eaa876d"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -250,9 +230,9 @@ version = "0.1.14"
 
 [[deps.ArrayInterfaceGPUArrays]]
 deps = ["Adapt", "ArrayInterfaceCore", "GPUArraysCore", "LinearAlgebra"]
-git-tree-sha1 = "02ec61006f49c43607a34cbd036b3d68485d38aa"
+git-tree-sha1 = "febba7add2873aecc0b6620b55969e73ec875bce"
 uuid = "6ba088a2-8465-4c0a-af30-387133b534db"
-version = "0.2.0"
+version = "0.2.1"
 
 [[deps.ArrayInterfaceOffsetArrays]]
 deps = ["ArrayInterface", "OffsetArrays", "Static"]
@@ -318,6 +298,18 @@ deps = ["CpuId", "IfElse", "Static"]
 git-tree-sha1 = "b1a532a582dd18b34543366322d390e1560d40a9"
 uuid = "2a0fbf3d-bb9c-48f3-b0a9-814d99fd7ab9"
 version = "0.1.23"
+
+[[deps.CRlibm]]
+deps = ["CRlibm_jll"]
+git-tree-sha1 = "32abd86e3c2025db5172aa182b982debed519834"
+uuid = "96374032-68de-5a5b-8d9e-752f78720389"
+version = "1.0.1"
+
+[[deps.CRlibm_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "e329286945d0cfc04456972ea732551869af1cfc"
+uuid = "4e9b3aee-d8a1-5a3d-ad8b-7d824db253f0"
+version = "1.0.1+0"
 
 [[deps.Cairo_jll]]
 deps = ["Artifacts", "Bzip2_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
@@ -451,9 +443,9 @@ version = "0.4.0"
 
 [[deps.DiffEqBase]]
 deps = ["ArrayInterfaceCore", "ChainRulesCore", "DataStructures", "Distributions", "DocStringExtensions", "FastBroadcast", "ForwardDiff", "FunctionWrappers", "LinearAlgebra", "Logging", "MuladdMacro", "NonlinearSolve", "Parameters", "Printf", "RecursiveArrayTools", "Reexport", "Requires", "SciMLBase", "Setfield", "SparseArrays", "StaticArrays", "Statistics", "ZygoteRules"]
-git-tree-sha1 = "79b3e2d3760a967c04d193aeea1d5e5f592a07ac"
+git-tree-sha1 = "9862c61c6049b0ad5a6b433e31d2c6c8ff373056"
 uuid = "2b5f629d-d688-5b77-993f-72d75c75574e"
-version = "6.92.1"
+version = "6.92.2"
 
 [[deps.DiffEqCallbacks]]
 deps = ["DataStructures", "DiffEqBase", "ForwardDiff", "LinearAlgebra", "NLsolve", "Parameters", "RecipesBase", "RecursiveArrayTools", "SciMLBase", "StaticArrays"]
@@ -497,9 +489,9 @@ uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
 [[deps.Distributions]]
 deps = ["ChainRulesCore", "DensityInterface", "FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SparseArrays", "SpecialFunctions", "Statistics", "StatsBase", "StatsFuns", "Test"]
-git-tree-sha1 = "0597dffe1268516192ff4ddebdb4d8937254512d"
+git-tree-sha1 = "d530092b57aef8b96b27694e51c575b09c7f0b2e"
 uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
-version = "0.25.63"
+version = "0.25.64"
 
 [[deps.DocStringExtensions]]
 deps = ["LibGit2"]
@@ -524,6 +516,11 @@ git-tree-sha1 = "3f3a2501fa7236e9b911e0f7a588c657e822bb6d"
 uuid = "5ae413db-bbd1-5e63-b57d-d24a61df00f5"
 version = "2.2.3+0"
 
+[[deps.ErrorfreeArithmetic]]
+git-tree-sha1 = "d6863c556f1142a061532e79f611aa46be201686"
+uuid = "90fa49ef-747e-5e6f-a989-263ba693cf1a"
+version = "0.5.2"
+
 [[deps.Expat_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "bad72f730e9e91c08d9427d5e8db95478a3c323d"
@@ -535,6 +532,11 @@ deps = ["ArrayInterfaceCore", "GPUArraysCore", "GenericSchur", "LinearAlgebra", 
 git-tree-sha1 = "b40c9037e1a33990466bc5d224ced34b34eebdb0"
 uuid = "d4d017d3-3776-5f7e-afef-a10c40355c18"
 version = "1.18.0"
+
+[[deps.ExprTools]]
+git-tree-sha1 = "56559bbef6ca5ea0c0818fa5c90320398a6fbf8d"
+uuid = "e2ba6199-217a-4e67-a87a-7c52f15ade04"
+version = "0.1.8"
 
 [[deps.FFMPEG]]
 deps = ["FFMPEG_jll"]
@@ -558,6 +560,12 @@ version = "0.2.1"
 git-tree-sha1 = "acebe244d53ee1b461970f8910c235b259e772ef"
 uuid = "9aa1b823-49e4-5ca5-8b0f-3971ec8bab6a"
 version = "0.3.2"
+
+[[deps.FastRounding]]
+deps = ["ErrorfreeArithmetic", "LinearAlgebra"]
+git-tree-sha1 = "6344aa18f654196be82e62816935225b3b9abe44"
+uuid = "fa42c844-2597-5d31-933b-ebd51ab2693f"
+version = "0.3.1"
 
 [[deps.FileWatching]]
 uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
@@ -741,9 +749,33 @@ git-tree-sha1 = "f550e6e32074c939295eb5ea6de31849ac2c9625"
 uuid = "83e8ac13-25f8-5344-8a64-a9f2b223428f"
 version = "0.5.1"
 
+[[deps.InlineStrings]]
+deps = ["Parsers"]
+git-tree-sha1 = "a8671d5c9670a62cb36b7d44c376bdb09181aa26"
+uuid = "842dd82b-1e85-43dc-bf29-5d0ee9dffc48"
+version = "1.1.3"
+
 [[deps.InteractiveUtils]]
 deps = ["Markdown"]
 uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
+
+[[deps.IntervalArithmetic]]
+deps = ["CRlibm", "FastRounding", "LinearAlgebra", "Markdown", "Random", "RecipesBase", "RoundingEmulator", "SetRounding", "StaticArrays"]
+git-tree-sha1 = "421f305e970dd1d2c8339c93b7674fd3a698ed06"
+uuid = "d1acc4aa-44c8-5952-acd4-ba5d80a2a253"
+version = "0.20.6"
+
+[[deps.IntervalRootFinding]]
+deps = ["ForwardDiff", "IntervalArithmetic", "LinearAlgebra", "Polynomials", "Reexport", "StaticArrays"]
+git-tree-sha1 = "b6969692c800cc5b90608fbd3be83189edc5e446"
+uuid = "d2bf35a9-74e0-55ec-b149-d360ff49b807"
+version = "0.5.10"
+
+[[deps.Intervals]]
+deps = ["Dates", "Printf", "RecipesBase", "Serialization", "TimeZones"]
+git-tree-sha1 = "f3c7f871d642d244e7a27e3fb81e8441e13230d8"
+uuid = "d8418881-c3e1-53bb-8760-2df7ec849ed5"
+version = "1.8.0"
 
 [[deps.InverseFunctions]]
 deps = ["Test"]
@@ -848,6 +880,10 @@ deps = ["ArrayInterface", "ArrayInterfaceOffsetArrays", "ArrayInterfaceStaticArr
 git-tree-sha1 = "b67e749fb35530979839e7b4b606a97105fe4f1c"
 uuid = "10f19ff3-798f-405d-979b-55457f8fc047"
 version = "0.1.10"
+
+[[deps.LazyArtifacts]]
+deps = ["Artifacts", "Pkg"]
+uuid = "4af54fe1-eca0-43a8-85a7-787d91b784e3"
 
 [[deps.LevyArea]]
 deps = ["LinearAlgebra", "Random", "SpecialFunctions"]
@@ -972,10 +1008,10 @@ deps = ["Base64"]
 uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
 
 [[deps.MbedTLS]]
-deps = ["Dates", "MbedTLS_jll", "Random", "Sockets"]
-git-tree-sha1 = "1c38e51c3d08ef2278062ebceade0e46cefc96fe"
+deps = ["Dates", "MbedTLS_jll", "MozillaCACerts_jll", "Random", "Sockets"]
+git-tree-sha1 = "891d3b4e8f8415f53108b4918d0183e61e18015b"
 uuid = "739be429-bea8-5141-9913-cc70e7f3736d"
-version = "1.0.3"
+version = "1.1.0"
 
 [[deps.MbedTLS_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -996,6 +1032,12 @@ version = "1.0.2"
 [[deps.Mmap]]
 uuid = "a63ad114-7e13-5084-954f-fe012c677804"
 
+[[deps.Mocking]]
+deps = ["Compat", "ExprTools"]
+git-tree-sha1 = "29714d0a7a8083bba8427a4fbfb00a540c681ce7"
+uuid = "78c3b35d-d492-501b-9361-3d52fe80e533"
+version = "0.7.3"
+
 [[deps.MozillaCACerts_jll]]
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
 version = "2022.2.1"
@@ -1004,6 +1046,12 @@ version = "2022.2.1"
 git-tree-sha1 = "c6190f9a7fc5d9d5915ab29f2134421b12d24a68"
 uuid = "46d2c3a1-f734-5fdb-9937-b9b9aeba4221"
 version = "0.2.2"
+
+[[deps.MutableArithmetics]]
+deps = ["LinearAlgebra", "SparseArrays", "Test"]
+git-tree-sha1 = "4e675d6e9ec02061800d6cfb695812becbd03cdf"
+uuid = "d8a4904e-b15c-11e9-3269-09a3773c0cb0"
+version = "1.0.4"
 
 [[deps.NLSolversBase]]
 deps = ["DiffResults", "Distributed", "FiniteDiff", "ForwardDiff"]
@@ -1166,6 +1214,12 @@ git-tree-sha1 = "4cd738fca4d826bef1a87cbe43196b34fa205e6d"
 uuid = "1d0040c9-8b98-4ee7-8388-3f51789ca0ad"
 version = "0.1.6"
 
+[[deps.Polynomials]]
+deps = ["Intervals", "LinearAlgebra", "MutableArithmetics", "RecipesBase"]
+git-tree-sha1 = "a1f7f4e41404bed760213ca01d7f384319f717a5"
+uuid = "f27b6e38-b328-58d1-80ce-0feddd5e7a45"
+version = "2.0.25"
+
 [[deps.PositiveFactorizations]]
 deps = ["LinearAlgebra"]
 git-tree-sha1 = "17275485f373e6673f7e7f97051f703ed5b15b20"
@@ -1278,6 +1332,11 @@ git-tree-sha1 = "68db32dff12bb6127bac73c209881191bf0efbb7"
 uuid = "f50d1b31-88e8-58de-be2c-1cc44531875f"
 version = "0.3.0+0"
 
+[[deps.RoundingEmulator]]
+git-tree-sha1 = "40b9edad2e5287e05bd413a38f61a8ff55b9557b"
+uuid = "5eaf0fd0-dfba-4ccb-bf02-d820a40db705"
+version = "0.2.1"
+
 [[deps.SHA]]
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
 version = "0.7.0"
@@ -1313,6 +1372,11 @@ version = "1.1.0"
 
 [[deps.Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
+
+[[deps.SetRounding]]
+git-tree-sha1 = "d7a25e439d07a17b7cdf97eecee504c50fedf5f6"
+uuid = "3cc68bcd-71a2-5612-b932-767ffbe40ab0"
+version = "0.2.1"
 
 [[deps.Setfield]]
 deps = ["ConstructionBase", "Future", "MacroTools", "Requires"]
@@ -1482,6 +1546,12 @@ deps = ["ManualMemory"]
 git-tree-sha1 = "f8629df51cab659d70d2e5618a430b4d3f37f2c3"
 uuid = "8290d209-cae3-49c0-8002-c8c24d57dab5"
 version = "0.5.0"
+
+[[deps.TimeZones]]
+deps = ["Dates", "Downloads", "InlineStrings", "LazyArtifacts", "Mocking", "Printf", "RecipesBase", "Serialization", "Unicode"]
+git-tree-sha1 = "0a4d8838dc28b4bcfaa3a20efb8d63975ad6781d"
+uuid = "f269a46b-ccf7-5d73-abea-4c690281aa53"
+version = "1.8.0"
 
 [[deps.TreeViews]]
 deps = ["Test"]
@@ -1766,28 +1836,21 @@ version = "0.9.1+5"
 """
 
 # ╔═╡ Cell order:
-# ╠═1097d874-4468-4e76-bdbc-c893a5dbfdc0
-# ╟─18a83e00-0dd4-4fe7-a5be-644361f875d3
-# ╟─4ad5df20-f85d-11ec-3803-a7ed7ed8f2f3
-# ╟─157c155f-241e-4d39-93f7-35997d83191d
-# ╟─9490e7f8-668e-4acc-8efd-dcc4d355acb9
-# ╟─d9bb5aa8-2708-40c3-8d42-3b21e6d634c0
-# ╟─936816f9-5a79-474c-8847-96a1f0cb9a6a
-# ╟─dd1af6a9-c048-4845-8858-8051d23f6bee
-# ╟─75d2969a-b83c-406d-90d5-42e4236042e4
-# ╟─a204c1f9-8fd9-4feb-971d-4cf008730641
-# ╟─9b3a5d92-6f53-486d-aa14-d648c7330869
-# ╟─6a97c988-3ec8-4271-b61c-47c40b1deee6
-# ╟─7e7239c2-2edf-4005-94be-90c85b282b01
-# ╟─1115e7e3-06f2-4f51-a71d-85ada76ce3a9
-# ╟─807c6201-c455-473d-96e1-9d99dfaa7c55
-# ╟─50153c10-d204-4e8b-8bcf-007e22f287ee
-# ╟─60c21a51-ce49-418d-8a7e-9a2c339af6e2
-# ╟─5dfedd16-77be-4350-9e75-afae14684fe2
-# ╠═54d209de-d485-44f8-911d-d988792b1057
-# ╟─3a6821d7-392a-4dd4-b5c8-c247edf9132f
-# ╟─f480e291-b67c-4a2f-9f44-914a340df81e
-# ╟─e1e02db0-de4b-4349-af8e-acac7bf046f5
-# ╟─f1d2afd0-e6b4-4272-91f7-1b225759534f
+# ╠═794bf502-f9e9-11ec-03c5-ad174a6ccd59
+# ╠═a830882a-8a52-4171-a0da-0449d4f5c901
+# ╟─69c47e84-0bb9-425a-8cc8-3c50e2ffa2b3
+# ╟─9969e088-322f-455b-8f3c-edb0ba8faed1
+# ╠═6527dc0e-6c30-4d84-8f41-5ec3e42eaf86
+# ╟─65bafd81-f8ff-49d4-a882-3007c8c8a71a
+# ╟─507ddd8e-9609-40d0-bd4f-682f72475f93
+# ╟─6e3ebd5c-b797-44f9-82ba-8ad9a18152eb
+# ╟─8826d6ea-a2cb-430a-9e03-5fd459df24b6
+# ╠═85011323-6e1b-4f28-8e94-9c9d2e3ae686
+# ╠═295c9623-7657-4ec4-ab35-af8d068adacc
+# ╠═55a5f7f0-e0fe-41dd-891a-9d733862dc9f
+# ╟─d18add15-daa9-4a46-9a1a-9304e74459fe
+# ╟─3a3ad2f0-bfa8-47cb-9d07-1d4215dcad18
+# ╟─fa92921c-0d13-4e2f-ae97-37af89acb500
+# ╟─a5fcf13e-7ff9-4cd4-920d-e892e5f48a0c
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
