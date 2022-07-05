@@ -92,9 +92,9 @@ t\_refresh : $(@bind tail Slider(0.001:0.001:0.1,default=0.02;show_value=true))
 md"""
 ## Vector field 
 
-We can also display the **vector field** ($f,g$) as vectors (arrows) attached to a grid of points in the state space ($x,y$). At each point, vectors are headed toward the future direction of the trajectory passing through that point, and are tangent to this curve. 
+We can also display the **vector field** ($f,g$) as vectors (arrows) attached to a grid of points in the state space ($x,v$). At each point, vectors are headed toward the future direction of the trajectory passing through that point, and are tangent to this curve. 
 
-In the graph below a scaled version of the vector field is displayed with blue arrows, along with a single trajectory in black, starting from ($x(0),y(0)$). Also, the time evolution of both variables is shown in the two graphs below.
+In the graph below a scaled version of the vector field is displayed with blue arrows, along with a single trajectory in black, starting from ($x(0),v(0)$). Also, the time evolution of both variables is shown in the two graphs below.
 """
 
 # ╔═╡ b5dea9d8-ebae-4a8a-aaec-180f8c83fdfd
@@ -116,7 +116,15 @@ md"""
 
 Now we will take into account the dissipation in the harmonic oscillator. 
 
-In its simplest form the dissipation, or friction, or damping, or resistance (slightly different flavors of the same phenomenon) can be put as a force that always acts against the movement. If the velocity is zero there are no drag forces, and  
+In its simplest form the dissipation, or friction, or damping (slightly different flavors of the same phenomenon) can be put as a force that always acts against the movement. If the velocity is zero there are no friction forces and, as the velocity increases, the friction grows linearly with the speed and always oposite in direction, so we write the force as $-\gamma v$ where $\gamma$ is the damping coefficient. 
+
+Then incorporating this term in the second equation (which is the movement equation realting the forces to the changes in the velocity) the damped harmonic oscillator can be written as:
+
+$\dot{x} = v$
+
+$\dot{v} = -\gamma v - k x$
+
+This is a **linear** system because both $f(x,v)$ and $g(x,v)$ are linear functions of the variables, i.e. do not involve powers higher than one, such as $x^2$, $xv$, $v^3$, etc.
 """	
 
 # ╔═╡ 8fef25bf-0633-4291-b27d-c3b6414147da
@@ -129,7 +137,7 @@ end
 # ╔═╡ bf009c87-d4cd-4001-8bd2-c95e3581fc8d
 md"""
 x(0) $(@bind x02 Slider(-0.5:0.02:0.5,default=0.0;show_value=true)) 
-y(0) : $(@bind y02 Slider(-0.5:0.01:0.5,default=0.1;show_value=true)) \
+v(0) : $(@bind y02 Slider(-0.5:0.01:0.5,default=0.1;show_value=true)) \
 k : $(@bind k2 Slider(0.1:0.01:2.0,default=0.1;show_value=true)) 
 γ : $(@bind γ Slider(0.0:0.001:0.2,default=0.1;show_value=true))
 """
@@ -152,13 +160,26 @@ md"""
 ## Stable Fixed Point (Attractor)
 """
 
+# ╔═╡ e0b5fcfb-0f0d-41f6-b5f8-280c2bf2f44c
+md"""
+For $\gamma>0$ all initial conditions follow a spiraling trajectory that evolves towards the central point: 
+
+($x=0,v=0$). 
+
+This is a **fixed point** of the flow because for this point the vector field is null ($f=0,g=0$). And therefore there is no time evolution, or the fixed point evolves into itself. It is also called an **equilibrium point**. 
+
+This fixed point is **stable** because if we perturb the system from the equilibrium position it returns to it. In fact, all trajectories converge to the fixed point and this makes it an **atractor**.
+
+For $\gamma=0$ there is no more friction and we return to the classic harmonic oscillator. The point ($x=0,v=0$) is still a fixed point but no longer an attractor. 
+"""
+
 # ╔═╡ 7c0d16f6-242d-4ae7-b5f3-444dd227bd3b
 md"""
 
 # Self-oscillator: Simple reed model (Rayleigh)
 
 
-In the "theory of sound" Rayleigh proposed a simple model for the blowing of a clarinet reed, in which the dissipation coefficient ($\gamma$) is negative (i.e. acts in favor of the motion and delivers energy) for small velocities and positive (i.e. acts by slowing down the motion) for large velocities. 
+In the "Theory of Sound" (1877) Rayleigh proposed a simple model for the blowing of a clarinet reed, in which the dissipation coefficient ($\gamma$) is negative (i.e. acts in favor of the motion and delivers energy) for small velocities and positive (i.e. acts by slowing down the motion) for large velocities. 
 
 $\gamma = v^2 - \mu$ 
 
@@ -168,6 +189,7 @@ $\dot{x} = v$
 
 $\dot{v} = -(v^2-\mu)v-kx$
 
+This is a **nonlinear system** because it includes a $v^3$ term
 """
 
 # ╔═╡ 2cd075b8-0fd1-481b-b230-1bf3a51f2d5f
@@ -202,8 +224,24 @@ end
 md"""
 
 ## Unstable Fixed Point (Repulsor)
+For $\mu<0$ we have a behavior similar to the case of the damped harmonic oscillator: the origin ($0,0$) is a fixed point (the vector field is null) and is an attractor. 
 
-## Stable Limit Cycle 
+However, for $\mu>0$ there is a **qualitative change in the dynamics**. the origin is still a fixed point but now it is unstable (try placing a initial condition close to it). The trajectories spiral away from the center. 
+
+This is the effect of negative dissipation and corresponds, in the physical system, to the energy delivery by the blowing pressure on the reed. An unstable fixed point from which the trajectories move away no matter how close they start from it is known as a **repulsor**
+
+These changes of stability that happen in nonlinear sytems are known as **bifurcations**
+
+## Stable Limit Cycle
+
+The trajectory that spirals away from the repulsor for $\mu>0$ corresponds, in the physical system, to the reed that is set in vibration by the blowing energy, oscillating with increasing amplitude until that energy is compensated by the nonlinear dissipation (which is the form proposed by Rayleigh). Then the aplitude stops growing and stabilizes to an oscillation of well-defined amplitude. 
+
+This corresponds in the state space to a periodic orbit to which all trajectories tend. The initial conditions that start with higher amplitude also decay to the same limit set. 
+
+This new limit set is known as a **limit cycle**. And as all near initial conditions converge to it, it is a *stable limit cycle*. 
+
+Note that, unlike the harmonic oscillator where each initial conditions gave rise to an oscillation with different amplitude, in this system all initial conditions converge to an equilibrium oscillation with a definite amplitude and frequency.
+
 
 """
 
@@ -211,7 +249,9 @@ md"""
 md"""
 # Phase portrait (multiple trajectories)
 
+The set (or ensemble) of all possible trajectories in the space of states is called the **phase portrait** of the system.
 
+We can evolve a grid of initial conditions and observe the "flow" of the dynamical system in the state space. This representation is complementary to that of the vector field (in the context of calculus, they are called integral and differential respectively).
 """
 
 # ╔═╡ 940e5c21-2d93-4fa1-a8b2-c8b1eb20dd45
@@ -1997,22 +2037,23 @@ version = "0.9.1+5"
 # ╟─b5dea9d8-ebae-4a8a-aaec-180f8c83fdfd
 # ╟─3f64c1ef-4bcb-49ed-a2a9-bc041950d514
 # ╟─c26b6f12-fd3d-4a96-9ca0-ddcf267e5a3c
-# ╠═9ca2ec27-8600-4d6f-8c9f-05e08ed137f3
+# ╟─9ca2ec27-8600-4d6f-8c9f-05e08ed137f3
 # ╠═8fef25bf-0633-4291-b27d-c3b6414147da
 # ╟─bf009c87-d4cd-4001-8bd2-c95e3581fc8d
 # ╟─5ee8744a-7b12-48e1-8c56-d641aed7e0c5
 # ╟─a7440fa6-8ae6-425c-93e0-7c3dfa53416e
 # ╟─e7e3910b-bd29-4bf9-b416-65dd5cfc2502
+# ╟─e0b5fcfb-0f0d-41f6-b5f8-280c2bf2f44c
 # ╟─7c0d16f6-242d-4ae7-b5f3-444dd227bd3b
 # ╠═2cd075b8-0fd1-481b-b230-1bf3a51f2d5f
 # ╟─7557f8d7-2654-41c2-a443-9d5a76622501
 # ╟─cb6d88cd-d6fb-4730-95a6-35a59224f35c
 # ╟─c45e6d60-3086-42f5-ba1b-df6de93827ed
 # ╟─2c1199ef-6e95-43b8-92e8-690b3ea1d45c
-# ╠═877f1288-8c71-4a96-8cec-b2f5e9c4c688
+# ╟─877f1288-8c71-4a96-8cec-b2f5e9c4c688
 # ╟─940e5c21-2d93-4fa1-a8b2-c8b1eb20dd45
-# ╠═13b4722a-ab98-4d09-9d0f-998a0596887a
-# ╠═48a9bf5d-5c44-4c4e-b9e4-a1ee53a4a978
+# ╟─13b4722a-ab98-4d09-9d0f-998a0596887a
+# ╟─48a9bf5d-5c44-4c4e-b9e4-a1ee53a4a978
 # ╟─50929479-b635-4cd3-9491-038c555d3e60
 # ╟─0cfeb6ad-605c-4e24-85ae-45be1339a79a
 # ╟─7de645ef-ab42-47cd-b8be-f7533c94e066
