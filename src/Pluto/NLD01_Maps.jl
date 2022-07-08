@@ -15,7 +15,7 @@ macro bind(def, element)
 end
 
 # ╔═╡ 977dfa56-983b-4b6d-b4dd-69786b2d0b1b
-using Pkg;Pkg.add("Plots");Pkg.add("Plots");Pkg.add("SIMD")
+using Pkg;Pkg.add("Plots");Pkg.add("PlutoUI");Pkg.add("SIMD");
 
 # ╔═╡ 1097d874-4468-4e76-bdbc-c893a5dbfdc0
 using Plots, PlutoUI, SIMD

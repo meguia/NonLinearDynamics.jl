@@ -14,6 +14,9 @@ macro bind(def, element)
     end
 end
 
+# ╔═╡ 1878f6d9-d9a7-4bf5-9525-2b021ebd1521
+using Pkg;Pkg.add("Plots");Pkg.add("PlutoUI");Pkg.add("DifferentialEquations");Pkg.add("ForwardDiff"); Pkg.add("StaticArrays"); Pkg.add("IntervalRootFinding")
+
 # ╔═╡ 794bf502-f9e9-11ec-03c5-ad174a6ccd59
 using Plots, PlutoUI, DifferentialEquations, ForwardDiff, StaticArrays, IntervalRootFinding
 
@@ -1815,6 +1818,7 @@ version = "0.9.1+5"
 """
 
 # ╔═╡ Cell order:
+# ╠═1878f6d9-d9a7-4bf5-9525-2b021ebd1521
 # ╠═794bf502-f9e9-11ec-03c5-ad174a6ccd59
 # ╠═a830882a-8a52-4171-a0da-0449d4f5c901
 # ╟─69c47e84-0bb9-425a-8cc8-3c50e2ffa2b3
