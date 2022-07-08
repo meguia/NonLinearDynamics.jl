@@ -15,7 +15,7 @@ macro bind(def, element)
 end
 
 # ╔═╡ 489110e0-a3fa-47a5-a2c5-603af5563b5b
-using Plots,BenchmarkTools, PlutoUI
+using Plots,BenchmarkTools, PlutoUI, LineraAlgebra
 
 # ╔═╡ 4aec301f-3507-4627-b1f6-a885bfb7b593
 gr()
