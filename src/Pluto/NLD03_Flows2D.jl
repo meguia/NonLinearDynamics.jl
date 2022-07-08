@@ -143,7 +143,7 @@ k : $(@bind k2 Slider(0.1:0.01:2.0,default=0.1;show_value=true))
 """
 
 # ╔═╡ 5ee8744a-7b12-48e1-8c56-d641aed7e0c5
-flow2d_vectorfield(oscharmdamp!,[x02,y02],50.0,[k2,γ];title="Damped Harmonic Oscillator")
+flow2d_vectorfield(oscharmdamp!,[x02,y02],250.0,[k2,γ];title="Damped Harmonic Oscillator")
 
 # ╔═╡ a7440fa6-8ae6-425c-93e0-7c3dfa53416e
 begin
