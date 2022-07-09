@@ -67,10 +67,10 @@ The same four styles applies for Juliet following the sign of the parametes $c$ 
 
 # ╔═╡ b35cce8b-796c-4f5c-b312-68d7084d5e90
 md"""
-Partner Name 1 $(@bind name1 TextField((20,1);default="Juliet"))
-$(@bind heshe1 Select(["she", "he"])) \
-Partner Name 1 $(@bind name2 TextField((20,1);default="Romeo")) 
-$(@bind heshe2 Select(["he", "she"])) 
+Partner Name 1 $(@bind name1 TextField((20,1);default="Willow"))
+$(@bind heshe1 Select(["she", "he", "ze"])) \
+Partner Name 1 $(@bind name2 TextField((20,1);default="Aspen")) 
+$(@bind heshe2 Select(["he", "she","ze"])) 
 """
 
 # ╔═╡ dc301dcf-2b27-431d-8604-1c94f6c6d353
@@ -198,6 +198,29 @@ begin
 	    size=(400,400),fmt=:png,title="Saddle Point")
 end	
 
+# ╔═╡ 79ea20a4-44be-45f5-beab-3328d49afe6e
+md"""
+# A Daring foray into matrices
+
+How to know what kind of stability has the fixed point of a linear system?
+Without going into the details of the algebra behind it, we can represent the four parameters $a,b,c,d$ in the form of a matrix.
+
+$A = \begin{bmatrix} a  & b \\ c & d \\ \end{bmatrix}$
+
+In fact this is one way to represent the linear vector field.
+
+$\begin{bmatrix}  \dot{x} \\ \dot{y} \end{bmatrix} = \begin{bmatrix} a  & b \\ c & d \\ \end{bmatrix} \begin{bmatrix} x \\ y \\ \end{bmatrix}$
+
+where the multiplication of the matrix $A$ by the vector $[x,y]$ give us the vector field in the usual form.
+
+Now, there are two numerical values derived from this matrix (which have a geometrical correlate when $A$ is interpreted as a linear transformation) that completely determine for me the stability class of the fixed point. These values are:
+
+- the trace of the matrix $Tr(A)$ which is the sum of its diagonal elements. $Tr(A) = a+d$
+- the determinant of the matrix $Det(A)$ which is calculated as $Det(A)=ad-bc$
+
+These are magnitudes that are easily calculated and that allow to determine to which of the stability classes the fixed point belongs.
+"""
+
 # ╔═╡ 4aa62401-a1c6-47f8-807f-7444d542fbde
 @bind parscl (
 	PlutoUI.combine() do bind
@@ -223,13 +246,16 @@ end
 md"""
 # Nonlinear (Non-romantic?) Love
 
+Romantic love can explode. Cycles of love and hate can end in indifference. In order to add a little more variety and realism, non-linear terms can be introduced that generate a saturation of, for example, explosive cycles of love and hate. It is not the most pleasant of the alternatives but it is one of the most interesting in its dynamics because it leads to the appearance of stable limit cycles, i.e. sustained oscillations that if disturbed return to their oscillation state.
+
+In the model below this can be observed for two narcissitic characters with a positive nonlinearity
 """
 
 # ╔═╡ d2008fc9-dd22-4725-9355-dacb7ff5821b
 function lovenlinear1!(du,u,p,t)
 	(a,b,c,d,ϵ) = p
-	du[1] = a*u[1]+b*u[2]*(1-ϵ*u[2]*u[2])
-	du[2] = d*u[2]+c*u[1]*(1-ϵ*u[1]*u[1])
+	du[1] = a*u[1]+b*u[2]-ϵ*u[2]*u[2]*u[1]
+	du[2] = d*u[2]+c*u[1]-ϵ*u[1]*u[1]*u[2]
 end
 
 # ╔═╡ 40ae473c-3362-468d-a988-0e0c1d85b5ea
@@ -246,46 +272,6 @@ end
 	end
 )
 
-# ╔═╡ d622eafe-f2d5-4992-ac3f-fabb392bb12a
-# Classification of Romantic Styles for R&J
-begin
-	(a2,b2,c2,d2,ϵ,_)=pars3
-	if (a2>0)
-		if (b2>0)
-			rtitle2 = "Romeo: Eager Beaver"
-		else
-			rtitle2 = "Romeo: Narcissistic"
-		end
-	else
-		if (b2>0)
-			rtitle2 = "Romeo: Cautious"
-		else
-			rtitle2 = "Romeo: Hermit"
-		end
-	end
-	if (c2>0)
-		if (d2>0)
-			jtitle2 = "Juliet: Eager Beaver"
-		else
-			jtitle2 = "Juliet: Narcissistic"
-		end
-	else
-		if (d2>0)
-			jtitle2 = "Juliet: Cautious"
-		else
-			jtitle2 = "Juliet: Hermit"
-		end
-	end
-	if (ϵ>0)
-		title2 = string(rtitle2," | ",jtitle2," | Positive Nonlinearity")
-	elseif (ϵ<0)
-		title2 = string(rtitle2," | ",jtitle2," | Negative Nonlinearity")
-	else
-		title2 = string(rtitle2," | ",jtitle2," | Zero Nonlinearity")
-	end	
-		
-end
-
 # ╔═╡ 7862b57f-93c1-4293-8e83-57b7c18dc3fc
 @bind u2 (
 	PlutoUI.combine() do bind
@@ -295,6 +281,20 @@ end
 		"""
 	end
 )
+
+# ╔═╡ 11c9283e-c5c7-468b-add8-56460fc01b35
+md"""
+
+# Nonlinear Two Dimensional Flows
+
+One-dimensional flows, although they can bifurcate, have a very limited repertoire of behaviors (basically diverging to infinity or converging to a fixed point).
+
+Flows in 2D incorporate a new behavior and a new limit set (or equilibrium) in addition to the fixed points. The new behavior is the oscillation and the new equilibrium associated with the oscillation is called the **limit cycle**. This, as can be imagined, greatly expands the repertoire of possible behaviors and adds a new type of bifurcation that is not present in 1D flows (Hopf bifurcation).
+
+Another new ingredient incorporated in 2D flows is that in addition to attracting and repelling fixed points, there are fixed points that are attractors in one direction and repellers in another, which is why they are called **saddle points** in allusion to the saddle shape that attracts in the front-back direction but repels to the sides. On the other hand, these directions in which they approach or move away from the saddle points will **function as organizers of the global flow**
+
+The organization of the global flow is a final element that is added in two-dimensional flows, because topological changes can occur in this organization without local changes. All the bifurcations we have seen so far occur due to changes in the number and stability of fixed points and are known as **local bifurcations**. Bifurcations associated with changes in the topological organization of the flow that are not reducible to changes in fixed points are known as **global bifurcations**, and are much more difficult to study.
+"""
 
 # ╔═╡ 86eb471e-cedf-4e5e-bcac-84476eb21274
 function flow2d(f::Function,u0::Vector{Float64},tmax::Float64,p;
@@ -321,13 +321,17 @@ function romanticlass(pars,name1,name2,heshe1,heshe2)
 	(a,b,c,d)=pars
 	if heshe1=="he"
 		hisher1="his"
-	else
+	elseif heshe1=="she"
 		hisher1="her"
+	else
+		hisher1="hirs"
 	end
 	if heshe2=="he"
 		hisher2="his"
-	else
+	elseif heshe2=="she"
 		hisher2="her"
+	else
+		hisher2="hirs"
 	end
 	if (a>0)
 		if (b>0)
@@ -372,6 +376,23 @@ begin
 	println(tit2b)
 end	
 
+# ╔═╡ d622eafe-f2d5-4992-ac3f-fabb392bb12a
+# Classification of Romantic Styles for R&J
+begin
+	(a2,b2,c2,d2,ϵ,_)=pars3
+	rtitle2, jtitle2 = romanticlass(pars3,name1,name2,heshe1,heshe2)
+	println(rtitle2)
+	println(jtitle2)
+	if (ϵ>0)
+		println("Positive Nonlinearity")
+	elseif (ϵ<0)
+		println("Negative Nonlinearity")
+	else
+		println("Zero Nonlinearity")
+	end	
+		
+end
+
 # ╔═╡ Cell order:
 # ╠═673fa0ec-754a-41a7-884f-d153f411e41c
 # ╠═f527ceca-f2d1-11ec-3cc5-bd33fdb53d6e
@@ -393,13 +414,15 @@ end
 # ╟─c4da9d4d-6035-4792-9e58-5006bd566441
 # ╟─21b1ac8b-e2a0-416a-a84c-227152546c3e
 # ╟─a40cee7a-994e-4860-9c97-394d7dbfec77
+# ╟─79ea20a4-44be-45f5-beab-3328d49afe6e
 # ╟─b4bf8b41-dff9-4e87-94c8-bda9365bd78e
 # ╟─4aa62401-a1c6-47f8-807f-7444d542fbde
 # ╟─17da3943-629d-49cf-88b4-febc97bb26bb
 # ╠═d2008fc9-dd22-4725-9355-dacb7ff5821b
 # ╟─d622eafe-f2d5-4992-ac3f-fabb392bb12a
-# ╠═a0662db2-84d5-473c-88a7-19066f8f9de6
+# ╟─a0662db2-84d5-473c-88a7-19066f8f9de6
 # ╟─40ae473c-3362-468d-a988-0e0c1d85b5ea
 # ╟─7862b57f-93c1-4293-8e83-57b7c18dc3fc
+# ╟─11c9283e-c5c7-468b-add8-56460fc01b35
 # ╟─86eb471e-cedf-4e5e-bcac-84476eb21274
 # ╟─211a4a3a-640a-492c-a7b8-e1f0eae4d7f4

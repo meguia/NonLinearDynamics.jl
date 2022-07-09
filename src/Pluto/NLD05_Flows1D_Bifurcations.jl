@@ -182,7 +182,7 @@ Let's go to the example of the logistic equation and now let's incorporate two p
 
 This more "real" logistic equation can be written as
 
-$\dot{x} = r_0 \left(x- \frac{x}{K}\right)x$
+$\dot{x} = r_0 \left(1- \frac{x}{K}\right)x$
 
 Let's see wha happens with the fixed points and their stability, which determine the topological structure of the flow, as we change the parameters.
 
