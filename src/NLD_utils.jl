@@ -3,6 +3,24 @@ using DifferentialEquations
 using ForwardDiff
 using IntervalRootFinding
 using StaticArrays
+using LinearAlgebra
+
+# structures  
+mutable struct Flow
+    f::Function
+    x0::Number 
+    t::Number
+    xv::Array 
+end
+
+mutable struct Map
+    f::Function
+    x0::Number 
+    t::Number
+    xv::Array 
+end
+
+
 
 # utilities
 
@@ -23,10 +41,9 @@ function realplot(x,y;plotops...)
     realplot!(p1,x,y;plotops...) 
 end    
 
-
 # flows 1D
 
-function dualplot_flow1D(f,x,x0,p,sol;
+function dualplot_flow1D(f,x,x0,p,sol,ylims;
     size=(900,300),plotops...)
 
     (ymin,ymax)=extrema(sol.u)    
@@ -38,22 +55,22 @@ function dualplot_flow1D(f,x,x0,p,sol;
     plot!(p1,x,f.(x,(p,),0.0),label="f(x)",xlabel="x",ylabel="f(x)",color=:blue)
     plot!(p1,sol.u,sol.u*0,label="x",color=:red)
     scatter!(p1,[x0],[0],label="x0",color=:green)
-    p2 = plot(sol,label="x(t)",ylabel="x",ylim=(0.9*ymin,1.1*ymax))
+    p2 = plot(sol,label="x(t)",ylabel="x",ylim=ylims)
     plot(p1,p2,layout=(1,2);size=size,fmt=:png,plotops...)
 end    
 
 function flow1D(f::Function,x0::Float64,tmax::Float64,p;
-    xlims=[-1.0,1.0],plotops...)
+    xlims=[-1.0,1.0],ylims=[-1.0,1.0],plotops...)
 
     xrange = xlims[2]-xlims[1]
     x=xlims[1]:xrange/100:xlims[2]
     prob = ODEProblem(f,x0,(0,tmax),p)
     sol = solve(prob)
-    dualplot_flow1D(f,x,x0,p,sol;plotops...)
+    dualplot_flow1D(f,x,x0,p,sol,ylims;plotops...)
 end 
 
 function flow1D(f::Function,x0::Float64,tmax::Float64,p,condition::Function;
-    xlims=[-1.0,1.0],plotops...)
+    xlims=[-1.0,1.0],ylims=[-1.0,1.0],plotops...)
 
     xrange = xlims[2]-xlims[1]
     x=xlims[1]:xrange/100:xlims[2]
@@ -61,7 +78,7 @@ function flow1D(f::Function,x0::Float64,tmax::Float64,p,condition::Function;
     condition_terminate(u,t,integrator) = condition(u)
     affect!(integrator) = terminate!(integrator)
     sol = solve(prob,callback=DiscreteCallback(condition_terminate,affect!))
-    dualplot_flow1D(f,x,x0,p,sol;plotops...)
+    dualplot_flow1D(f,x,x0,p,sol,ylims;plotops...)
 end
 
 function flow1D(f::Function,x0::Float64,tmax::Float64,p,tperturb::Float64,Aperturb::Float64,condition::Function;

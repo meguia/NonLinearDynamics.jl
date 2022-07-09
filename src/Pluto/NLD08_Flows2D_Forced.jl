@@ -14,95 +14,186 @@ macro bind(def, element)
     end
 end
 
-# ╔═╡ 1097d874-4468-4e76-bdbc-c893a5dbfdc0
-using Plots, PlutoUI, DifferentialEquations, ForwardDiff, StaticArrays, IntervalRootFinding
+# ╔═╡ 8601d8d7-d4df-473f-b65d-0f03aeb8f5f4
+using PlutoUI, Plots, DifferentialEquations, ForwardDiff, IntervalRootFinding, StaticArrays
 
-# ╔═╡ d511c3c8-c596-48a5-8182-4dbcaa607eb6
+# ╔═╡ 09b22c30-bb22-4633-9939-2e97bb0beb5e
 include("../NLD_utils.jl")
 
-# ╔═╡ 18a83e00-0dd4-4fe7-a5be-644361f875d3
-TableOfContents()
+# ╔═╡ 1f49c325-fc99-4b15-81ee-dc1c5bbe6f08
+gr();
 
-# ╔═╡ 4ad5df20-f85d-11ec-3803-a7ed7ed8f2f3
+# ╔═╡ 4237b1cb-075a-49be-8f2c-a6eb9c5c9901
 md"""
-# Flows 1D
+# Forced van der Pol
 
 
+$\dot{x} = y$
+
+$\dot{y} = -\mu y - kx$
+
+Remember that $y$ represents the velocity of the oscillator, $\dot{y}$ the acceleration which is equal to the applied force (we assume a mass equal to 1) which appears in the right member of the second equation. In this equation $-kx$ represents the linear elastic force, while $-\mu y$ is the *friction*: a force that always opposes the velocity ( 𝜇>0 ) and that always slows down the oscillator. In the following, we are going to study different general forms for this friction, that in a general way we are going to express as a function of the position $x$ and the velocity $y$:
+
+$\dot{x} = y$
+
+$\dot{y} = -F(x,y)y - kx$
+
+Linear Friction:
+
+$F(x,y)=\mu$
+
+We may now wonder what would happen if we were to apply a "negative friction" for small values of the amplitude of oscillation.
+
+Why? Because in this way we can prevent the oscillations from "dying". If the amplitude of the oscillation $x$ becomes very small (the system is slowed down by friction) a force appears that goes **in favor** of the velocity, injecting energy to the system, still for large oscillation amplitudes the dissipation that slows down the system wins. 
+
+In this way an equilibrium is reached in which self-oscillations are produced which are not extinguished. These oscillations in phase space are known as **limit cycles** and are invariant sets (attractors or repulsors) like fixed points. Note the difference with the oscillations and concentric orbits of the frictionless harmonic oscillator. Unlike the latter, relaxation oscillations (or limit cycles in general) are attractors, i.e. any nearby condition ends up converging to them. 
+
+How can we write this friction inversion for values of $x$ close to zero? 
+The simplest way is to use a quadratic nolinearity. A sinking parabola on the axis has negative values near $x=0$ and positive values for large values of $x$ (both positive and negative). Therefore we can replace linear friction by $\mu(x^2-1)$ . The resistance (or friction) as a function of the position of the oscillator would be:
+
+van der Pol's Friction:
+
+$F(x,y) = \mu(x^2-1)$
+
+And the system of differential equations is written:
+
+$\dot{x} = y$
+
+$\dot{y} = \mu (1 -x^2)y - x + A cos(\phi)$
+
+$\dot{\phi} = \omega$
 """
 
-# ╔═╡ d16430c4-6c92-4d09-b36d-73fd4164123f
+# ╔═╡ 906dd4e2-b975-4eb4-8469-a25ea89668dc
+function fvdp!(du,u,p,t)
+    du[1] = u[2]
+    du[2] = p[1]*(1.0-u[1]*u[1])*u[2]-u[1]+p[2]*cos(u[3])
+    du[3] = p[3]
+    du
+end;    
+
+# ╔═╡ 7fbb3faa-1f3c-4c3e-bc58-90e50eaf6e7c
+gr()
+
+# ╔═╡ 6282f7e6-4831-45ef-9b1d-3f077fdd74a4
+@bind pvdp (
+	PlutoUI.combine() do bind
+		md"""
+		μ: $(bind(Slider(0:0.02:4.0,default=0.1;show_value=true))) \
+		A: $(bind(Slider(0.0:0.02:3.0,default=0.0;show_value=true))) \
+		ω: $(bind(Slider(0:0.02:3.0,default=1.0;show_value=true))) \
+		ncycles: $(bind(Slider(12:10:200,default=12;show_value=true)))
+		"""
+	end
+)	
+
+# ╔═╡ 2d29b217-fe25-4bb1-9282-51b4932356cf
+flow2d_forced(fvdp!,[0.5,0.5,0],pvdp,2*pi/pvdp[3]; tcycles=10,ncycles=pvdp[4])
+
+# ╔═╡ 6b52504e-805e-417e-8fb2-6473b47b0ad0
 md"""
-$(@bind ticks Clock(1))
-$(@bind reset Button("Reset"))
+# Forced Duffing Oscillator
+
+Let us see now a periodic forced system where the response is much more irregular. We return to the Duffing oscillator (with linear friction). Recall that we arrived at this system by first writing the equation for the harmonic oscillator in its general form with a restoring force $K(x)$
+
+$\dot{x}=y$ 
+
+$\dot{y}=-\mu y + K(x)$
+
+and choosing a restoring force with a linear and a cubic term:
+
+$K(x) = \beta x - x^3$
+
+As for large values of $x$ the cubic term will dominate, it is guaranteed that the system is globally attracting (if $x$ is positive $-K(x)$ is very negative and vice versa).
+
+The Duffing oscillator is NOT a self oscillator because it has no negative friction (energy injection). In any case, what we are interested in studying here is the forced Duffing oscillator:
+
+$\dot{x} = y$ 
+
+$\dot{y} = -\mu y + \beta x -  x^3 + A cos(\phi)$ 
+
+$\dot{\phi} = \omega$
 """
 
-# ╔═╡ d9bb5aa8-2708-40c3-8d42-3b21e6d634c0
+# ╔═╡ 4c3108b9-2328-42b7-9c69-bee0647e94b8
+function duffing_forced!(du,u,p,t)
+    (μ,β,A,ω)=p
+    du[1] = u[2]
+    du[2] = -μ*u[2]+u[1]*(β-u[1]*u[1])+A*cos(u[3])
+    du[3] = ω
+    du
+end;  
+
+# ╔═╡ 4ee77c37-0347-45c0-b101-b96fcb7e004d
+@bind pduff (
+	PlutoUI.combine() do bind
+		md"""
+		μ: $(bind(Slider(0:0.01:1.0,default=0.8;show_value=true))) \
+		β: $(bind(Slider(-2.0:0.02:2.0,default=1.0;show_value=true))) \
+		A: $(bind(Slider(0.0:0.02:3.0,default=0.0;show_value=true))) \
+		ω: $(bind(Slider(0:0.02:3.0,default=1.0;show_value=true))) \
+		x0: $(bind(Slider(-2.0:0.02:2.0,default=1.0;show_value=true))) \
+		ncycles: $(bind(Slider(1:10:200,default=1;show_value=true)))
+		"""
+	end
+)	
+
+# ╔═╡ 37ddd39f-4de1-4eb0-a230-46181c7e64db
+flow2d_forced(duffing_forced!,[pduff[5],0.0,0.0],pduff,2*pi/pduff[4];tcycles=0,ncycles=pduff[6],xlims=(-2,2),ylims=(-1.5,1.5))
+
+# ╔═╡ 8b29c214-4b49-4f44-9eb5-230899ec7321
 md"""
-x(0) $(@bind x0 Slider(-1.0:0.02:1.0,default=0.7;show_value=true)) 
-v(0) : $(@bind y0 Slider(-1.0:0.01:1.0,default=0.0;show_value=true)) \
-k : $(@bind k Slider(0.1:0.01:2.0,default=0.7;show_value=true)) 
-t\_refresh : $(@bind tail Slider(0.001:0.001:0.1,default=0.02;show_value=true))
+# Attraction Basins
+
+An important notion that will allow us to characterize the growing complexity of the behavior of this system is that of the basin of attraction.
+
+The basin of attraction of a certain attractor (for example a limit cycle that in the Poincare section corresponds to a fixed point or a set of periodic points), is defined by all those initial conditions that converge to the attractor for long times.
+
+To determine the basins it is necessary to evolve a grid of several thousand initial conditions over several cycles, therefore the graphs that follow can be very demanding. Run first with a low value of delta (the grid resolution) and make sure that Julia is taking in Threads.nthreads() the full number of processors in order to parallelize the problem.
 """
 
-# ╔═╡ bf009c87-d4cd-4001-8bd2-c95e3581fc8d
+# ╔═╡ 0a270882-fde3-4dcc-8cef-291e86a4f8c2
 md"""
-x(0) $(@bind x02 Slider(-0.5:0.02:0.5,default=0.0;show_value=true)) 
-v(0) : $(@bind y02 Slider(-0.5:0.01:0.5,default=0.1;show_value=true)) \
-k : $(@bind k2 Slider(0.1:0.01:2.0,default=0.1;show_value=true)) 
-γ : $(@bind γ Slider(0.0:0.001:0.2,default=0.1;show_value=true))
+Select one: $(@bind sel1 Select([([0.14,1.0,0.1,1.0],[[1.0,0.0],[-1.0,0.0],[-1,0.7],[0.3,0.3]])=>"μ=0.14,β=1,A=0.1,ω=1",([0.14,1.0,0.14,1.0],[[1.1,0.0],[-0.8,0.0]])=>"μ=0.14,β=1,A=0.14,ω=1",([0.14,1.0,0.2,1.0],[[1.2,0.0],[-0.9,0.0]])=>"μ=0.14,β=1,A=0.2,ω=1",([0.14,1.0,0.24,1.0],[[1.2,0.0],[-0.9,0.0],[0.1,1.1]])=>"μ=0.14,β=1,A=0.24,ω=1"]))
 """
 
-# ╔═╡ 7557f8d7-2654-41c2-a443-9d5a76622501
+# ╔═╡ dc6e3382-7239-48f1-a88d-bc12fda7cb73
+attractor_basin(duffing_forced!,sel1[1],sel1[2],0.3;delta=0.01,tmax=30*pi,xlims=(-2.5,2.5),ylims=(-2.0,2.0))
+
+# ╔═╡ 3078878b-a2f8-40f5-9398-401682ebb2f5
 md"""
-x(0) $(@bind x03 Slider(-1.0:0.01:1.0,default=0.1;show_value=true)) 
-K : $(@bind K2 Slider(1.0:0.1:5.0,default=2.0;show_value=true)) \
-μ : $(@bind μ Slider(-0.1:0.001:0.3,default=0.1;show_value=true))
-tmax : $(@bind tmax2 Slider(5.0:5.0:40.0,default=10.0;show_value=true))
+# Strange Attractor
+
+For greater values of $A$, the trajectories no longer converge to limit cycles but istead they approach to a set with a fractal structure known as a **strange attractor**. On the Poincare section is a set of points that, unlike the one generated by a torus formed by quasiperiodic orbits, is not confined to a curve. Let's see the poincare section for a value $A=0.27$ that gives rise to a strange attractor:
 """
 
-# ╔═╡ 940e5c21-2d93-4fa1-a8b2-c8b1eb20dd45
-md"""
-k : $(@bind k3 Slider(0.3:0.01:2.0,default=0.5;show_value=true)) 
-γ : $(@bind γ3 Slider(0.0:0.1:2.0,default=0.1;show_value=true))
-"""
+# ╔═╡ 59c6b45e-3959-45ff-be82-4c0409d17589
+@bind par (
+	PlutoUI.combine() do bind
+		md"""
+		μ: $(bind(Slider(0:0.01:0.3,default=0.14;show_value=true))) \
+		β: $(bind(Slider(-2.0:0.02:2.0,default=1.0;show_value=true))) \
+		A: $(bind(Slider(0.0:0.02:3.0,default=0.0;show_value=true))) \
+		ω: $(bind(Slider(0:0.02:3.0,default=1.0;show_value=true))) \
+		ncycles: $(bind(Slider(1000:1000:90000,default=10000;show_value=true)))
+		"""
+	end
+)	
 
-# ╔═╡ 50929479-b635-4cd3-9491-038c555d3e60
-md"""
-K : $(@bind K4 Slider(1.0:0.1:5.0,default=2.0;show_value=true)) 
-μ : $(@bind μ4 Slider(-0.5:0.1:0.5,default=0.5;show_value=true))
-"""
+# ╔═╡ 64e04ff2-6662-4775-93cd-85a915487478
+poincare_forced(duffing_forced!,[0.5,0.5,0],par,2*pi/par[4]; tcycles=30,ncycles=par[5],size=(900,600))
 
-# ╔═╡ f480e291-b67c-4a2f-9f44-914a340df81e
+# ╔═╡ c7399360-fad1-466a-9324-f830b20b07a7
+TableOfContents(title="📚 Table of Contents", indent=true, depth=4, aside=true)
+
+# ╔═╡ 1f7f958e-b0c3-433f-bae9-3bf63da3de7a
 html"""
 <style>
 input[type*="range"] {
-	width: 30%;
+	width: 50%;
 }
 </style>
 """
-
-# ╔═╡ 5bbb333e-47a3-464b-82f5-cb8053c5c733
-function plot_state_flow2D!(p1,u,t;alpha=0.5)
-	title = "t=$(round(t,digits=4))  x(t) = $(round(u[1],digits=6)) y(t) = $(round(u[2],digits=6))"
-	scatter!(p1,u[1:1],u[2:2],c=:red,alpha=alpha, markerstrokewidth = 0)
-	title!(p1,title)
-end;
-
-# ╔═╡ 64022ca2-6323-4428-b938-843e228d4922
-function plot_state_flow2D(u,xrange,yrange,t)
-	title = "t=$(round(t,digits=4))  x(t) = $(round(u[1],digits=6)) y(t) = $(round(u[2],digits=6))"
-	p1 = plot(xlims=xrange,ylims=yrange,size=(800,800),title=title,legend=false)
-	plot!(p1,[xrange[1],xrange[2]],[0,0],c=:black)
-	plot!(p1,[0,0],[yrange[1],yrange[2]],c=:black)
-end;
-
-# ╔═╡ 842dff44-ed12-42fd-b0e4-e4d33025f8ae
-mutable struct Flow
-	f::Function
-	u0::Array 
-	t::Number
-	xv::Array 
-end	
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -115,12 +206,12 @@ PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
-DifferentialEquations = "~7.2.0"
+DifferentialEquations = "~7.1.0"
 ForwardDiff = "~0.10.30"
 IntervalRootFinding = "~0.5.10"
-Plots = "~1.31.1"
+Plots = "~1.29.0"
 PlutoUI = "~0.7.39"
-StaticArrays = "~1.5.0"
+StaticArrays = "~1.4.4"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -323,9 +414,9 @@ uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
 
 [[deps.ConstructionBase]]
 deps = ["LinearAlgebra"]
-git-tree-sha1 = "c096d0e321368ac23eb1be1ea405814f8b32adb3"
+git-tree-sha1 = "59d00b3139a9de4eb961057eabb65ac6522be954"
 uuid = "187b0558-2788-49d3-abe0-74a17ed4e7c9"
-version = "1.3.1"
+version = "1.4.0"
 
 [[deps.Contour]]
 deps = ["StaticArrays"]
@@ -377,15 +468,21 @@ version = "0.4.0"
 
 [[deps.DiffEqBase]]
 deps = ["ArrayInterfaceCore", "ChainRulesCore", "DataStructures", "Distributions", "DocStringExtensions", "FastBroadcast", "ForwardDiff", "FunctionWrappers", "LinearAlgebra", "Logging", "MuladdMacro", "NonlinearSolve", "Parameters", "Printf", "RecursiveArrayTools", "Reexport", "Requires", "SciMLBase", "Setfield", "SparseArrays", "StaticArrays", "Statistics", "ZygoteRules"]
-git-tree-sha1 = "9862c61c6049b0ad5a6b433e31d2c6c8ff373056"
+git-tree-sha1 = "f7a479aac5f3917b8472ac5f1b77d6f296fe58f1"
 uuid = "2b5f629d-d688-5b77-993f-72d75c75574e"
-version = "6.92.2"
+version = "6.92.3"
 
 [[deps.DiffEqCallbacks]]
 deps = ["DataStructures", "DiffEqBase", "ForwardDiff", "LinearAlgebra", "NLsolve", "Parameters", "RecipesBase", "RecursiveArrayTools", "SciMLBase", "StaticArrays"]
 git-tree-sha1 = "cfef2afe8d73ed2d036b0e4b14a3f9b53045c534"
 uuid = "459566f4-90b8-5000-8ac3-15dfb0a30def"
 version = "2.23.1"
+
+[[deps.DiffEqJump]]
+deps = ["ArrayInterfaceCore", "DataStructures", "DiffEqBase", "DocStringExtensions", "FunctionWrappers", "Graphs", "LinearAlgebra", "Markdown", "PoissonRandom", "Random", "RandomNumbers", "RecursiveArrayTools", "Reexport", "SciMLBase", "StaticArrays", "TreeViews", "UnPack"]
+git-tree-sha1 = "de3014a7c8b4f84d22715a43fe6c58e1c35dc998"
+uuid = "c894b116-72e5-5b58-be3c-e6d8d4ac2b12"
+version = "8.6.3"
 
 [[deps.DiffEqNoiseProcess]]
 deps = ["DiffEqBase", "Distributions", "GPUArraysCore", "LinearAlgebra", "Markdown", "Optim", "PoissonRandom", "QuadGK", "Random", "Random123", "RandomNumbers", "RecipesBase", "RecursiveArrayTools", "ResettableStacks", "SciMLBase", "StaticArrays", "Statistics"]
@@ -406,10 +503,10 @@ uuid = "b552c78f-8df3-52c6-915a-8e097449b14b"
 version = "1.11.0"
 
 [[deps.DifferentialEquations]]
-deps = ["BoundaryValueDiffEq", "DelayDiffEq", "DiffEqBase", "DiffEqCallbacks", "DiffEqNoiseProcess", "JumpProcesses", "LinearAlgebra", "LinearSolve", "OrdinaryDiffEq", "Random", "RecursiveArrayTools", "Reexport", "SteadyStateDiffEq", "StochasticDiffEq", "Sundials"]
-git-tree-sha1 = "0ccc4356a8f268d5eee641f0944074560c45267a"
+deps = ["BoundaryValueDiffEq", "DelayDiffEq", "DiffEqBase", "DiffEqCallbacks", "DiffEqJump", "DiffEqNoiseProcess", "LinearAlgebra", "LinearSolve", "OrdinaryDiffEq", "Random", "RecursiveArrayTools", "Reexport", "SteadyStateDiffEq", "StochasticDiffEq", "Sundials"]
+git-tree-sha1 = "3f3db9365fedd5fdbecebc3cce86dfdfe5c43c50"
 uuid = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
-version = "7.2.0"
+version = "7.1.0"
 
 [[deps.Distances]]
 deps = ["LinearAlgebra", "SparseArrays", "Statistics", "StatsAPI"]
@@ -1110,9 +1207,9 @@ version = "1.3.0"
 
 [[deps.Plots]]
 deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers", "GR", "GeometryBasics", "JSON", "Latexify", "LinearAlgebra", "Measures", "NaNMath", "Pkg", "PlotThemes", "PlotUtils", "Printf", "REPL", "Random", "RecipesBase", "RecipesPipeline", "Reexport", "Requires", "Scratch", "Showoff", "SparseArrays", "Statistics", "StatsBase", "UUIDs", "UnicodeFun", "Unzip"]
-git-tree-sha1 = "93e82cebd5b25eb33068570e3f63a86be16955be"
+git-tree-sha1 = "9e42de869561d6bdf8602c57ec557d43538a92f0"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
-version = "1.31.1"
+version = "1.29.1"
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "Markdown", "Random", "Reexport", "UUIDs"]
@@ -1344,9 +1441,9 @@ version = "1.24.0"
 
 [[deps.SpecialFunctions]]
 deps = ["ChainRulesCore", "IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_jll"]
-git-tree-sha1 = "a9e798cae4867e3a41cae2dd9eb60c047f1212db"
+git-tree-sha1 = "d75bda01f8c31ebb72df80a46c88b25d1c79c56d"
 uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
-version = "2.1.6"
+version = "2.1.7"
 
 [[deps.Static]]
 deps = ["IfElse"]
@@ -1355,10 +1452,10 @@ uuid = "aedffcd0-7271-4cad-89d0-dc628f76c6d3"
 version = "0.7.5"
 
 [[deps.StaticArrays]]
-deps = ["LinearAlgebra", "Random", "StaticArraysCore", "Statistics"]
-git-tree-sha1 = "9f8a5dc5944dc7fbbe6eb4180660935653b0a9d9"
+deps = ["LinearAlgebra", "Random", "Statistics"]
+git-tree-sha1 = "2bbd9f2e40afd197a1379aef05e0d85dba649951"
 uuid = "90137ffa-7385-5640-81b9-e52037218182"
-version = "1.5.0"
+version = "1.4.7"
 
 [[deps.StaticArraysCore]]
 git-tree-sha1 = "66fe9eb253f910fe8cf161953880cfdaef01cdf0"
@@ -1401,9 +1498,9 @@ version = "6.50.0"
 
 [[deps.StrideArraysCore]]
 deps = ["ArrayInterface", "CloseOpenIntervals", "IfElse", "LayoutPointers", "ManualMemory", "SIMDTypes", "Static", "ThreadingUtilities"]
-git-tree-sha1 = "367989c5c0c856fdf7e7f6577b384e63104fb854"
+git-tree-sha1 = "ac730bd978bf35f9fe45daa0bd1f51e493e97eb4"
 uuid = "7792a7ef-975c-4747-a70f-980b88e8d1da"
-version = "0.3.14"
+version = "0.3.15"
 
 [[deps.StructArrays]]
 deps = ["Adapt", "DataAPI", "StaticArrays", "Tables"]
@@ -1520,9 +1617,9 @@ version = "0.1.2"
 
 [[deps.VectorizationBase]]
 deps = ["ArrayInterface", "CPUSummary", "HostCPUFeatures", "IfElse", "LayoutPointers", "Libdl", "LinearAlgebra", "SIMDTypes", "Static"]
-git-tree-sha1 = "9d87c8c1d27dc20ba8be6bdca85d36556c371172"
+git-tree-sha1 = "39e55018bccc5a858217db32aa3d9e7decbefd0c"
 uuid = "3d5dd08c-fd9d-11e8-17fa-ed2836048c2f"
-version = "0.21.38"
+version = "0.21.40"
 
 [[deps.VertexSafeGraphs]]
 deps = ["Graphs"]
@@ -1752,19 +1849,25 @@ version = "0.9.1+5"
 """
 
 # ╔═╡ Cell order:
-# ╠═1097d874-4468-4e76-bdbc-c893a5dbfdc0
-# ╠═d511c3c8-c596-48a5-8182-4dbcaa607eb6
-# ╟─18a83e00-0dd4-4fe7-a5be-644361f875d3
-# ╠═4ad5df20-f85d-11ec-3803-a7ed7ed8f2f3
-# ╟─d16430c4-6c92-4d09-b36d-73fd4164123f
-# ╟─d9bb5aa8-2708-40c3-8d42-3b21e6d634c0
-# ╟─bf009c87-d4cd-4001-8bd2-c95e3581fc8d
-# ╟─7557f8d7-2654-41c2-a443-9d5a76622501
-# ╟─940e5c21-2d93-4fa1-a8b2-c8b1eb20dd45
-# ╟─50929479-b635-4cd3-9491-038c555d3e60
-# ╟─f480e291-b67c-4a2f-9f44-914a340df81e
-# ╟─5bbb333e-47a3-464b-82f5-cb8053c5c733
-# ╟─64022ca2-6323-4428-b938-843e228d4922
-# ╟─842dff44-ed12-42fd-b0e4-e4d33025f8ae
+# ╠═8601d8d7-d4df-473f-b65d-0f03aeb8f5f4
+# ╠═09b22c30-bb22-4633-9939-2e97bb0beb5e
+# ╟─1f49c325-fc99-4b15-81ee-dc1c5bbe6f08
+# ╟─4237b1cb-075a-49be-8f2c-a6eb9c5c9901
+# ╠═906dd4e2-b975-4eb4-8469-a25ea89668dc
+# ╟─7fbb3faa-1f3c-4c3e-bc58-90e50eaf6e7c
+# ╟─2d29b217-fe25-4bb1-9282-51b4932356cf
+# ╟─6282f7e6-4831-45ef-9b1d-3f077fdd74a4
+# ╟─6b52504e-805e-417e-8fb2-6473b47b0ad0
+# ╠═4c3108b9-2328-42b7-9c69-bee0647e94b8
+# ╟─37ddd39f-4de1-4eb0-a230-46181c7e64db
+# ╟─4ee77c37-0347-45c0-b101-b96fcb7e004d
+# ╟─8b29c214-4b49-4f44-9eb5-230899ec7321
+# ╟─0a270882-fde3-4dcc-8cef-291e86a4f8c2
+# ╟─dc6e3382-7239-48f1-a88d-bc12fda7cb73
+# ╟─3078878b-a2f8-40f5-9398-401682ebb2f5
+# ╟─64e04ff2-6662-4775-93cd-85a915487478
+# ╟─59c6b45e-3959-45ff-be82-4c0409d17589
+# ╟─c7399360-fad1-466a-9324-f830b20b07a7
+# ╟─1f7f958e-b0c3-433f-bae9-3bf63da3de7a
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

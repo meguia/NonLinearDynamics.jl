@@ -14,220 +14,292 @@ macro bind(def, element)
     end
 end
 
-# ╔═╡ 38c4e220-d708-11ec-3968-fbbd41c26155
-using PlutoUI, Plots, DifferentialEquations, ForwardDiff, IntervalRootFinding, StaticArrays
+# ╔═╡ 1097d874-4468-4e76-bdbc-c893a5dbfdc0
+using Plots, PlutoUI, DifferentialEquations, ForwardDiff, StaticArrays, IntervalRootFinding
 
-# ╔═╡ 3eca675f-4243-47b5-8bd0-b34f774b73d3
+# ╔═╡ d511c3c8-c596-48a5-8182-4dbcaa607eb6
 include("../NLD_utils.jl")
 
-# ╔═╡ e2271efe-9a67-4496-891b-46f076b367f3
-theme(:default)
+# ╔═╡ 18a83e00-0dd4-4fe7-a5be-644361f875d3
+TableOfContents()
 
-# ╔═╡ 62cba86d-4406-4d16-8715-b29bee7d3178
+# ╔═╡ 4ad5df20-f85d-11ec-3803-a7ed7ed8f2f3
+md"""
+# Flows 1D
+## Definition and numerical solution
+
+A 1D Flow is defined asigning the instantaneous rate of change of the state, i. e. the time derivative of the variable $\dot{x}$ to a vector field $f(x)$ which is a function of the variable only (the of the position in state space):
+
+$\dot{x} = f(x)$
+
+which has a particular solution $x(t)$ (or trajectory on state space) for a given initial condition $x(0)$. 
+
+We can compute numerically this solution as in the cell below for the flow:
+
+$\dot{x} = -2 x$
+"""
+
+# ╔═╡ a8b84ccb-977e-4cf7-b384-f2f68c48122a
+function linear!(du,u,p,t)
+	du[1]=-2*u[1]
+end
+
+# ╔═╡ d9bb5aa8-2708-40c3-8d42-3b21e6d634c0
+md"""
+x(0) $(@bind x0 Slider(-1.0:0.02:1.0,default=0.7;show_value=true)) 
+"""
+
+# ╔═╡ 1f8ae008-a195-42d8-b29e-66c78c81c8d6
+begin
+	sol = solve(ODEProblem(linear!,[x0],(0,3.0),[]))
+	p1 = plot([-1,1],[0.0,0.0],c=:black,xlims=(-1,1),ylims=(-0.1,0.1),size=(800,100),yaxis=false,yticks=false,legend=false,xlabel="x")
+	scatter!(p1,[x0],[0],c=:red)
+	plot!(p1,[sol.u[1][1],sol.u[end][1]],[0.0,0.0],arrow=true,c=:red)
+	p2 = plot(sol,ylabel="x",size=(800,300),ylims=(-1,1),legend=false)
+	plot(p1,p2,layout=grid(2,1,heights=[0.2 ,0.8]))
+end	
+
+# ╔═╡ f317741a-f3ae-4450-b57d-8403cab18335
+md"""
+The solution (an exponential decay) $x(t)$ starting from the initial condition $x(0)=x_0$ is shown in the lower graph as a function of time, and as a trajectory (in red) in the state space (black line) above.
+
+However we will be more interested in the topological structure of the flow that can be derived from the analysis of the vector field $f(x)$.
+
+# Topological Structure of the Flow
+
+The vector field $f(x)$ is defined assigning a vector (arrow) equal to the value of the function $f(x)$ to each of the points of the state space. For the case of the 1D Flow all regions with the vectors pointing in a given direction correspond to the same trajectory. 
+
+The **fixed points** $x_*$ correspond to those states that evolve into themselves, i. e. where the vector field (and the time derivative) are null (zero).
+
+**All trajectories in a 1D Flow start or end in a fixed point or at $\pm \infty$**
+
+The topological structure of the flow is given by all the trajectories and fixed points of the system. 
+
+In order to calculate this, there are two methods, one more graphical, the other more numerical. 
+
+"""
+
+# ╔═╡ d3d28638-8c26-461c-b804-d76a923515ff
+md"""
+### Graphical method
+
+We plot $f(x)$ in the vertical axis superimposed with the state space in the $x$.
+
+Then we determine the intervals of **positivity** ($f(x)>0$ green in the graph below) and **negativity** ($f(x)<0$ red in the graph below) of the function 
+
+We draw trajectories going to the right in the intervals of positivity ($\dot{x}>0$) and to the left in the intervals of negativity ($\dot{x}<0$).
+
+The **fixed points** are those where the flow is neither to the left nor to the right $f(x)=0$. 
+
+A fixed point can be **stable** (or **atractor**) if the trajectories converge to it from the left and the right, or **unstable** (i. e. **repulsor**) if the trajectories diverge to both sides. all aother cases are called **neutral**.
+
+"""
+
+# ╔═╡ 7af7eecd-eb9e-4ab2-b2f8-890ad5969237
+html"""
+<div>
+<img src="https://i.imgur.com/gIgFZOL.png" width="700px">
+</div>
+"""
+
+# ╔═╡ c0aa4384-0807-42f6-86fd-e6182121e465
+md"""
+We also note that whenever the function crosses the horizontal axis (fixed point) with a negative slope the fixed point is an attractor (since a perturbation to the right goes back to the left and vice versa), while if the slope is positive the fixed point is a repulsor (a perturbation to the right keeps moving to the right and the same to the other side, the perturbation is amplified). This is the basis of the other method.
+"""
+
+# ╔═╡ 01b880a3-2e24-4177-b9b0-2931f028e6e9
+md"""
+### Numerical Method
+
+This is not a numerical method to solve the differential equation but rather a method to analyze the vector field and determine the topological structure without the need to graph the entire function.
+
+The first step is to determine all the fixed points $x_*$ that satisfies the equation $f(x_*)=0$. These are also called the **zeroes** of the function $f(x)$, the fixed points are the zeroes of the vector field $f(x)$. This can be done by hand if the function is simple. For example for the previous equation with $f(x)=-2x$ it is clear that the only $x_*$ that satifies $f(x_*)=0$ is $x_*=0$. If the vector field is not so simple there are many numerical methods to find the zeroes of a function. 
+
+The second step is to determine the stability of the fixed points. This can be done by finding the slope of the function at the fixed point (or equivalently the **derivative of f with respect to x** at that point which we will denote using a tilde instead of a point $f'(x_*)$):
+
+- If the slope is **positive** at the fixed point (or the zeros) the function (from left to right) is going from the negatives (the flow at the left is going to the left) to the positives (the flow at the right is going to the right), therefore the fixed point is **unstable**
+
+- If the slope is **negative** at the fixed point (or the zeros) the function is going from the positives (the flow at the left is going to the right) to the negatives (the flow at the right is going to the left), therefore the fixed point is **stable**
+
+- If the slope is **zero** we have a neutral fixed point. In this case it may happen, but not always, that the function tangentially touches the horizontal axis, in that case any slight perturbation of the shape of the function (later we will define what that means in a more formal way) either generates two fixed points (one stable and one unstable), or causes there to be no fixed point. Later we will see that this is linked to a type of change in the topology of the flow called repulsor-attractor bifurcation. 
+
+Deriving the function and evaluating it at the fixed point is known as **linearization**. Why? Because for any function $f(x)$ the best linear approximation in a point environment is equal to the function evaluated at that point $f(x_*)$ (which is zero because we are at a fixed point) plus the derivative (slope of the tangent line to the function at that point that is the geometric interpretation of the derivative) multiplied by the deviation from the point $f'(x_*)(x-x_*)$, where we use the prime to denote the derivative with respect to the variable. Note that $f'(x_*)$ it is a constant because it is the derivative evaluated at the fixed point. 
+In other words, we can approximate our nonlinear dynamical system as a linear system very close to the fixed point:
+
+$\dot{x}=f'(x_*)(x-x_*)$
+
+This means that in an environment of an attractor fixed point (if $f'(x_*)<0$ )  trajectories converge as a decreasing exponential to the attractor, while in a repulsor fixed point ($f'(x_*)<0$) the trajectories diverge exponentially, just as in a linear system.
+
+If the derivative at the fixed point is zero the linealization is no longer valid.
+
+We can now study the Logistic Equation using the graphical method
+"""
+
+# ╔═╡ 112c2bc7-352d-4025-8455-003d2543cd5c
 md"""
 # Logistic Equation
 
-In what follows we will work with simple population dynamics models where the continuous variable can represent the density of a population (i.e. both the variable and time evolve continuously). In this context it is usual to denote the growth rate as $R$ (rate). Therefore the equation:
+The logistic equation is defined as:
+
+$\dot{x}=r_0x(1-x)$
+
+Since we are not interested now in the parameters we fix $r_0=2$.
+
+In the graph below we show in the left panel the vector field $f(x)$ in blue, superimposed witch the state space (in black) and a particular trajectory in red, and in the left panel the solution correspondig to this trajectory as a function of time.
+
+The vector field is then $f(x) = 2 x (1-x)$. We must find the zeroes of these function that is already factorized. There are two posible solutions:
+
+$x_* = 0$for this fixed point the slope is positive as can be seen in the graph (this can aso be computed analitycally from the derivatve function). Therefore this point is a repulsor.
+
+$x_* = 1$ for this fixed point the slope is negative as can be seen in the graph (this can aso be computed analitycally from the derivatve function). This fixed point corresponds to the ideal population or capacity and is an atractor. All positive initial conditions tends towards it.
 
 
-$\dot{x} = Rx$
-$\dot{x}=Rx\left(1-\frac{x}{K}\right)$
-
-corresponds to the unlimited exponential growth of the population density at rate $R$. 
-
-But exponential growth cannot be maintained forever, so if we want to model in a more realistic way a magnitude that grows with limited resources we must limit the growth rate $R$. One possible way (the simplest) is to limit $R$ with a linear function becoming zero when the population reaches the maximum capacity $K$. That is, let our variable growth rate be: $R(x)=R(1-x/K)$. Replacing this rate in the original equation we obtain the logistic equation 
-
-$\dot{x}=Rx\left(1-\frac{x}{K}\right)$
-
-wuth $K>0$ and $R>0$.
-
-This is the simplest system that models the growth of a population with K capacity.
 """
 
-# ╔═╡ 6d64cc27-1059-4dd7-8f17-1c6fd9a2eca0
+# ╔═╡ d9808200-5320-49c1-9ebf-5c8dc128c6a3
+function logistic(u,p,t)
+	p[1]*u[1]*(1.0-u[1])
+end;	
+
+# ╔═╡ bf009c87-d4cd-4001-8bd2-c95e3581fc8d
+md"""
+x(0) $(@bind x02 Slider(0.0:0.02:2.0,default=0.3;show_value=true)) 
+"""
+
+# ╔═╡ 0e3c83d9-5268-44e4-8cee-dd2421943748
+flow1D(logistic,x02,4.0,[2.0];xlims=[-0.1,2.0],ylims=[0,2.0])
+
+# ╔═╡ e581cc6f-1a68-4b1b-a0e2-e0f3327334e6
+md"""
+# Parameter variation and structural stability
+
+Now we can reintroduce the parameter concept. It is a value that remains constant during the time evolution, i.e. it does not vary, but it characterizes the flow and defines a family of "neighboring" flows in the space of all possible flows. It is very important to understand that although they cannot vary during the time evolution, we can be interested in **how the dynamical system varies** when we modify this parameter. In particular what will interest us most is if there are changes in the topological structure of the flow. Sometimes the parameters are called control parameters because they can be modified externally to obtain different flows.
+
+Let's go to the example of the logistic equation and now let's incorporate two parameters: the growth rate $r$ and the population capacity $K$ (we will understand this name once we have analyzed the solutions and the flow structure).
+
+This more "real" logistic equation can be written as
+
+$\dot{x} = r_0 \left(x- \frac{x}{K}\right)x$
+
+Let's see wha happens with the fixed points and their stability, which determine the topological structure of the flow, as we change the parameters.
+
+"""
+
+# ╔═╡ c8478515-c670-4d8f-bd22-336ebbe8b053
+function logistic2(u,p,t)
+	p[1]*u[1]*(1.0-u[1]/p[2])
+end;	
+
+# ╔═╡ ad65b408-4705-4bcc-b9bb-1009177117bf
+md"""
+x(0) $(@bind x03 Slider(0.0:0.02:2.0,default=0.3;show_value=true)) \
+r0 $(@bind r0 Slider(0.02:0.02:2.0,default=0.3;show_value=true))
+K $(@bind K Slider(0.02:0.02:2.0,default=1.0;show_value=true))
+"""
+
+# ╔═╡ 4b3851da-0bbf-46c8-99ec-b4fc7115982c
+flow1D(logistic2,x03,20.0,[r0,K];xlims=[-0.1,2.0],ylims=[0,2.0])
+
+# ╔═╡ 96df68ec-3d01-4eab-b270-b59d79e02f3a
+md"""
+Note that we vary the parameters in a realistic range, both the maximum growth rate $r_0$ and the population capacity $K$ are positive.
+
+As can be seen, varying $r_0$ varies the rate at which we converge to the single attractor of the system, and varying $K$ varies the position of the attractor, which is precisely at $x_*=K$.
+
+But what is more important, is that in all this range of variation **the topological structure of the flow does not change**. We always have a repeller on the left and an attractor on the right and that gives me only one possible structure, regardless of whether the position of the attractor changes.
+
+This feature that the topological characteristics of the flows (the parametric family of flows) do not vary as the parameters vary is known as **structural stability**. In this case the logistic equation is structurally stable over the entire parameter domain, but we can also have structural stability in a range. 
+
+And the most interesting thing happens when there is a loss of structural stability, because it implies that there will be a change in the topological structure of the flow, and this phenomenon is known as **bifurcation**. 
+"""
+
+# ╔═╡ ae8f5c80-2d38-4b6d-93ba-1ae45ddcfc86
+md"""
+# Qualitative Changes in the TS of the Flow																														
+The 1D flow is characterized qualitatively by its fixed points and stability. Can these change? What is the most general form? 
+
+Earlier we talked about structural stability and referred to the invariance of the topological structure to perturbations in the parameters. We had also wondered what happened when it tangentially grazed the horizontal axis at a fixed point and the linearization ceased to be valid. It is not difficult to see that when the latter happens we are faced with the imminence of a change in the topological structure of the flow. 
+
+We can think of the function f(x) as a snaking rope that varies with the parameters. The topological structure of the flow will not change as long as we have the same number of crossings (number of fixed points) and the sequence of crossings up, down, up, etc. does not change. What is the generic way it can change? When a "loop" that is on the positive or negative side crosses the axis as seen in the sequence of drawings below in which we have three different system parameter values:																									
+"""
+
+# ╔═╡ 09c6c2ef-0b7f-460a-904c-f71ecf0f8fd2
 html"""
-<div style="position: relative; right: 0; top: 0; z-index: 300;"><iframe src="https://www.youtube.com/embed/JwYhhnuuINk" width=500 height=250  frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<div>
+<img src="https://i.imgur.com/dmDiLts.png" width="700px">
+</div>
 """
 
-# ╔═╡ 4dc32b5a-5794-4d2d-844e-cdb80bec2e7b
-logistic(x,p,t)=p[1]*x*(1.0-x/p[2]);
-
-# ╔═╡ aa22c728-662c-4fdb-aae9-b3b411e311e2
+# ╔═╡ e0bfc074-d0b0-42f3-8cf6-2ae5871f38c0
 md"""
-Now we are going to plot, in addition to the time evolution, the function $f(x)$ in order to visualize the fixed points and the flow on the line.
+In this case at the exact point where the change occurs (center diagram) two things happen simultaneously:
 
-In order to do this, we are going to use the function of the course package `flux1D` whose arguments are (for the basic method)
+- Two fixed points are merged into one. Any perturbation, however small it may be, on one side makes them disappear and on the other side generates two fixed points. Moreover, these two fixed points are always an attractor and a repeller.
+- The derivative of the vector field is zero at that point so the linearization is no longer valid.
 
-`flux1D(f,x0,tmax,p;xlims)`
-- f is a function f(x,p,t) that defines the flow (returns the time derivative).
-- x0 is a scalar which gives the initial condition
-- tmax is a scalar that gives the final time of integration (always starts from t=0)
-- p is a vector (1D array) with the parameters of the system. Even if we have only one parameter we have to pass it as an array of only one element
-- the tuple xlims=(xmin,xmax) limits the graph of f(x) between the interval (xmin,xmax). This parameter is optional so it is after the semicolon.
+The conclusion is that there is no generic way to change the stability of the fixed points without creating or destroying a pair of fixed points: an attractor and a repeller. This is the attractor-repeller bifurcation (which is known as saddle node SN in systems of more than one dimension). In other words, a fixed point cannot go from being stable to unstable without passing through zero and this cannot be done in a generic way without collapsing with another fixed point of complementary stability (let's think that we try to invert the slope of one of the stretches of the black string above where it cuts the horizontal axis. Here "generic form" means that no additional conditions are imposed. If we force the origin to be always a fixed point or there is some symmetry condition there are other possible cases as we will see below.
 
-
-We can see that $f(x)$ is an inverted parabola that cuts the horizontal axis always in the fixed points $x=0$ and $x=K$
-and always with the same stability. That is, there are no topological changes (no bifurcations).
-Why inverted? How would it be the other way around in the positives?
+Let us define a bifurcation more formally: **Any change in the number of fixed points or their stability (i.e. the topological structure of the flow) by varying the parameters of the system is known as a local bifurcation**. Local refers to occurring at a given point in phase space.
 """
 
-# ╔═╡ 77766c99-4142-4acb-a855-ab133e67aa66
-@bind pars2 (
-	PlutoUI.combine() do bind
-		md"""
-		R: $(bind(Slider(0:0.02:2.0,default=0.5;show_value=true))) \
-		K: $(bind(Slider(0.02:0.02:2.0,default=1.0;show_value=true))) \
-		x0: $(bind(Slider(0:0.01:2.0,default=0.01;show_value=true)))
-		"""
-	end
-)
-
-# ╔═╡ 16a156b5-92ab-4e1c-ab70-c3b348186c57
-flow1D(logistic,pars2[3],100.0,pars2;xlims=[-0.1,2.0],title="Logistic")
-
-# ╔═╡ ad67a3cb-a42f-451d-92a5-301559322c30
+# ╔═╡ a25549e0-8875-4b5c-aa1d-7e47e8b207e0
 md"""
-## Math addendum 
 
-This equation has two fixed points. One at $x=0$ and the other at $x=K$. To evaluate its stability we calculate the derivative of the vector field $f(x)=Rx(1-x/K)$, which is equal to $f'(x)=R-2Rx/K$, and evaluate it at the fixed points.
+# Saddle Node Bifurcation
 
-- Fixed point $x_*=0$ : $f'(0)=R$ is always positive $\rightarrow$ the fixed point is unstable (repulsive). In its neighborhood, for a small positive population there is an exponential growth with rate R since 1 is much larger than $x/K$.
+Now we will present the most general or "simple" model that presents a certain bifurcation that occurs at the origin and for a parameter value equal to zero. Particular systems that have a local bifurcation at some other point for some other parameter value can be brought to the normal form by a change of coordinates.
 
-- Fixed point $x_*=K$: $f'(K)=-R$ is always negative $\rightarrow$ the fixed point is stable (attractor). It represents the maximum population that reaches growth.  If $x$ is slightly less than $K$ then $(1-x/K)$ is positive, the derivative is positive and the population grows. If instead $x$ is slightly higher than $K$ then $(1-x/K)$ is negative, the derivative is negative and the population decreases until reaching equilibrium at $x=K$.
+In the case of the repulsor attractor bifurcation (or SN in one dimension) it is fairly intuitive, both from the above drawing and from what we discussed when we wondered what happens to the linearization if the derivative of $f(x)$ becomes zero at the fixed point, that the simplest and most generic way to have a bifurcation of SN is by a (quadratic) parabola cutting the horizontal axis at the origin for the zero parameter value. That is:
+
+$\dot{x} = a - x^2$
+
+this is the version with the inverted parabola but we could equivalently have another equation with the positive quadratic term.
+
+For this system we have two fixed points (the repeller on the left and the attractor on the right) when $a>0$ and no fixed point for $a<0$. In $a=0$ the parabola "kisses" the horizontal axis and the two fixed points collapse into one (which is attractor on the right and repulsor on the left).
+
+The normal form gives us another important information that has to do with scaling. In a bifurcation environment, when the two fixed points with complementary stability are created they are located at $x_*=\pm\sqrt{a}$ . That is, they move away from the coalescence (or emergence) point with a scaling that goes as the square root of the parameter. When we find attractor repulsor (or saddle-node in higher dimensions) bifurcations there will always be an environment, for parameter values close to the value of the bifurcation, where this scaling is also observed, therefore we can anticipate the location of the fixed points without the need to find the zeros of the vector field.
 """
 
-# ╔═╡ ce4da9bf-316b-45d2-8504-f2a63cdda247
+# ╔═╡ 6cd940fd-94ab-49c4-a29a-accdb2b81ec9
 md"""
-# Logistic Equation with Harvest
+# Bifurcation Diagram
 
-Now, we will take a look at a simple population model that traverses an attractor-repeller (or Saddle-Node in 1D) bifurcation. 
+A representation that we are going to find very frequently and that it is extremely useful to characterize a given dynamic system is the bifurcation diagram in the product space of variables and parameters. 
 
-All the population models that we will see below are based on the logistic model and add an additional term that accounts for predation, either by another species or by exploitation of the species as a resource. In its simplest version, a constant decreasing term is added to represent harvesting (harvesting, hunting, fishing)
+In the case previos dynamical system we have a variable ($x$) and a parameter ($a$) and it is usual practice to represent the parameter on the horizontal axis (because it is in fact the independent control variable of our problem) and the variable on the vertical axis. That is to say that now the phase space will appear vertically. It is also usual not to represent the whole flow but only the fixed points. The fixed points are branches in the bifurcation diagram that give for each parameter value the location of the parameter (we could even write them as a function of the parameter, for example). Finally we can use blue color for the branches corresponding to the stable fixed points (or attractors) and red for the unstable ones (or repulsors).
 
-$\dot{x} = Rx\left(1-\frac{x}{K}\right) - H$ 
-
-Warning: this is not a realistic model for a population because it may give negative x values. Because of this we must introduce a cut-off condition when the variable becomes negative: $(u)->(u<0)$.
-
+Taking all this into account the bifurcation diagram for the normal form of the SN bifurcation is as follows:
 """
 
-# ╔═╡ 29474ca0-839b-45de-a7bf-7d91c5ea59aa
-logharvest1(x,p,t)=p[1]*x*(1.0-x/p[2])-p[3];
-
-# ╔═╡ 8fc407f4-a242-4cdc-b7e0-062c8f5782d1
-@bind pars_harvest (
-	PlutoUI.combine() do bind
-		md"""
-		R: $(bind(Slider(0:0.02:2.0,default=0.5;show_value=true))) \
-		K: $(bind(Slider(0.02:0.02:2.0,default=1.0;show_value=true))) \
-		H: $(bind(Slider(0.0:0.02:2.0,default=0.1;show_value=true))) \
-		x0: $(bind(Slider(0:0.02:2.0,default=0.5;show_value=true)))
-		"""
-	end
-)
-
-# ╔═╡ 794936ae-d9ae-4319-994f-4282c99c4238
-flow1D(logharvest1,pars_harvest[4],300.0,pars_harvest,(u)->(u<0);xlims=[0.0,2.0],title="Logistic with Harvest")
-
-# ╔═╡ b13d261e-1c1b-41b0-ae86-e20cd2304727
-md"""
-## Critical Slowing Down
-"""
-
-# ╔═╡ c3757398-060c-412c-997b-58331b2dee04
-@bind pars_csd (
-	PlutoUI.combine() do bind
-		md"""
-		H: $(bind(Slider(0.2:0.002:0.25,default=0.1;show_value=true))) \
-		S: $(bind(Slider(0:0.001:0.1,default=0.0;show_value=true)))
-		"""
-	end
-)
-
-# ╔═╡ f1f04dd4-0447-4e48-9bab-f34058a6a0f1
-flow1D(logharvest1,0.5+sqrt(0.25-pars_csd[1]),200.0,[1.0,1.0,pars_csd[1]],10.0,pars_csd[2],(u)->(u<0);xlims=[0.0,1.0],title="Log whith Harvest perturbed")
-
-# ╔═╡ c803ed90-958c-4d0e-84d5-3e8cc9c8fbfe
-md"""
-# Consumer Equation
-
-The next population model is a bit more realistic and is known as the **consumer equation**. It is a model that appears in macroeconomics as a simplification of the dynamics of consumption of a renewable resource and is made by the logistic equation with a harvest or consumption term that is directly proportional to the abundance of the resource $Px$. The parameter $P$ corresponds to the rate of consumption of the resource and $R$ can be reinterpreted as the rate of production or generation of the renewable resource.  
-
-
-$\dot{x} = Rx\left(1-\frac{x}{K}\right) - Px$ 
-"""
-
-# ╔═╡ b4ea8364-a582-443c-bdb1-46e75a5c4d4e
-# Consumer Equation
-consumer(x,p,t)=p[1]*x*(1.0-x/p[2])-p[3]*x;
-
-# ╔═╡ 5afa3aff-af15-429b-a0fb-9a0dfcad740d
-@bind pars_consumer (
-	PlutoUI.combine() do bind
-		md"""
-		R: $(bind(Slider(0:0.02:1.0,default=0.5;show_value=true))) \
-		K: $(bind(Slider(0.02:0.02:2.0,default=1.0;show_value=true))) \
-		P: $(bind(Slider(0.0:0.01:0.5,default=0.0;show_value=true))) \
-		x0: $(bind(Slider(0:0.02:2.0,default=0.5;show_value=true)))
-		"""
-	end
-)
-
-# ╔═╡ 5018d342-0a51-4275-8c0f-1b5d253c2ec0
-flow1D(consumer,pars_consumer[4],300.0,pars_consumer,xlims=[0.0,2.0],title="Consumer Equation")
-
-# ╔═╡ 84a596c1-3a0a-4edd-a7ea-f3fcd8839c2a
-md"""
-# Logistic Equation with Outbreak
-
-$\dot{x} = Rx\left(1-\displaystyle\frac{x}{K}\right)-P\displaystyle\frac{x^2}{1+x^2}$
-"""
-
-# ╔═╡ 91b2718a-a921-4bae-99c0-91ec9c7e6479
+# ╔═╡ 3d502689-789e-408b-a2b2-bfeee64e5e4e
 html"""
-<div style="position: relative; right: 0; top: 0; z-index: 300;"><iframe src="https://www.youtube.com/embed/1CSKTCS6st8" width=500 height=250  frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<div>
+<img src="https://i.imgur.com/lmMKrvz.png" width="400px">
+</div>
 """
 
-# ╔═╡ 5a0b156e-b0b2-43b8-b15e-bcdb65c154bf
-logoutbreak(x,p,t)=p[1]*x*(1.0-x/p[2])-p[3]*x*x/(1+x*x);
-
-# ╔═╡ 6528501f-3bb2-48a7-b24e-d32400033538
-@bind pars_outbreak (
-	PlutoUI.combine() do bind
-		md"""
-		R: $(bind(Slider(0:0.02:2.0,default=0.25;show_value=true))) \
-		K: $(bind(Slider(0.01:0.02:10.0,default=8.71;show_value=true))) \
-		P: $(bind(Slider(0.0:0.01:1.0,default=0.48;show_value=true))) \
-		x0: $(bind(Slider(0:0.02:8.0,default=0.1;show_value=true)))
-		"""
-	end
-)
-
-# ╔═╡ a3270d8b-f167-4fb9-bcc5-c62c91b39649
-flow1D(logoutbreak,pars_outbreak[4],300.0,pars_outbreak;xlims=[-0.2,8.0],title="Log with Outbreak")
-
-# ╔═╡ 0d0d6d2f-56b2-4e01-b9a4-6e469eac90ad
-html"""
-<div style="position: relative; right: 0; top: 0; z-index: 300;"><iframe src="https://www.youtube.com/embed/MlwAI3BlDsU" width=500 height=250  frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+# ╔═╡ 6c14fbbc-1ec3-4a80-884a-3e6121fa57da
+md"""
+The saddle-node bifurcation occurs at the point $a=0$, $x=0$ of the diagram (green point) from which arise to the right ($a>0$) a stable branch for the attractor (blue) and an unstable one for the repeller (red) that move away from the bifurcation point as \pm\sqrt{a} (the coordinates of the fixed points).
 """
 
-# ╔═╡ 76cfd5c8-6298-4ae2-9d2d-9e60deb12f49
-html"""
-<div style="position: relative; right: 0; top: 0; z-index: 300;"><iframe src="https://www.youtube.com/embed/yUEXpUyi404" width=500 height=250  frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+# ╔═╡ 7557f8d7-2654-41c2-a443-9d5a76622501
+md"""
+x(0) $(@bind x04 Slider(-1.0:0.01:1.0,default=0.1;show_value=true)) 
+a: $(@bind a Slider(-0.5:0.01:0.5,default=0.1;show_value=true)) 
 """
 
-# ╔═╡ 0bf40552-b627-4fa7-b3ba-1d8c7ed4a568
-html"""
-<div style="position: relative; right: 0; top: 0; z-index: 250;"><iframe src="https://www.youtube.com/embed/Vu9oNWXv4Uk" width=500 height=250  frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
-"""
+# ╔═╡ 3c64b9fd-c2b0-440f-84ac-b15c6574d2df
+begin
+	nodosilla(x,p,t)=p[1]-x*x
+	flow1D(nodosilla,x04,2.0,[a],(u)->(u<-1.0);xlims=[-1.0,1.0],title="Saddle Node")
+end	
 
-# ╔═╡ 2ac364c2-cbdd-49b4-9f26-9fe89382be5e
-TableOfContents(title="📚 Table of Contents", indent=true, depth=4, aside=true)
-
-# ╔═╡ 6b6a5e19-5298-4969-b1c9-699aa1cb2996
+# ╔═╡ f480e291-b67c-4a2f-9f44-914a340df81e
 html"""
 <style>
 input[type*="range"] {
-	width: 50%;
+	width: 30%;
 }
 </style>
 """
@@ -243,12 +315,12 @@ PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
-DifferentialEquations = "~7.1.0"
+DifferentialEquations = "~7.2.0"
 ForwardDiff = "~0.10.30"
 IntervalRootFinding = "~0.5.10"
-Plots = "~1.29.0"
+Plots = "~1.31.1"
 PlutoUI = "~0.7.39"
-StaticArrays = "~1.4.4"
+StaticArrays = "~1.5.0"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -281,33 +353,39 @@ version = "0.2.0"
 
 [[deps.ArrayInterface]]
 deps = ["ArrayInterfaceCore", "Compat", "IfElse", "LinearAlgebra", "Static"]
-git-tree-sha1 = "d956c0606a3bc1112a1f99a8b2309b79558d9921"
+git-tree-sha1 = "6ccb71b40b04ad69152f1f83d5925de13911417e"
 uuid = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
-version = "6.0.17"
+version = "6.0.19"
 
 [[deps.ArrayInterfaceCore]]
 deps = ["LinearAlgebra", "SparseArrays", "SuiteSparse"]
-git-tree-sha1 = "d618d3cf75e8ed5064670e939289698ecf426c7f"
+git-tree-sha1 = "7d255eb1d2e409335835dc8624c35d97453011eb"
 uuid = "30b0a656-2188-435a-8636-2ec0e6a096e2"
-version = "0.1.12"
+version = "0.1.14"
 
 [[deps.ArrayInterfaceGPUArrays]]
-deps = ["Adapt", "ArrayInterfaceCore", "GPUArrays", "LinearAlgebra"]
-git-tree-sha1 = "2b6bf6e383302e0eb71e76c6fb7bd24e0e582f4d"
+deps = ["Adapt", "ArrayInterfaceCore", "GPUArraysCore", "LinearAlgebra"]
+git-tree-sha1 = "febba7add2873aecc0b6620b55969e73ec875bce"
 uuid = "6ba088a2-8465-4c0a-af30-387133b534db"
-version = "0.1.0"
+version = "0.2.1"
 
 [[deps.ArrayInterfaceOffsetArrays]]
 deps = ["ArrayInterface", "OffsetArrays", "Static"]
-git-tree-sha1 = "7dce0e2846e7496622f5d2742502d7e029693458"
+git-tree-sha1 = "c49f6bad95a30defff7c637731f00934c7289c50"
 uuid = "015c0d05-e682-4f19-8f0a-679ce4c54826"
-version = "0.1.5"
+version = "0.1.6"
 
 [[deps.ArrayInterfaceStaticArrays]]
-deps = ["Adapt", "ArrayInterface", "LinearAlgebra", "Static", "StaticArrays"]
-git-tree-sha1 = "d7dc30474e73173a990eca86af76cae8790fa9f2"
+deps = ["Adapt", "ArrayInterface", "ArrayInterfaceStaticArraysCore", "LinearAlgebra", "Static", "StaticArrays"]
+git-tree-sha1 = "efb000a9f643f018d5154e56814e338b5746c560"
 uuid = "b0d46f97-bff5-4637-a19a-dd75974142cd"
-version = "0.1.2"
+version = "0.1.4"
+
+[[deps.ArrayInterfaceStaticArraysCore]]
+deps = ["Adapt", "ArrayInterfaceCore", "LinearAlgebra", "StaticArraysCore"]
+git-tree-sha1 = "a1e2cf6ced6505cbad2490532388683f1e88c3ed"
+uuid = "dd5226c6-a4d4-4bc7-8575-46859f9c95b9"
+version = "0.1.0"
 
 [[deps.ArrayLayouts]]
 deps = ["FillArrays", "LinearAlgebra", "SparseArrays"]
@@ -382,9 +460,9 @@ version = "0.5.1"
 
 [[deps.ChainRulesCore]]
 deps = ["Compat", "LinearAlgebra", "SparseArrays"]
-git-tree-sha1 = "9489214b993cd42d17f44c36e359bf6a7c919abf"
+git-tree-sha1 = "2dd813e5f2f7eec2d1268c57cf2373d3ee91fcea"
 uuid = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-version = "1.15.0"
+version = "1.15.1"
 
 [[deps.ChangesOfVariables]]
 deps = ["ChainRulesCore", "LinearAlgebra", "Test"]
@@ -394,15 +472,15 @@ version = "0.1.3"
 
 [[deps.CloseOpenIntervals]]
 deps = ["ArrayInterface", "Static"]
-git-tree-sha1 = "16cfdcff2db5e6e6b365ae3689b8694741f00a43"
+git-tree-sha1 = "5522c338564580adf5d58d91e43a55db0fa5fb39"
 uuid = "fb6a15b2-703c-40df-9091-08a04967cfa9"
-version = "0.1.9"
+version = "0.1.10"
 
 [[deps.ColorSchemes]]
 deps = ["ColorTypes", "ColorVectorSpace", "Colors", "FixedPointNumbers", "Random"]
-git-tree-sha1 = "7297381ccb5df764549818d9a7d57e45f1057d30"
+git-tree-sha1 = "1fd869cc3875b57347f7027521f561cf46d1fcd8"
 uuid = "35d6a980-a343-548e-a6ea-1d62b119f2f4"
-version = "3.18.0"
+version = "3.19.0"
 
 [[deps.ColorTypes]]
 deps = ["FixedPointNumbers", "Random"]
@@ -445,9 +523,9 @@ uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
 
 [[deps.ConstructionBase]]
 deps = ["LinearAlgebra"]
-git-tree-sha1 = "f74e9d5388b8620b4cee35d4c5a618dd4dc547f4"
+git-tree-sha1 = "c096d0e321368ac23eb1be1ea405814f8b32adb3"
 uuid = "187b0558-2788-49d3-abe0-74a17ed4e7c9"
-version = "1.3.0"
+version = "1.3.1"
 
 [[deps.Contour]]
 deps = ["StaticArrays"]
@@ -499,9 +577,9 @@ version = "0.4.0"
 
 [[deps.DiffEqBase]]
 deps = ["ArrayInterfaceCore", "ChainRulesCore", "DataStructures", "Distributions", "DocStringExtensions", "FastBroadcast", "ForwardDiff", "FunctionWrappers", "LinearAlgebra", "Logging", "MuladdMacro", "NonlinearSolve", "Parameters", "Printf", "RecursiveArrayTools", "Reexport", "Requires", "SciMLBase", "Setfield", "SparseArrays", "StaticArrays", "Statistics", "ZygoteRules"]
-git-tree-sha1 = "2edc95c52ea37f9e7b6b0c043c58d3a12a6d3337"
+git-tree-sha1 = "9862c61c6049b0ad5a6b433e31d2c6c8ff373056"
 uuid = "2b5f629d-d688-5b77-993f-72d75c75574e"
-version = "6.91.1"
+version = "6.92.2"
 
 [[deps.DiffEqCallbacks]]
 deps = ["DataStructures", "DiffEqBase", "ForwardDiff", "LinearAlgebra", "NLsolve", "Parameters", "RecipesBase", "RecursiveArrayTools", "SciMLBase", "StaticArrays"]
@@ -509,17 +587,11 @@ git-tree-sha1 = "cfef2afe8d73ed2d036b0e4b14a3f9b53045c534"
 uuid = "459566f4-90b8-5000-8ac3-15dfb0a30def"
 version = "2.23.1"
 
-[[deps.DiffEqJump]]
-deps = ["ArrayInterfaceCore", "DataStructures", "DiffEqBase", "DocStringExtensions", "FunctionWrappers", "Graphs", "LinearAlgebra", "Markdown", "PoissonRandom", "Random", "RandomNumbers", "RecursiveArrayTools", "Reexport", "StaticArrays", "TreeViews", "UnPack"]
-git-tree-sha1 = "926f5d9345f0ebfcdd88f03beafef9b7c198dd0d"
-uuid = "c894b116-72e5-5b58-be3c-e6d8d4ac2b12"
-version = "8.6.0"
-
 [[deps.DiffEqNoiseProcess]]
-deps = ["DiffEqBase", "Distributions", "GPUArrays", "LinearAlgebra", "Markdown", "Optim", "PoissonRandom", "QuadGK", "Random", "Random123", "RandomNumbers", "RecipesBase", "RecursiveArrayTools", "ResettableStacks", "SciMLBase", "StaticArrays", "Statistics"]
-git-tree-sha1 = "7f089e4db1c33b7e2fd1635a721c71bcb7d1ad38"
+deps = ["DiffEqBase", "Distributions", "GPUArraysCore", "LinearAlgebra", "Markdown", "Optim", "PoissonRandom", "QuadGK", "Random", "Random123", "RandomNumbers", "RecipesBase", "RecursiveArrayTools", "ResettableStacks", "SciMLBase", "StaticArrays", "Statistics"]
+git-tree-sha1 = "6f3fe6ebe1b6e6e3a9b72739ada313aa17c9bb66"
 uuid = "77a26b50-5914-5dd7-bc55-306e6241c503"
-version = "5.11.1"
+version = "5.12.0"
 
 [[deps.DiffResults]]
 deps = ["StaticArrays"]
@@ -534,10 +606,10 @@ uuid = "b552c78f-8df3-52c6-915a-8e097449b14b"
 version = "1.11.0"
 
 [[deps.DifferentialEquations]]
-deps = ["BoundaryValueDiffEq", "DelayDiffEq", "DiffEqBase", "DiffEqCallbacks", "DiffEqJump", "DiffEqNoiseProcess", "LinearAlgebra", "LinearSolve", "OrdinaryDiffEq", "Random", "RecursiveArrayTools", "Reexport", "SteadyStateDiffEq", "StochasticDiffEq", "Sundials"]
-git-tree-sha1 = "3f3db9365fedd5fdbecebc3cce86dfdfe5c43c50"
+deps = ["BoundaryValueDiffEq", "DelayDiffEq", "DiffEqBase", "DiffEqCallbacks", "DiffEqNoiseProcess", "JumpProcesses", "LinearAlgebra", "LinearSolve", "OrdinaryDiffEq", "Random", "RecursiveArrayTools", "Reexport", "SteadyStateDiffEq", "StochasticDiffEq", "Sundials"]
+git-tree-sha1 = "0ccc4356a8f268d5eee641f0944074560c45267a"
 uuid = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
-version = "7.1.0"
+version = "7.2.0"
 
 [[deps.Distances]]
 deps = ["LinearAlgebra", "SparseArrays", "Statistics", "StatsAPI"]
@@ -551,9 +623,9 @@ uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
 [[deps.Distributions]]
 deps = ["ChainRulesCore", "DensityInterface", "FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SparseArrays", "SpecialFunctions", "Statistics", "StatsBase", "StatsFuns", "Test"]
-git-tree-sha1 = "0ec161f87bf4ab164ff96dfacf4be8ffff2375fd"
+git-tree-sha1 = "d530092b57aef8b96b27694e51c575b09c7f0b2e"
 uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
-version = "0.25.62"
+version = "0.25.64"
 
 [[deps.DocStringExtensions]]
 deps = ["LibGit2"]
@@ -589,10 +661,10 @@ uuid = "2e619515-83b5-522b-bb60-26c02a35a201"
 version = "2.4.8+0"
 
 [[deps.ExponentialUtilities]]
-deps = ["ArrayInterfaceCore", "GPUArrays", "GenericSchur", "LinearAlgebra", "Printf", "SparseArrays", "libblastrampoline_jll"]
-git-tree-sha1 = "343c0b28b7513bbdd8ea91d8500fd1f357944f22"
+deps = ["ArrayInterfaceCore", "GPUArraysCore", "GenericSchur", "LinearAlgebra", "Printf", "SparseArrays", "libblastrampoline_jll"]
+git-tree-sha1 = "b40c9037e1a33990466bc5d224ced34b34eebdb0"
 uuid = "d4d017d3-3776-5f7e-afef-a10c40355c18"
-version = "1.17.1"
+version = "1.18.0"
 
 [[deps.ExprTools]]
 git-tree-sha1 = "56559bbef6ca5ea0c0818fa5c90320398a6fbf8d"
@@ -613,9 +685,9 @@ version = "4.4.0+0"
 
 [[deps.FastBroadcast]]
 deps = ["ArrayInterface", "ArrayInterfaceCore", "LinearAlgebra", "Polyester", "Static", "StrideArraysCore"]
-git-tree-sha1 = "81765322b2960b7c92f9280b00956cb8d645d3f7"
+git-tree-sha1 = "21cdeff41e5a1822c2acd7fc7934c5f450588e00"
 uuid = "7034ab61-46d4-4ed7-9d0f-46aef9175898"
-version = "0.2.0"
+version = "0.2.1"
 
 [[deps.FastClosures]]
 git-tree-sha1 = "acebe244d53ee1b461970f8910c235b259e772ef"
@@ -694,11 +766,11 @@ git-tree-sha1 = "51d2dfe8e590fbd74e7a842cf6d13d8a2f45dc01"
 uuid = "0656b61e-2033-5cc2-a64a-77c0f6c09b89"
 version = "3.3.6+0"
 
-[[deps.GPUArrays]]
-deps = ["Adapt", "LLVM", "LinearAlgebra", "Printf", "Random", "Serialization", "Statistics"]
-git-tree-sha1 = "c783e8883028bf26fb05ed4022c450ef44edd875"
-uuid = "0c68f7d7-f131-5f86-a1c3-88cf8149b2d7"
-version = "8.3.2"
+[[deps.GPUArraysCore]]
+deps = ["Adapt"]
+git-tree-sha1 = "4078d3557ab15dd9fe6a0cf6f65e3d4937e98427"
+uuid = "46192b85-c4d5-4398-a991-12ede77f4527"
+version = "0.1.0"
 
 [[deps.GR]]
 deps = ["Base64", "DelimitedFiles", "GR_jll", "HTTP", "JSON", "Libdl", "LinearAlgebra", "Pkg", "Printf", "Random", "RelocatableFolders", "Serialization", "Sockets", "Test", "UUIDs"]
@@ -744,9 +816,9 @@ version = "1.3.14+0"
 
 [[deps.Graphs]]
 deps = ["ArnoldiMethod", "Compat", "DataStructures", "Distributed", "Inflate", "LinearAlgebra", "Random", "SharedArrays", "SimpleTraits", "SparseArrays", "Statistics"]
-git-tree-sha1 = "4888af84657011a65afc7a564918d281612f983a"
+git-tree-sha1 = "db5c7e27c0d46fd824d470a3c32a4fc6c935fa96"
 uuid = "86223c79-3864-5bf0-83f7-82e725a168b6"
-version = "1.7.0"
+version = "1.7.1"
 
 [[deps.Grisu]]
 git-tree-sha1 = "53bb909d1151e57e2484c3d1b53e19552b887fb2"
@@ -812,9 +884,9 @@ version = "0.5.1"
 
 [[deps.InlineStrings]]
 deps = ["Parsers"]
-git-tree-sha1 = "61feba885fac3a407465726d0c330b3055df897f"
+git-tree-sha1 = "a8671d5c9670a62cb36b7d44c376bdb09181aa26"
 uuid = "842dd82b-1e85-43dc-bf29-5d0ee9dffc48"
-version = "1.1.2"
+version = "1.1.3"
 
 [[deps.InteractiveUtils]]
 deps = ["Markdown"]
@@ -834,9 +906,9 @@ version = "0.5.10"
 
 [[deps.Intervals]]
 deps = ["Dates", "Printf", "RecipesBase", "Serialization", "TimeZones"]
-git-tree-sha1 = "5fe139a9f9610d0c61e85c9f522ab8bc12aec9e4"
+git-tree-sha1 = "f3c7f871d642d244e7a27e3fb81e8441e13230d8"
 uuid = "d8418881-c3e1-53bb-8760-2df7ec849ed5"
-version = "1.7.1"
+version = "1.8.0"
 
 [[deps.InverseFunctions]]
 deps = ["Test"]
@@ -883,6 +955,12 @@ git-tree-sha1 = "b53380851c6e6664204efb2e62cd24fa5c47e4ba"
 uuid = "aacddb02-875f-59d6-b918-886e6ef4fbf8"
 version = "2.1.2+0"
 
+[[deps.JumpProcesses]]
+deps = ["ArrayInterfaceCore", "DataStructures", "DiffEqBase", "DocStringExtensions", "FunctionWrappers", "Graphs", "LinearAlgebra", "Markdown", "PoissonRandom", "Random", "RandomNumbers", "RecursiveArrayTools", "Reexport", "SciMLBase", "StaticArrays", "TreeViews", "UnPack"]
+git-tree-sha1 = "4aa139750616fee7216ddcb30652357c60c3683e"
+uuid = "ccbc3e58-028d-4f4c-8cd5-9ae44345cda5"
+version = "9.0.1"
+
 [[deps.KLU]]
 deps = ["LinearAlgebra", "SparseArrays", "SuiteSparse_jll"]
 git-tree-sha1 = "cae5e3dfd89b209e01bcd65b3a25e74462c67ee0"
@@ -891,9 +969,9 @@ version = "0.3.0"
 
 [[deps.Krylov]]
 deps = ["LinearAlgebra", "Printf", "SparseArrays"]
-git-tree-sha1 = "13b16b00144816211cbf92823ded6042490eb009"
+git-tree-sha1 = "7f0a89bd74c30aa7ff96c4bf1bc884c39663a621"
 uuid = "ba0b0d4f-ebba-5204-a429-3ac8c609bfb7"
-version = "0.8.1"
+version = "0.8.2"
 
 [[deps.KrylovKit]]
 deps = ["LinearAlgebra", "Printf"]
@@ -913,18 +991,6 @@ git-tree-sha1 = "bf36f528eec6634efc60d7ec062008f171071434"
 uuid = "88015f11-f218-50d7-93a8-a6af411a945d"
 version = "3.0.0+1"
 
-[[deps.LLVM]]
-deps = ["CEnum", "LLVMExtra_jll", "Libdl", "Printf", "Unicode"]
-git-tree-sha1 = "e7e9184b0bf0158ac4e4aa9daf00041b5909bf1a"
-uuid = "929cbde3-209d-540e-8aea-75f648917ca0"
-version = "4.14.0"
-
-[[deps.LLVMExtra_jll]]
-deps = ["Artifacts", "JLLWrappers", "LazyArtifacts", "Libdl", "Pkg", "TOML"]
-git-tree-sha1 = "771bfe376249626d3ca12bcd58ba243d3f961576"
-uuid = "dad2f222-ce93-54a1-a47d-0025e8a3acab"
-version = "0.0.16+0"
-
 [[deps.LZO_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "e5b909bcf985c5e2605737d2ce278ed791b89be6"
@@ -935,12 +1001,6 @@ version = "2.10.1+0"
 git-tree-sha1 = "f2355693d6778a178ade15952b7ac47a4ff97996"
 uuid = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 version = "1.3.0"
-
-[[deps.LabelledArrays]]
-deps = ["ArrayInterface", "ArrayInterfaceStaticArrays", "ChainRulesCore", "LinearAlgebra", "MacroTools", "StaticArrays"]
-git-tree-sha1 = "a63da17ff71f41a1f818e0e1d3c02a32cf4c51f7"
-uuid = "2ee39098-c373-598a-b85f-a56591580800"
-version = "1.10.2"
 
 [[deps.Latexify]]
 deps = ["Formatting", "InteractiveUtils", "LaTeXStrings", "MacroTools", "Markdown", "Printf", "Requires"]
@@ -1042,10 +1102,10 @@ deps = ["Libdl", "libblastrampoline_jll"]
 uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [[deps.LinearSolve]]
-deps = ["ArrayInterfaceCore", "DocStringExtensions", "GPUArrays", "IterativeSolvers", "KLU", "Krylov", "KrylovKit", "LinearAlgebra", "RecursiveFactorization", "Reexport", "SciMLBase", "Setfield", "SparseArrays", "SuiteSparse", "UnPack"]
-git-tree-sha1 = "5812ab11c1528fef08e3d9b1fc376b1231ec8952"
+deps = ["ArrayInterfaceCore", "DocStringExtensions", "GPUArraysCore", "IterativeSolvers", "KLU", "Krylov", "KrylovKit", "LinearAlgebra", "RecursiveFactorization", "Reexport", "SciMLBase", "Setfield", "SparseArrays", "SuiteSparse", "UnPack"]
+git-tree-sha1 = "c08c4177cc7edbf42a92f08a04bf848dde73f0b9"
 uuid = "7ed4a6bd-45f5-4d41-b270-4a48e9bafcae"
-version = "1.18.1"
+version = "1.20.0"
 
 [[deps.LogExpFunctions]]
 deps = ["ChainRulesCore", "ChangesOfVariables", "DocStringExtensions", "InverseFunctions", "IrrationalConstants", "LinearAlgebra"]
@@ -1058,9 +1118,9 @@ uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
 
 [[deps.LoopVectorization]]
 deps = ["ArrayInterface", "ArrayInterfaceCore", "ArrayInterfaceOffsetArrays", "ArrayInterfaceStaticArrays", "CPUSummary", "ChainRulesCore", "CloseOpenIntervals", "DocStringExtensions", "ForwardDiff", "HostCPUFeatures", "IfElse", "LayoutPointers", "LinearAlgebra", "OffsetArrays", "PolyesterWeave", "SIMDDualNumbers", "SIMDTypes", "SLEEFPirates", "SpecialFunctions", "Static", "ThreadingUtilities", "UnPack", "VectorizationBase"]
-git-tree-sha1 = "5ea9a0aaf5ded7f0b6e43c96ca1793e60c96af93"
+git-tree-sha1 = "7bf979d315193570cc2b79b4d2eb4595d68b9352"
 uuid = "bdcacae8-1622-11e9-2a5c-532679323890"
-version = "0.12.118"
+version = "0.12.119"
 
 [[deps.MacroTools]]
 deps = ["Markdown", "Random"]
@@ -1078,10 +1138,10 @@ deps = ["Base64"]
 uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
 
 [[deps.MbedTLS]]
-deps = ["Dates", "MbedTLS_jll", "Random", "Sockets"]
-git-tree-sha1 = "1c38e51c3d08ef2278062ebceade0e46cefc96fe"
+deps = ["Dates", "MbedTLS_jll", "MozillaCACerts_jll", "Random", "Sockets"]
+git-tree-sha1 = "891d3b4e8f8415f53108b4918d0183e61e18015b"
 uuid = "739be429-bea8-5141-9913-cc70e7f3736d"
-version = "1.0.3"
+version = "1.1.0"
 
 [[deps.MbedTLS_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -1149,9 +1209,9 @@ version = "0.3.20"
 
 [[deps.OffsetArrays]]
 deps = ["Adapt"]
-git-tree-sha1 = "ec2e30596282d722f018ae784b7f44f3b88065e4"
+git-tree-sha1 = "1ea784113a6aa054c5ebd95945fa5e52c2f378e7"
 uuid = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
-version = "1.12.6"
+version = "1.12.7"
 
 [[deps.Ogg_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1169,9 +1229,9 @@ uuid = "05823500-19ac-5b8b-9628-191a04bc5112"
 
 [[deps.OpenSSL_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "ab05aa4cc89736e95915b01e7279e61b1bfe33b8"
+git-tree-sha1 = "9a36165cf84cff35851809a40a928e1103702013"
 uuid = "458c3c95-2e84-50aa-8efc-19380b2a3a95"
-version = "1.1.14+0"
+version = "1.1.16+0"
 
 [[deps.OpenSpecFun_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Pkg"]
@@ -1198,9 +1258,9 @@ version = "1.4.1"
 
 [[deps.OrdinaryDiffEq]]
 deps = ["Adapt", "ArrayInterface", "ArrayInterfaceGPUArrays", "ArrayInterfaceStaticArrays", "DataStructures", "DiffEqBase", "DocStringExtensions", "ExponentialUtilities", "FastBroadcast", "FastClosures", "FiniteDiff", "ForwardDiff", "LinearAlgebra", "LinearSolve", "Logging", "LoopVectorization", "MacroTools", "MuladdMacro", "NLsolve", "NonlinearSolve", "Polyester", "PreallocationTools", "RecursiveArrayTools", "Reexport", "SciMLBase", "SparseArrays", "SparseDiffTools", "StaticArrays", "UnPack"]
-git-tree-sha1 = "36c40402ad1d467dd2267fef3ab96f686356626e"
+git-tree-sha1 = "062f233b13f04aa942bd3ca831791280f57874a3"
 uuid = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
-version = "6.15.0"
+version = "6.18.1"
 
 [[deps.PCRE_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1210,9 +1270,9 @@ version = "8.44.0+0"
 
 [[deps.PDMats]]
 deps = ["LinearAlgebra", "SparseArrays", "SuiteSparse"]
-git-tree-sha1 = "7f4869861f8dac4990d6808b66b57e5a425cfd99"
+git-tree-sha1 = "ca433b9e2f5ca3a0ce6702a032fce95a3b6e1e48"
 uuid = "90014a1f-27ba-587c-ab20-58faa44d9150"
-version = "0.11.13"
+version = "0.11.14"
 
 [[deps.Parameters]]
 deps = ["OrderedCollections", "UnPack"]
@@ -1244,15 +1304,15 @@ version = "3.0.0"
 
 [[deps.PlotUtils]]
 deps = ["ColorSchemes", "Colors", "Dates", "Printf", "Random", "Reexport", "Statistics"]
-git-tree-sha1 = "bb16469fd5224100e422f0b027d26c5a25de1200"
+git-tree-sha1 = "9888e59493658e476d3073f1ce24348bdc086660"
 uuid = "995b91a9-d308-5afd-9ec6-746e21dbc043"
-version = "1.2.0"
+version = "1.3.0"
 
 [[deps.Plots]]
 deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers", "GR", "GeometryBasics", "JSON", "Latexify", "LinearAlgebra", "Measures", "NaNMath", "Pkg", "PlotThemes", "PlotUtils", "Printf", "REPL", "Random", "RecipesBase", "RecipesPipeline", "Reexport", "Requires", "Scratch", "Showoff", "SparseArrays", "Statistics", "StatsBase", "UUIDs", "UnicodeFun", "Unzip"]
-git-tree-sha1 = "9e42de869561d6bdf8602c57ec557d43538a92f0"
+git-tree-sha1 = "93e82cebd5b25eb33068570e3f63a86be16955be"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
-version = "1.29.1"
+version = "1.31.1"
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "Markdown", "Random", "Reexport", "UUIDs"]
@@ -1268,15 +1328,15 @@ version = "0.4.1"
 
 [[deps.Polyester]]
 deps = ["ArrayInterface", "BitTwiddlingConvenienceFunctions", "CPUSummary", "IfElse", "ManualMemory", "PolyesterWeave", "Requires", "Static", "StrideArraysCore", "ThreadingUtilities"]
-git-tree-sha1 = "bfd5fb3376bc084d202c717bbba8c94696755d87"
+git-tree-sha1 = "97bbf8dc886d67ff0dd1f56cfc0ee18b7bb7f8ce"
 uuid = "f517fe37-dbe3-4b94-8317-1923a5111588"
-version = "0.6.12"
+version = "0.6.13"
 
 [[deps.PolyesterWeave]]
 deps = ["BitTwiddlingConvenienceFunctions", "CPUSummary", "IfElse", "Static", "ThreadingUtilities"]
-git-tree-sha1 = "7e597df97e46ffb1c8adbaddfa56908a7a20194b"
+git-tree-sha1 = "4cd738fca4d826bef1a87cbe43196b34fa205e6d"
 uuid = "1d0040c9-8b98-4ee7-8388-3f51789ca0ad"
-version = "0.1.5"
+version = "0.1.6"
 
 [[deps.Polynomials]]
 deps = ["Intervals", "LinearAlgebra", "MutableArithmetics", "RecipesBase"]
@@ -1291,10 +1351,10 @@ uuid = "85a6dd25-e78a-55b7-8502-1745935b8125"
 version = "0.2.4"
 
 [[deps.PreallocationTools]]
-deps = ["Adapt", "ArrayInterfaceCore", "ForwardDiff", "LabelledArrays"]
-git-tree-sha1 = "77266c25ab9d48e31ef167eae936e8f6fa0e4754"
+deps = ["Adapt", "ArrayInterfaceCore", "ForwardDiff"]
+git-tree-sha1 = "ba66bf03b84ca3bd0a26aa2bbe96cd9df2f4f9b9"
 uuid = "d236fae5-4411-538c-8e31-a6e3d9e00b46"
-version = "0.3.2"
+version = "0.4.0"
 
 [[deps.Preferences]]
 deps = ["TOML"]
@@ -1350,10 +1410,10 @@ uuid = "01d81517-befc-4cb6-b9ec-a95719d0359c"
 version = "0.5.2"
 
 [[deps.RecursiveArrayTools]]
-deps = ["Adapt", "ArrayInterfaceCore", "ArrayInterfaceStaticArrays", "ChainRulesCore", "DocStringExtensions", "FillArrays", "GPUArrays", "LinearAlgebra", "RecipesBase", "StaticArrays", "Statistics", "ZygoteRules"]
-git-tree-sha1 = "c8bb13a16838ce37f94149c356c5664562b46548"
+deps = ["Adapt", "ArrayInterfaceCore", "ArrayInterfaceStaticArraysCore", "ChainRulesCore", "DocStringExtensions", "FillArrays", "GPUArraysCore", "LinearAlgebra", "RecipesBase", "StaticArraysCore", "Statistics", "ZygoteRules"]
+git-tree-sha1 = "7ddd4f1ac52f9cc1b784212785f86a75602a7e4b"
 uuid = "731186ca-8d62-57ce-b412-fbd966d074cd"
-version = "2.29.2"
+version = "2.31.0"
 
 [[deps.RecursiveFactorization]]
 deps = ["LinearAlgebra", "LoopVectorization", "Polyester", "StrideArraysCore", "TriangularSolve"]
@@ -1417,15 +1477,15 @@ version = "0.1.0"
 
 [[deps.SLEEFPirates]]
 deps = ["IfElse", "Static", "VectorizationBase"]
-git-tree-sha1 = "ac399b5b163b9140f9c310dfe9e9aaa225617ff6"
+git-tree-sha1 = "7ee0e13ac7cd77f2c0e93bff8c40c45f05c77a5a"
 uuid = "476501e8-09a2-5ece-8869-fb82de89a1fa"
-version = "0.6.32"
+version = "0.6.33"
 
 [[deps.SciMLBase]]
-deps = ["ArrayInterfaceCore", "CommonSolve", "ConstructionBase", "Distributed", "DocStringExtensions", "IteratorInterfaceExtensions", "LinearAlgebra", "Logging", "Markdown", "RecipesBase", "RecursiveArrayTools", "StaticArrays", "Statistics", "Tables", "TreeViews"]
-git-tree-sha1 = "ac248d767048e681843ab674b18e483b05bedc09"
+deps = ["ArrayInterfaceCore", "CommonSolve", "ConstructionBase", "Distributed", "DocStringExtensions", "IteratorInterfaceExtensions", "LinearAlgebra", "Logging", "Markdown", "RecipesBase", "RecursiveArrayTools", "StaticArraysCore", "Statistics", "Tables", "TreeViews"]
+git-tree-sha1 = "3243a883fa422a0a5cfe2d3b6ea6287fc396018f"
 uuid = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
-version = "1.41.2"
+version = "1.42.2"
 
 [[deps.Scratch]]
 deps = ["Dates"]
@@ -1490,15 +1550,20 @@ version = "2.1.6"
 
 [[deps.Static]]
 deps = ["IfElse"]
-git-tree-sha1 = "5d2c08cef80c7a3a8ba9ca023031a85c263012c5"
+git-tree-sha1 = "46638763d3a25ad7818a15d441e0c3446a10742d"
 uuid = "aedffcd0-7271-4cad-89d0-dc628f76c6d3"
-version = "0.6.6"
+version = "0.7.5"
 
 [[deps.StaticArrays]]
-deps = ["LinearAlgebra", "Random", "Statistics"]
-git-tree-sha1 = "2bbd9f2e40afd197a1379aef05e0d85dba649951"
+deps = ["LinearAlgebra", "Random", "StaticArraysCore", "Statistics"]
+git-tree-sha1 = "9f8a5dc5944dc7fbbe6eb4180660935653b0a9d9"
 uuid = "90137ffa-7385-5640-81b9-e52037218182"
-version = "1.4.7"
+version = "1.5.0"
+
+[[deps.StaticArraysCore]]
+git-tree-sha1 = "66fe9eb253f910fe8cf161953880cfdaef01cdf0"
+uuid = "1e83bf80-4336-4d27-bf5d-d5a4f845583c"
+version = "1.0.1"
 
 [[deps.Statistics]]
 deps = ["LinearAlgebra", "SparseArrays"]
@@ -1512,9 +1577,9 @@ version = "1.4.0"
 
 [[deps.StatsBase]]
 deps = ["DataAPI", "DataStructures", "LinearAlgebra", "LogExpFunctions", "Missings", "Printf", "Random", "SortingAlgorithms", "SparseArrays", "Statistics", "StatsAPI"]
-git-tree-sha1 = "8977b17906b0a1cc74ab2e3a05faa16cf08a8291"
+git-tree-sha1 = "48598584bacbebf7d30e20880438ed1d24b7c7d6"
 uuid = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
-version = "0.33.16"
+version = "0.33.18"
 
 [[deps.StatsFuns]]
 deps = ["ChainRulesCore", "HypergeometricFunctions", "InverseFunctions", "IrrationalConstants", "LogExpFunctions", "Reexport", "Rmath", "SpecialFunctions"]
@@ -1529,22 +1594,22 @@ uuid = "9672c7b4-1e72-59bd-8a11-6ac3964bc41f"
 version = "1.8.0"
 
 [[deps.StochasticDiffEq]]
-deps = ["Adapt", "ArrayInterface", "DataStructures", "DiffEqBase", "DiffEqJump", "DiffEqNoiseProcess", "DocStringExtensions", "FillArrays", "FiniteDiff", "ForwardDiff", "LevyArea", "LinearAlgebra", "Logging", "MuladdMacro", "NLsolve", "OrdinaryDiffEq", "Random", "RandomNumbers", "RecursiveArrayTools", "Reexport", "SciMLBase", "SparseArrays", "SparseDiffTools", "StaticArrays", "UnPack"]
-git-tree-sha1 = "fea4cc29ff7d392ceb29bb64a717e6ed128bb5ff"
+deps = ["Adapt", "ArrayInterface", "DataStructures", "DiffEqBase", "DiffEqNoiseProcess", "DocStringExtensions", "FillArrays", "FiniteDiff", "ForwardDiff", "JumpProcesses", "LevyArea", "LinearAlgebra", "Logging", "MuladdMacro", "NLsolve", "OrdinaryDiffEq", "Random", "RandomNumbers", "RecursiveArrayTools", "Reexport", "SciMLBase", "SparseArrays", "SparseDiffTools", "StaticArrays", "UnPack"]
+git-tree-sha1 = "fbefdd80ccbabf9d7c402dbaf845afde5f4cf33d"
 uuid = "789caeaf-c7a9-5a7d-9973-96adeb23e2a0"
-version = "6.49.1"
+version = "6.50.0"
 
 [[deps.StrideArraysCore]]
 deps = ["ArrayInterface", "CloseOpenIntervals", "IfElse", "LayoutPointers", "ManualMemory", "SIMDTypes", "Static", "ThreadingUtilities"]
-git-tree-sha1 = "ba311ca021c7aeed918481de6f540ae6e09099cf"
+git-tree-sha1 = "367989c5c0c856fdf7e7f6577b384e63104fb854"
 uuid = "7792a7ef-975c-4747-a70f-980b88e8d1da"
-version = "0.3.10"
+version = "0.3.14"
 
 [[deps.StructArrays]]
 deps = ["Adapt", "DataAPI", "StaticArrays", "Tables"]
-git-tree-sha1 = "9097e2914e179ab1d45330403fae880630acea0b"
+git-tree-sha1 = "ec47fb6069c57f1cee2f67541bf8f23415146de7"
 uuid = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
-version = "0.6.9"
+version = "0.6.11"
 
 [[deps.SuiteSparse]]
 deps = ["Libdl", "LinearAlgebra", "Serialization", "SparseArrays"]
@@ -1604,9 +1669,9 @@ version = "0.5.0"
 
 [[deps.TimeZones]]
 deps = ["Dates", "Downloads", "InlineStrings", "LazyArtifacts", "Mocking", "Printf", "RecipesBase", "Serialization", "Unicode"]
-git-tree-sha1 = "0a359b0ee27e4fbc90d9b3da1f48ddc6f98a0c9e"
+git-tree-sha1 = "0a4d8838dc28b4bcfaa3a20efb8d63975ad6781d"
 uuid = "f269a46b-ccf7-5d73-abea-4c690281aa53"
-version = "1.7.3"
+version = "1.8.0"
 
 [[deps.TreeViews]]
 deps = ["Test"]
@@ -1616,9 +1681,9 @@ version = "0.3.0"
 
 [[deps.TriangularSolve]]
 deps = ["CloseOpenIntervals", "IfElse", "LayoutPointers", "LinearAlgebra", "LoopVectorization", "Polyester", "Static", "VectorizationBase"]
-git-tree-sha1 = "b8d08f55b02625770c09615d96927b3a8396925e"
+git-tree-sha1 = "caf797b6fccbc0d080c44b4cb2319faf78c9d058"
 uuid = "d5829a12-d9aa-46ab-831f-fb7c9ab06edf"
-version = "0.1.11"
+version = "0.1.12"
 
 [[deps.Tricks]]
 git-tree-sha1 = "6bac775f2d42a611cdfcd1fb217ee719630c4175"
@@ -1655,9 +1720,9 @@ version = "0.1.2"
 
 [[deps.VectorizationBase]]
 deps = ["ArrayInterface", "CPUSummary", "HostCPUFeatures", "IfElse", "LayoutPointers", "Libdl", "LinearAlgebra", "SIMDTypes", "Static"]
-git-tree-sha1 = "7d3de169cd221392082a5abc7f363726e1a30628"
+git-tree-sha1 = "9d87c8c1d27dc20ba8be6bdca85d36556c371172"
 uuid = "3d5dd08c-fd9d-11e8-17fa-ed2836048c2f"
-version = "0.21.36"
+version = "0.21.38"
 
 [[deps.VertexSafeGraphs]]
 deps = ["Graphs"]
@@ -1887,36 +1952,36 @@ version = "0.9.1+5"
 """
 
 # ╔═╡ Cell order:
-# ╠═38c4e220-d708-11ec-3968-fbbd41c26155
-# ╟─3eca675f-4243-47b5-8bd0-b34f774b73d3
-# ╟─e2271efe-9a67-4496-891b-46f076b367f3
-# ╟─62cba86d-4406-4d16-8715-b29bee7d3178
-# ╟─6d64cc27-1059-4dd7-8f17-1c6fd9a2eca0
-# ╠═4dc32b5a-5794-4d2d-844e-cdb80bec2e7b
-# ╟─aa22c728-662c-4fdb-aae9-b3b411e311e2
-# ╠═16a156b5-92ab-4e1c-ab70-c3b348186c57
-# ╠═77766c99-4142-4acb-a855-ab133e67aa66
-# ╟─ad67a3cb-a42f-451d-92a5-301559322c30
-# ╟─ce4da9bf-316b-45d2-8504-f2a63cdda247
-# ╠═29474ca0-839b-45de-a7bf-7d91c5ea59aa
-# ╟─794936ae-d9ae-4319-994f-4282c99c4238
-# ╟─8fc407f4-a242-4cdc-b7e0-062c8f5782d1
-# ╟─b13d261e-1c1b-41b0-ae86-e20cd2304727
-# ╟─f1f04dd4-0447-4e48-9bab-f34058a6a0f1
-# ╟─c3757398-060c-412c-997b-58331b2dee04
-# ╟─c803ed90-958c-4d0e-84d5-3e8cc9c8fbfe
-# ╠═b4ea8364-a582-443c-bdb1-46e75a5c4d4e
-# ╟─5018d342-0a51-4275-8c0f-1b5d253c2ec0
-# ╟─5afa3aff-af15-429b-a0fb-9a0dfcad740d
-# ╟─84a596c1-3a0a-4edd-a7ea-f3fcd8839c2a
-# ╟─91b2718a-a921-4bae-99c0-91ec9c7e6479
-# ╠═5a0b156e-b0b2-43b8-b15e-bcdb65c154bf
-# ╟─a3270d8b-f167-4fb9-bcc5-c62c91b39649
-# ╟─6528501f-3bb2-48a7-b24e-d32400033538
-# ╟─0d0d6d2f-56b2-4e01-b9a4-6e469eac90ad
-# ╟─76cfd5c8-6298-4ae2-9d2d-9e60deb12f49
-# ╟─0bf40552-b627-4fa7-b3ba-1d8c7ed4a568
-# ╟─2ac364c2-cbdd-49b4-9f26-9fe89382be5e
-# ╟─6b6a5e19-5298-4969-b1c9-699aa1cb2996
+# ╠═1097d874-4468-4e76-bdbc-c893a5dbfdc0
+# ╠═d511c3c8-c596-48a5-8182-4dbcaa607eb6
+# ╟─18a83e00-0dd4-4fe7-a5be-644361f875d3
+# ╟─4ad5df20-f85d-11ec-3803-a7ed7ed8f2f3
+# ╠═a8b84ccb-977e-4cf7-b384-f2f68c48122a
+# ╟─1f8ae008-a195-42d8-b29e-66c78c81c8d6
+# ╟─d9bb5aa8-2708-40c3-8d42-3b21e6d634c0
+# ╟─f317741a-f3ae-4450-b57d-8403cab18335
+# ╟─d3d28638-8c26-461c-b804-d76a923515ff
+# ╟─7af7eecd-eb9e-4ab2-b2f8-890ad5969237
+# ╟─c0aa4384-0807-42f6-86fd-e6182121e465
+# ╟─01b880a3-2e24-4177-b9b0-2931f028e6e9
+# ╟─112c2bc7-352d-4025-8455-003d2543cd5c
+# ╠═d9808200-5320-49c1-9ebf-5c8dc128c6a3
+# ╠═0e3c83d9-5268-44e4-8cee-dd2421943748
+# ╟─bf009c87-d4cd-4001-8bd2-c95e3581fc8d
+# ╟─e581cc6f-1a68-4b1b-a0e2-e0f3327334e6
+# ╠═c8478515-c670-4d8f-bd22-336ebbe8b053
+# ╠═4b3851da-0bbf-46c8-99ec-b4fc7115982c
+# ╟─ad65b408-4705-4bcc-b9bb-1009177117bf
+# ╟─96df68ec-3d01-4eab-b270-b59d79e02f3a
+# ╟─ae8f5c80-2d38-4b6d-93ba-1ae45ddcfc86
+# ╟─09c6c2ef-0b7f-460a-904c-f71ecf0f8fd2
+# ╟─e0bfc074-d0b0-42f3-8cf6-2ae5871f38c0
+# ╟─a25549e0-8875-4b5c-aa1d-7e47e8b207e0
+# ╟─6cd940fd-94ab-49c4-a29a-accdb2b81ec9
+# ╟─3d502689-789e-408b-a2b2-bfeee64e5e4e
+# ╟─6c14fbbc-1ec3-4a80-884a-3e6121fa57da
+# ╟─3c64b9fd-c2b0-440f-84ac-b15c6574d2df
+# ╟─7557f8d7-2654-41c2-a443-9d5a76622501
+# ╟─f480e291-b67c-4a2f-9f44-914a340df81e
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

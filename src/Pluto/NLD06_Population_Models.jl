@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.8
+# v0.19.9
 
 using Markdown
 using InteractiveUtils
@@ -14,227 +14,223 @@ macro bind(def, element)
     end
 end
 
-# ╔═╡ f527ceca-f2d1-11ec-3cc5-bd33fdb53d6e
-using DifferentialEquations, Plots, ForwardDiff,IntervalRootFinding, StaticArrays, PlutoUI
+# ╔═╡ 38c4e220-d708-11ec-3968-fbbd41c26155
+using PlutoUI, Plots, DifferentialEquations, ForwardDiff, IntervalRootFinding, StaticArrays
 
-# ╔═╡ cf2a4cec-ea32-4bd1-a56d-8fde23d3e31c
+# ╔═╡ 3eca675f-4243-47b5-8bd0-b34f774b73d3
 include("../NLD_utils.jl")
 
-# ╔═╡ d777dcf0-600c-4bce-b6cf-da7e57b1c1ae
+# ╔═╡ e2271efe-9a67-4496-891b-46f076b367f3
+theme(:default)
+
+# ╔═╡ 62cba86d-4406-4d16-8715-b29bee7d3178
 md"""
-# Nonlinear Dynamics of Love Affairs 💘
+# Logistic Equation
 
-## Classic Linear model of Romantic Love 👫
+In what follows we will work with simple population dynamics models where the continuous variable can represent the density of a population (i.e. both the variable and time evolve continuously). In this context it is usual to denote the growth rate as $R$ (rate). Therefore the equation:
 
-Based on the one-page influential work of Strogatz (1988) of the Shakespearean love affair of Romeo and Juliet. Here $R$ is Romeo’s love (or hate if negative) for Juliet and $J$ is Juliet’s love for Romeo. The simplest model is linear with:
 
-$\dot{R}= aR+bJ$
+$\dot{x} = Rx$
+$\dot{x}=Rx\left(1-\frac{x}{K}\right)$
 
-$\dot{J}= cR+dJ$
+corresponds to the unlimited exponential growth of the population density at rate $R$. 
 
-where $a$ and $b$ specify Romeo’s “romantic style,” and $c$ and $d$ specify Juliet’s style. The parameter $a$($c$) describes the extent to which Romeo (Juliet) is encouraged by his(her) own feelings, and $b$($d$) is the extent to which he is encouraged by his(her) partner feelings.
+But exponential growth cannot be maintained forever, so if we want to model in a more realistic way a magnitude that grows with limited resources we must limit the growth rate $R$. One possible way (the simplest) is to limit $R$ with a linear function becoming zero when the population reaches the maximum capacity $K$. That is, let our variable growth rate be: $R(x)=R(1-x/K)$. Replacing this rate in the original equation we obtain the logistic equation 
 
-The resulting dynamics is
-two-dimensional, governed by the initial conditions and the four
-parameters, which may be positive or negative.
+$\dot{x}=Rx\left(1-\frac{x}{K}\right)$
+
+wuth $K>0$ and $R>0$.
+
+This is the simplest system that models the growth of a population with K capacity.
 """
 
-
-# ╔═╡ 42638d65-5778-4776-b7f6-20550c515289
-function lovelinear!(du,u,p,t)
-	(a,b,c,d) = p
-	du[1] = a*u[1]+b*u[2]
-	du[2] = c*u[1]+d*u[2]
-end
-
-# ╔═╡ 0f57818a-9608-4f24-84a0-b5579e72fc2d
-md"""
-Romeo can exhibit one of four romantic styles depending on the signs of a and b, with names adapted from those suggested by Strogatz and his students:
-
-1. Eager beaver: $a > 0$, $b > 0$ (Romeo is encouraged by his own feelings as well as Juliet’s.)
-2. Narcissistic nerd: $a > 0$, $b < 0$ (Romeo wants more of what he feels but retreats from Juliet’s feelings.)
-3. Cautious (or secure) lover: $a < 0$, $b > 0$ (Romeo retreats from his own feelings but is encouraged by Juliet’s.)
-4. Hermit: $a < 0$, $b < 0$ (Romeo retreats from his own feelings as well as Juliet’s.) 
-
-The same four styles applies for Juliet following the sign of the parametes $c$ and $d$
-"""	
-
-# ╔═╡ b35cce8b-796c-4f5c-b312-68d7084d5e90
-md"""
-Partner Name 1 $(@bind name1 TextField((20,1);default="Juliet"))
-$(@bind heshe1 Select(["she", "he"])) \
-Partner Name 1 $(@bind name2 TextField((20,1);default="Romeo")) 
-$(@bind heshe2 Select(["he", "she"])) 
+# ╔═╡ 6d64cc27-1059-4dd7-8f17-1c6fd9a2eca0
+html"""
+<div style="position: relative; right: 0; top: 0; z-index: 300;"><iframe src="https://www.youtube.com/embed/JwYhhnuuINk" width=500 height=250  frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
 """
 
-# ╔═╡ dc301dcf-2b27-431d-8604-1c94f6c6d353
-@bind pars1 (
-	PlutoUI.combine() do bind
-		md"""
-		a: $(bind(Slider(-1.0:0.02:1.0,default=0.1;show_value=true))) 
-		b: $(bind(Slider(-1.0:0.02:1.0,default=0.1;show_value=true))) \
-		c: $(bind(Slider(-1.0:0.02:1.0,default=0.1;show_value=true))) 
-		d: $(bind(Slider(-1.0:0.02:1.0,default=0.1;show_value=true))) \
-		"""
-	end
-)
+# ╔═╡ 4dc32b5a-5794-4d2d-844e-cdb80bec2e7b
+logistic(x,p,t)=p[1]*x*(1.0-x/p[2]);
 
-# ╔═╡ 7eaf2748-335c-4c5b-a3b7-7942470fa29c
-# Classification of Romantic Styles for R&J
-begin
-	(a,b,c,d)=pars1
-	if heshe1=="he"
-		hisher1="his"
-	else
-		hisher1="her"
-	end
-	if heshe2=="he"
-		hisher2="his"
-	else
-		hisher2="her"
-	end
-	if (a>0)
-		if (b>0)
-			rtitle = "$name1 (EAGER) is encouraged by $hisher1 own feelings as well as $(name2)’s"
-		else
-			rtitle = "$name1 (NARCISSISTIC) wants more of what $heshe1 feels but retreats from $(name2)’s feelings"
-		end
-	else
-		if (b>0)
-			rtitle = "$name1 (CAUTIOUS) Retreats from $hisher1 own feelings but is encouraged by $(name2)'s"
-		else
-			rtitle = "$name1 (HERMIT) retreats from $hisher1 own feelings as well as $(name2)’s"
-		end
-	end
-	if (c>0)
-		if (d>0)
-			jtitle = "$name2 (EAGER) is encouraged by $hisher2 own feelings as well as $(name1)’s"
-		else
-			jtitle = "$name2 (NARCISSISTIC) wants more of what $heshe2 feels but retreats from $(name1)’s feelings"
-		end
-	else
-		if (d>0)
-			jtitle = "$name2 (CAUTIOUS) Retreats from $hisher2 own feelings but is encouraged by $(name1)'s"
-		else
-			jtitle = "$name1 (HERMIT) retreats from $hisher1 own feelings as well as $(name2)’s"
-		end
-	end
-	title1 = rtitle , jtitle
-end
-
-# ╔═╡ 59d4e977-7d25-4ef1-98de-9a2a712dfa6c
-@bind u1 (
-	PlutoUI.combine() do bind
-		md"""
-		x$0$: $(bind(Slider(-1.0:0.02:1.0,default=0.1;show_value=true))) 
-		y0: $(bind(Slider(-1.0:0.02:1.0,default=0.1;show_value=true))) \
-		"""
-	end
-)
-
-# ╔═╡ 86eb471e-cedf-4e5e-bcac-84476eb21274
-function flow2d(f::Function,u0::Vector{Float64},tmax::Float64,p;
-    xlims=[-1.0,1.0],ylims=[-1.0,1.0],size=(700,500),plotops...)
-    xrange = xlims[2]-xlims[1]
-    yrange = ylims[2]-ylims[1]
-    condition(u,t,integrator) = (u[1]*u[1]+u[2]*u[2]) > max(xrange*xrange,yrange*yrange)
-    affect!(integrator) = terminate!(integrator)
-    sol = solve(ODEProblem(f,u0,(0.0,tmax),p),callback=DiscreteCallback(condition,affect!))
-    p1 = plot(sol,vars=(0,1:2))
-    p2 = plot(sol,vars=(1,2),c=:black,arrow=true,xlims=xlims,ylims=ylims,labels="",xlabel="x",ylabel="y")
-    plot(p1,p2,layout=(1,2),size = size)
-end 
-
-# ╔═╡ 5db59da7-984a-4f90-9a90-6a35cb61778e
-flow2d(lovelinear!,collect(u1),200.0,pars1;size=(800,400))
-
-# ╔═╡ ad546f0a-fdfa-422c-8ed5-3e2b59f9cbfb
+# ╔═╡ aa22c728-662c-4fdb-aae9-b3b411e311e2
 md"""
+Now we are going to plot, in addition to the time evolution, the function $f(x)$ in order to visualize the fixed points and the flow on the line.
 
-Although Strogatz’s model was originally intended more to motivate students than
-as a serious description of love affairs, it makes several interesting and
-plausible predictions and suggests extensions that produce an even wider
-range of behavior.
+In order to do this, we are going to use the function of the course package `flux1D` whose arguments are (for the basic method)
+
+`flux1D(f,x0,tmax,p;xlims)`
+- f is a function f(x,p,t) that defines the flow (returns the time derivative).
+- x0 is a scalar which gives the initial condition
+- tmax is a scalar that gives the final time of integration (always starts from t=0)
+- p is a vector (1D array) with the parameters of the system. Even if we have only one parameter we have to pass it as an array of only one element
+- the tuple xlims=(xmin,xmax) limits the graph of f(x) between the interval (xmin,xmax). This parameter is optional so it is after the semicolon.
 
 
+We can see that $f(x)$ is an inverted parabola that cuts the horizontal axis always in the fixed points $x=0$ and $x=K$
+and always with the same stability. That is, there are no topological changes (no bifurcations).
+Why inverted? How would it be the other way around in the positives?
 """
 
-# ╔═╡ d2008fc9-dd22-4725-9355-dacb7ff5821b
-function lovenlinear1!(du,u,p,t)
-	(a,b,c,d,ϵ) = p
-	du[1] = a*u[1]+b*u[2]*(1-ϵ*u[2]*u[2])
-	du[2] = d*u[2]+c*u[1]*(1-ϵ*u[1]*u[1])
-end
-
-# ╔═╡ 40ae473c-3362-468d-a988-0e0c1d85b5ea
+# ╔═╡ 77766c99-4142-4acb-a855-ab133e67aa66
 @bind pars2 (
 	PlutoUI.combine() do bind
 		md"""
-		a: $(bind(Slider(-1.0:0.02:1.0,default=0.1;show_value=true))) 
-		b: $(bind(Slider(-1.0:0.02:1.0,default=0.1;show_value=true))) \
-		c: $(bind(Slider(-1.0:0.02:1.0,default=0.1;show_value=true))) 
-		d: $(bind(Slider(-1.0:0.02:1.0,default=0.1;show_value=true))) \
-		ϵ: $(bind(Slider(-0.5:0.001:0.5,default=0.0;show_value=true))) 
-		tmax : $(bind(Slider(0:10.0:1000.0,default=100.0;show_value=true)))
+		R: $(bind(Slider(0:0.02:2.0,default=0.5;show_value=true))) \
+		K: $(bind(Slider(0.02:0.02:2.0,default=1.0;show_value=true))) \
+		x0: $(bind(Slider(0:0.01:2.0,default=0.01;show_value=true)))
 		"""
 	end
 )
 
-# ╔═╡ d622eafe-f2d5-4992-ac3f-fabb392bb12a
-# Classification of Romantic Styles for R&J
-begin
-	(a2,b2,c2,d2,ϵ,_)=pars2
-	if (a2>0)
-		if (b2>0)
-			rtitle2 = "Romeo: Eager Beaver"
-		else
-			rtitle2 = "Romeo: Narcissistic"
-		end
-	else
-		if (b2>0)
-			rtitle2 = "Romeo: Cautious"
-		else
-			rtitle2 = "Romeo: Hermit"
-		end
-	end
-	if (c2>0)
-		if (d2>0)
-			jtitle2 = "Juliet: Eager Beaver"
-		else
-			jtitle2 = "Juliet: Narcissistic"
-		end
-	else
-		if (d2>0)
-			jtitle2 = "Juliet: Cautious"
-		else
-			jtitle2 = "Juliet: Hermit"
-		end
-	end
-	if (ϵ>0)
-		title2 = string(rtitle2," | ",jtitle2," | Positive Nonlinearity")
-	elseif (ϵ<0)
-		title2 = string(rtitle2," | ",jtitle2," | Negative Nonlinearity")
-	else
-		title2 = string(rtitle2," | ",jtitle2," | Zero Nonlinearity")
-	end	
-		
-end
+# ╔═╡ 16a156b5-92ab-4e1c-ab70-c3b348186c57
+flow1D(logistic,pars2[3],100.0,pars2;xlims=[-0.1,2.0],title="Logistic")
 
-# ╔═╡ 7862b57f-93c1-4293-8e83-57b7c18dc3fc
-@bind u2 (
+# ╔═╡ ad67a3cb-a42f-451d-92a5-301559322c30
+md"""
+## Math addendum 
+
+This equation has two fixed points. One at $x=0$ and the other at $x=K$. To evaluate its stability we calculate the derivative of the vector field $f(x)=Rx(1-x/K)$, which is equal to $f'(x)=R-2Rx/K$, and evaluate it at the fixed points.
+
+- Fixed point $x_*=0$ : $f'(0)=R$ is always positive $\rightarrow$ the fixed point is unstable (repulsive). In its neighborhood, for a small positive population there is an exponential growth with rate R since 1 is much larger than $x/K$.
+
+- Fixed point $x_*=K$: $f'(K)=-R$ is always negative $\rightarrow$ the fixed point is stable (attractor). It represents the maximum population that reaches growth.  If $x$ is slightly less than $K$ then $(1-x/K)$ is positive, the derivative is positive and the population grows. If instead $x$ is slightly higher than $K$ then $(1-x/K)$ is negative, the derivative is negative and the population decreases until reaching equilibrium at $x=K$.
+"""
+
+# ╔═╡ ce4da9bf-316b-45d2-8504-f2a63cdda247
+md"""
+# Logistic Equation with Harvest
+
+Now, we will take a look at a simple population model that traverses an attractor-repeller (or Saddle-Node in 1D) bifurcation. 
+
+All the population models that we will see below are based on the logistic model and add an additional term that accounts for predation, either by another species or by exploitation of the species as a resource. In its simplest version, a constant decreasing term is added to represent harvesting (harvesting, hunting, fishing)
+
+$\dot{x} = Rx\left(1-\frac{x}{K}\right) - H$ 
+
+Warning: this is not a realistic model for a population because it may give negative x values. Because of this we must introduce a cut-off condition when the variable becomes negative: $(u)->(u<0)$.
+
+"""
+
+# ╔═╡ 29474ca0-839b-45de-a7bf-7d91c5ea59aa
+logharvest1(x,p,t)=p[1]*x*(1.0-x/p[2])-p[3];
+
+# ╔═╡ 8fc407f4-a242-4cdc-b7e0-062c8f5782d1
+@bind pars_harvest (
 	PlutoUI.combine() do bind
 		md"""
-		x$0$: $(bind(Slider(-1.0:0.02:1.0,default=0.1;show_value=true))) 
-		y0: $(bind(Slider(-1.0:0.02:1.0,default=0.1;show_value=true))) \
+		R: $(bind(Slider(0:0.02:2.0,default=0.5;show_value=true))) \
+		K: $(bind(Slider(0.02:0.02:2.0,default=1.0;show_value=true))) \
+		H: $(bind(Slider(0.0:0.02:2.0,default=0.1;show_value=true))) \
+		x0: $(bind(Slider(0:0.02:2.0,default=0.5;show_value=true)))
 		"""
 	end
 )
 
-# ╔═╡ a0662db2-84d5-473c-88a7-19066f8f9de6
-flow2d(lovenlinear1!,collect(u2),pars2[6],pars2;size=(800,400),xlims=[-5,5],ylims=[-5,5])
+# ╔═╡ 794936ae-d9ae-4319-994f-4282c99c4238
+flow1D(logharvest1,pars_harvest[4],300.0,pars_harvest,(u)->(u<0);xlims=[0.0,2.0],title="Logistic with Harvest")
 
-# ╔═╡ 19903b9c-9d0a-438c-8dec-9488a69ba4be
+# ╔═╡ b13d261e-1c1b-41b0-ae86-e20cd2304727
+md"""
+## Critical Slowing Down
+"""
 
+# ╔═╡ c3757398-060c-412c-997b-58331b2dee04
+@bind pars_csd (
+	PlutoUI.combine() do bind
+		md"""
+		H: $(bind(Slider(0.2:0.002:0.25,default=0.1;show_value=true))) \
+		S: $(bind(Slider(0:0.001:0.1,default=0.0;show_value=true)))
+		"""
+	end
+)
+
+# ╔═╡ f1f04dd4-0447-4e48-9bab-f34058a6a0f1
+flow1D(logharvest1,0.5+sqrt(0.25-pars_csd[1]),200.0,[1.0,1.0,pars_csd[1]],10.0,pars_csd[2],(u)->(u<0);xlims=[0.0,1.0],title="Log whith Harvest perturbed")
+
+# ╔═╡ c803ed90-958c-4d0e-84d5-3e8cc9c8fbfe
+md"""
+# Consumer Equation
+
+The next population model is a bit more realistic and is known as the **consumer equation**. It is a model that appears in macroeconomics as a simplification of the dynamics of consumption of a renewable resource and is made by the logistic equation with a harvest or consumption term that is directly proportional to the abundance of the resource $Px$. The parameter $P$ corresponds to the rate of consumption of the resource and $R$ can be reinterpreted as the rate of production or generation of the renewable resource.  
+
+
+$\dot{x} = Rx\left(1-\frac{x}{K}\right) - Px$ 
+"""
+
+# ╔═╡ b4ea8364-a582-443c-bdb1-46e75a5c4d4e
+# Consumer Equation
+consumer(x,p,t)=p[1]*x*(1.0-x/p[2])-p[3]*x;
+
+# ╔═╡ 5afa3aff-af15-429b-a0fb-9a0dfcad740d
+@bind pars_consumer (
+	PlutoUI.combine() do bind
+		md"""
+		R: $(bind(Slider(0:0.02:1.0,default=0.5;show_value=true))) \
+		K: $(bind(Slider(0.02:0.02:2.0,default=1.0;show_value=true))) \
+		P: $(bind(Slider(0.0:0.01:0.5,default=0.0;show_value=true))) \
+		x0: $(bind(Slider(0:0.02:2.0,default=0.5;show_value=true)))
+		"""
+	end
+)
+
+# ╔═╡ 5018d342-0a51-4275-8c0f-1b5d253c2ec0
+flow1D(consumer,pars_consumer[4],300.0,pars_consumer,xlims=[0.0,2.0],title="Consumer Equation")
+
+# ╔═╡ 84a596c1-3a0a-4edd-a7ea-f3fcd8839c2a
+md"""
+# Logistic Equation with Outbreak
+
+$\dot{x} = Rx\left(1-\displaystyle\frac{x}{K}\right)-P\displaystyle\frac{x^2}{1+x^2}$
+"""
+
+# ╔═╡ 91b2718a-a921-4bae-99c0-91ec9c7e6479
+html"""
+<div style="position: relative; right: 0; top: 0; z-index: 300;"><iframe src="https://www.youtube.com/embed/1CSKTCS6st8" width=500 height=250  frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+"""
+
+# ╔═╡ 5a0b156e-b0b2-43b8-b15e-bcdb65c154bf
+logoutbreak(x,p,t)=p[1]*x*(1.0-x/p[2])-p[3]*x*x/(1+x*x);
+
+# ╔═╡ 6528501f-3bb2-48a7-b24e-d32400033538
+@bind pars_outbreak (
+	PlutoUI.combine() do bind
+		md"""
+		R: $(bind(Slider(0:0.02:2.0,default=0.25;show_value=true))) \
+		K: $(bind(Slider(0.01:0.02:10.0,default=8.71;show_value=true))) \
+		P: $(bind(Slider(0.0:0.01:1.0,default=0.48;show_value=true))) \
+		x0: $(bind(Slider(0:0.02:8.0,default=0.1;show_value=true)))
+		"""
+	end
+)
+
+# ╔═╡ a3270d8b-f167-4fb9-bcc5-c62c91b39649
+flow1D(logoutbreak,pars_outbreak[4],300.0,pars_outbreak;xlims=[-0.2,8.0],title="Log with Outbreak")
+
+# ╔═╡ 0d0d6d2f-56b2-4e01-b9a4-6e469eac90ad
+html"""
+<div style="position: relative; right: 0; top: 0; z-index: 300;"><iframe src="https://www.youtube.com/embed/MlwAI3BlDsU" width=500 height=250  frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+"""
+
+# ╔═╡ 76cfd5c8-6298-4ae2-9d2d-9e60deb12f49
+html"""
+<div style="position: relative; right: 0; top: 0; z-index: 300;"><iframe src="https://www.youtube.com/embed/yUEXpUyi404" width=500 height=250  frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+"""
+
+# ╔═╡ 0bf40552-b627-4fa7-b3ba-1d8c7ed4a568
+html"""
+<div style="position: relative; right: 0; top: 0; z-index: 250;"><iframe src="https://www.youtube.com/embed/Vu9oNWXv4Uk" width=500 height=250  frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+"""
+
+# ╔═╡ 2ac364c2-cbdd-49b4-9f26-9fe89382be5e
+TableOfContents(title="📚 Table of Contents", indent=true, depth=4, aside=true)
+
+# ╔═╡ 6b6a5e19-5298-4969-b1c9-699aa1cb2996
+html"""
+<style>
+input[type*="range"] {
+	width: 50%;
+}
+</style>
+"""
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -250,18 +246,17 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 DifferentialEquations = "~7.1.0"
 ForwardDiff = "~0.10.30"
 IntervalRootFinding = "~0.5.10"
-Plots = "~1.31.1"
+Plots = "~1.29.0"
 PlutoUI = "~0.7.39"
-StaticArrays = "~1.5.0"
+StaticArrays = "~1.4.4"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.8.0-rc1"
+julia_version = "1.7.3"
 manifest_format = "2.0"
-project_hash = "df42c3d26c6e01443d80f1628fde4be91eaa876d"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -277,7 +272,6 @@ version = "3.3.3"
 
 [[deps.ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
-version = "1.1.1"
 
 [[deps.ArnoldiMethod]]
 deps = ["LinearAlgebra", "Random", "StaticArrays"]
@@ -287,21 +281,21 @@ version = "0.2.0"
 
 [[deps.ArrayInterface]]
 deps = ["ArrayInterfaceCore", "Compat", "IfElse", "LinearAlgebra", "Static"]
-git-tree-sha1 = "1d062b8ab719670c16024105ace35e6d32988d4f"
+git-tree-sha1 = "6ccb71b40b04ad69152f1f83d5925de13911417e"
 uuid = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
-version = "6.0.18"
+version = "6.0.19"
 
 [[deps.ArrayInterfaceCore]]
 deps = ["LinearAlgebra", "SparseArrays", "SuiteSparse"]
-git-tree-sha1 = "5e732808bcf7bbf730e810a9eaafc52705b38bb5"
+git-tree-sha1 = "7d255eb1d2e409335835dc8624c35d97453011eb"
 uuid = "30b0a656-2188-435a-8636-2ec0e6a096e2"
-version = "0.1.13"
+version = "0.1.14"
 
 [[deps.ArrayInterfaceGPUArrays]]
 deps = ["Adapt", "ArrayInterfaceCore", "GPUArraysCore", "LinearAlgebra"]
-git-tree-sha1 = "02ec61006f49c43607a34cbd036b3d68485d38aa"
+git-tree-sha1 = "febba7add2873aecc0b6620b55969e73ec875bce"
 uuid = "6ba088a2-8465-4c0a-af30-387133b534db"
-version = "0.2.0"
+version = "0.2.1"
 
 [[deps.ArrayInterfaceOffsetArrays]]
 deps = ["ArrayInterface", "OffsetArrays", "Static"]
@@ -394,9 +388,9 @@ version = "0.5.1"
 
 [[deps.ChainRulesCore]]
 deps = ["Compat", "LinearAlgebra", "SparseArrays"]
-git-tree-sha1 = "9489214b993cd42d17f44c36e359bf6a7c919abf"
+git-tree-sha1 = "2dd813e5f2f7eec2d1268c57cf2373d3ee91fcea"
 uuid = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-version = "1.15.0"
+version = "1.15.1"
 
 [[deps.ChangesOfVariables]]
 deps = ["ChainRulesCore", "LinearAlgebra", "Test"]
@@ -454,13 +448,12 @@ version = "3.45.0"
 [[deps.CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
-version = "0.5.2+0"
 
 [[deps.ConstructionBase]]
 deps = ["LinearAlgebra"]
-git-tree-sha1 = "f74e9d5388b8620b4cee35d4c5a618dd4dc547f4"
+git-tree-sha1 = "59d00b3139a9de4eb961057eabb65ac6522be954"
 uuid = "187b0558-2788-49d3-abe0-74a17ed4e7c9"
-version = "1.3.0"
+version = "1.4.0"
 
 [[deps.Contour]]
 deps = ["StaticArrays"]
@@ -512,9 +505,9 @@ version = "0.4.0"
 
 [[deps.DiffEqBase]]
 deps = ["ArrayInterfaceCore", "ChainRulesCore", "DataStructures", "Distributions", "DocStringExtensions", "FastBroadcast", "ForwardDiff", "FunctionWrappers", "LinearAlgebra", "Logging", "MuladdMacro", "NonlinearSolve", "Parameters", "Printf", "RecursiveArrayTools", "Reexport", "Requires", "SciMLBase", "Setfield", "SparseArrays", "StaticArrays", "Statistics", "ZygoteRules"]
-git-tree-sha1 = "ab123ea2e24d20140b284413bff63e80ea976626"
+git-tree-sha1 = "f7a479aac5f3917b8472ac5f1b77d6f296fe58f1"
 uuid = "2b5f629d-d688-5b77-993f-72d75c75574e"
-version = "6.92.0"
+version = "6.92.3"
 
 [[deps.DiffEqCallbacks]]
 deps = ["DataStructures", "DiffEqBase", "ForwardDiff", "LinearAlgebra", "NLsolve", "Parameters", "RecipesBase", "RecursiveArrayTools", "SciMLBase", "StaticArrays"]
@@ -523,10 +516,10 @@ uuid = "459566f4-90b8-5000-8ac3-15dfb0a30def"
 version = "2.23.1"
 
 [[deps.DiffEqJump]]
-deps = ["ArrayInterfaceCore", "DataStructures", "DiffEqBase", "DocStringExtensions", "FunctionWrappers", "Graphs", "LinearAlgebra", "Markdown", "PoissonRandom", "Random", "RandomNumbers", "RecursiveArrayTools", "Reexport", "StaticArrays", "TreeViews", "UnPack"]
-git-tree-sha1 = "760a048fc34902bfd1b1e4ac4b67162da1f74972"
+deps = ["ArrayInterfaceCore", "DataStructures", "DiffEqBase", "DocStringExtensions", "FunctionWrappers", "Graphs", "LinearAlgebra", "Markdown", "PoissonRandom", "Random", "RandomNumbers", "RecursiveArrayTools", "Reexport", "SciMLBase", "StaticArrays", "TreeViews", "UnPack"]
+git-tree-sha1 = "de3014a7c8b4f84d22715a43fe6c58e1c35dc998"
 uuid = "c894b116-72e5-5b58-be3c-e6d8d4ac2b12"
-version = "8.6.2"
+version = "8.6.3"
 
 [[deps.DiffEqNoiseProcess]]
 deps = ["DiffEqBase", "Distributions", "GPUArraysCore", "LinearAlgebra", "Markdown", "Optim", "PoissonRandom", "QuadGK", "Random", "Random123", "RandomNumbers", "RecipesBase", "RecursiveArrayTools", "ResettableStacks", "SciMLBase", "StaticArrays", "Statistics"]
@@ -564,9 +557,9 @@ uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
 [[deps.Distributions]]
 deps = ["ChainRulesCore", "DensityInterface", "FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SparseArrays", "SpecialFunctions", "Statistics", "StatsBase", "StatsFuns", "Test"]
-git-tree-sha1 = "0ec161f87bf4ab164ff96dfacf4be8ffff2375fd"
+git-tree-sha1 = "d530092b57aef8b96b27694e51c575b09c7f0b2e"
 uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
-version = "0.25.62"
+version = "0.25.64"
 
 [[deps.DocStringExtensions]]
 deps = ["LibGit2"]
@@ -577,7 +570,6 @@ version = "0.8.6"
 [[deps.Downloads]]
 deps = ["ArgTools", "FileWatching", "LibCURL", "NetworkOptions"]
 uuid = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
-version = "1.6.0"
 
 [[deps.DualNumbers]]
 deps = ["Calculus", "NaNMath", "SpecialFunctions"]
@@ -826,9 +818,9 @@ version = "0.5.1"
 
 [[deps.InlineStrings]]
 deps = ["Parsers"]
-git-tree-sha1 = "61feba885fac3a407465726d0c330b3055df897f"
+git-tree-sha1 = "a8671d5c9670a62cb36b7d44c376bdb09181aa26"
 uuid = "842dd82b-1e85-43dc-bf29-5d0ee9dffc48"
-version = "1.1.2"
+version = "1.1.3"
 
 [[deps.InteractiveUtils]]
 deps = ["Markdown"]
@@ -848,9 +840,9 @@ version = "0.5.10"
 
 [[deps.Intervals]]
 deps = ["Dates", "Printf", "RecipesBase", "Serialization", "TimeZones"]
-git-tree-sha1 = "5fe139a9f9610d0c61e85c9f522ab8bc12aec9e4"
+git-tree-sha1 = "f3c7f871d642d244e7a27e3fb81e8441e13230d8"
 uuid = "d8418881-c3e1-53bb-8760-2df7ec849ed5"
-version = "1.7.1"
+version = "1.8.0"
 
 [[deps.InverseFunctions]]
 deps = ["Test"]
@@ -896,6 +888,12 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "b53380851c6e6664204efb2e62cd24fa5c47e4ba"
 uuid = "aacddb02-875f-59d6-b918-886e6ef4fbf8"
 version = "2.1.2+0"
+
+[[deps.JumpProcesses]]
+deps = ["ArrayInterfaceCore", "DataStructures", "DiffEqBase", "DocStringExtensions", "FunctionWrappers", "Graphs", "LinearAlgebra", "Markdown", "PoissonRandom", "Random", "RandomNumbers", "RecursiveArrayTools", "Reexport", "SciMLBase", "StaticArrays", "TreeViews", "UnPack"]
+git-tree-sha1 = "4aa139750616fee7216ddcb30652357c60c3683e"
+uuid = "ccbc3e58-028d-4f4c-8cd5-9ae44345cda5"
+version = "9.0.1"
 
 [[deps.KLU]]
 deps = ["LinearAlgebra", "SparseArrays", "SuiteSparse_jll"]
@@ -963,12 +961,10 @@ version = "1.0.0"
 [[deps.LibCURL]]
 deps = ["LibCURL_jll", "MozillaCACerts_jll"]
 uuid = "b27032c2-a3e7-50c8-80cd-2d36dbcbfd21"
-version = "0.6.3"
 
 [[deps.LibCURL_jll]]
 deps = ["Artifacts", "LibSSH2_jll", "Libdl", "MbedTLS_jll", "Zlib_jll", "nghttp2_jll"]
 uuid = "deac9b47-8bc7-5906-a0fe-35ac56dc84c0"
-version = "7.81.0+0"
 
 [[deps.LibGit2]]
 deps = ["Base64", "NetworkOptions", "Printf", "SHA"]
@@ -977,7 +973,6 @@ uuid = "76f85450-5226-5b5a-8eaa-529ad045b433"
 [[deps.LibSSH2_jll]]
 deps = ["Artifacts", "Libdl", "MbedTLS_jll"]
 uuid = "29816b5a-b9ab-546f-933c-edad1886dfa8"
-version = "1.10.2+0"
 
 [[deps.Libdl]]
 uuid = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
@@ -1042,9 +1037,9 @@ uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [[deps.LinearSolve]]
 deps = ["ArrayInterfaceCore", "DocStringExtensions", "GPUArraysCore", "IterativeSolvers", "KLU", "Krylov", "KrylovKit", "LinearAlgebra", "RecursiveFactorization", "Reexport", "SciMLBase", "Setfield", "SparseArrays", "SuiteSparse", "UnPack"]
-git-tree-sha1 = "b3e7461184bd748e5dee98f9b11766be39634fae"
+git-tree-sha1 = "c08c4177cc7edbf42a92f08a04bf848dde73f0b9"
 uuid = "7ed4a6bd-45f5-4d41-b270-4a48e9bafcae"
-version = "1.19.0"
+version = "1.20.0"
 
 [[deps.LogExpFunctions]]
 deps = ["ChainRulesCore", "ChangesOfVariables", "DocStringExtensions", "InverseFunctions", "IrrationalConstants", "LinearAlgebra"]
@@ -1077,15 +1072,14 @@ deps = ["Base64"]
 uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
 
 [[deps.MbedTLS]]
-deps = ["Dates", "MbedTLS_jll", "Random", "Sockets"]
-git-tree-sha1 = "1c38e51c3d08ef2278062ebceade0e46cefc96fe"
+deps = ["Dates", "MbedTLS_jll", "MozillaCACerts_jll", "Random", "Sockets"]
+git-tree-sha1 = "891d3b4e8f8415f53108b4918d0183e61e18015b"
 uuid = "739be429-bea8-5141-9913-cc70e7f3736d"
-version = "1.0.3"
+version = "1.1.0"
 
 [[deps.MbedTLS_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "c8ffd9c3-330d-5841-b78e-0817d7145fa1"
-version = "2.28.0+0"
 
 [[deps.Measures]]
 git-tree-sha1 = "e498ddeee6f9fdb4551ce855a46f54dbd900245f"
@@ -1109,7 +1103,6 @@ version = "0.7.3"
 
 [[deps.MozillaCACerts_jll]]
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
-version = "2022.2.1"
 
 [[deps.MuladdMacro]]
 git-tree-sha1 = "c6190f9a7fc5d9d5915ab29f2134421b12d24a68"
@@ -1141,7 +1134,6 @@ version = "0.3.7"
 
 [[deps.NetworkOptions]]
 uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
-version = "1.2.0"
 
 [[deps.NonlinearSolve]]
 deps = ["ArrayInterfaceCore", "FiniteDiff", "ForwardDiff", "IterativeSolvers", "LinearAlgebra", "RecursiveArrayTools", "RecursiveFactorization", "Reexport", "SciMLBase", "Setfield", "StaticArrays", "UnPack"]
@@ -1151,9 +1143,9 @@ version = "0.3.20"
 
 [[deps.OffsetArrays]]
 deps = ["Adapt"]
-git-tree-sha1 = "ec2e30596282d722f018ae784b7f44f3b88065e4"
+git-tree-sha1 = "1ea784113a6aa054c5ebd95945fa5e52c2f378e7"
 uuid = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
-version = "1.12.6"
+version = "1.12.7"
 
 [[deps.Ogg_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1164,12 +1156,10 @@ version = "1.3.5+1"
 [[deps.OpenBLAS_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
 uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
-version = "0.3.20+0"
 
 [[deps.OpenLibm_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "05823500-19ac-5b8b-9628-191a04bc5112"
-version = "0.8.1+0"
 
 [[deps.OpenSSL_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1202,9 +1192,9 @@ version = "1.4.1"
 
 [[deps.OrdinaryDiffEq]]
 deps = ["Adapt", "ArrayInterface", "ArrayInterfaceGPUArrays", "ArrayInterfaceStaticArrays", "DataStructures", "DiffEqBase", "DocStringExtensions", "ExponentialUtilities", "FastBroadcast", "FastClosures", "FiniteDiff", "ForwardDiff", "LinearAlgebra", "LinearSolve", "Logging", "LoopVectorization", "MacroTools", "MuladdMacro", "NLsolve", "NonlinearSolve", "Polyester", "PreallocationTools", "RecursiveArrayTools", "Reexport", "SciMLBase", "SparseArrays", "SparseDiffTools", "StaticArrays", "UnPack"]
-git-tree-sha1 = "e92f136d8961446ea0cf1f46bc6335654d49fa8c"
+git-tree-sha1 = "062f233b13f04aa942bd3ca831791280f57874a3"
 uuid = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
-version = "6.18.0"
+version = "6.18.1"
 
 [[deps.PCRE_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1239,7 +1229,6 @@ version = "0.40.1+0"
 [[deps.Pkg]]
 deps = ["Artifacts", "Dates", "Downloads", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "REPL", "Random", "SHA", "Serialization", "TOML", "Tar", "UUIDs", "p7zip_jll"]
 uuid = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
-version = "1.8.0"
 
 [[deps.PlotThemes]]
 deps = ["PlotUtils", "Statistics"]
@@ -1255,9 +1244,9 @@ version = "1.3.0"
 
 [[deps.Plots]]
 deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers", "GR", "GeometryBasics", "JSON", "Latexify", "LinearAlgebra", "Measures", "NaNMath", "Pkg", "PlotThemes", "PlotUtils", "Printf", "REPL", "Random", "RecipesBase", "RecipesPipeline", "Reexport", "Requires", "Scratch", "Showoff", "SparseArrays", "Statistics", "StatsBase", "UUIDs", "UnicodeFun", "Unzip"]
-git-tree-sha1 = "93e82cebd5b25eb33068570e3f63a86be16955be"
+git-tree-sha1 = "9e42de869561d6bdf8602c57ec557d43538a92f0"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
-version = "1.31.1"
+version = "1.29.1"
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "Markdown", "Random", "Reexport", "UUIDs"]
@@ -1408,7 +1397,6 @@ version = "0.2.1"
 
 [[deps.SHA]]
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
-version = "0.7.0"
 
 [[deps.SIMDDualNumbers]]
 deps = ["ForwardDiff", "IfElse", "SLEEFPirates", "VectorizationBase"]
@@ -1429,9 +1417,9 @@ version = "0.6.33"
 
 [[deps.SciMLBase]]
 deps = ["ArrayInterfaceCore", "CommonSolve", "ConstructionBase", "Distributed", "DocStringExtensions", "IteratorInterfaceExtensions", "LinearAlgebra", "Logging", "Markdown", "RecipesBase", "RecursiveArrayTools", "StaticArraysCore", "Statistics", "Tables", "TreeViews"]
-git-tree-sha1 = "6a3f7d9b084b508e87d12135de950ac969187954"
+git-tree-sha1 = "3243a883fa422a0a5cfe2d3b6ea6287fc396018f"
 uuid = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
-version = "1.42.0"
+version = "1.42.2"
 
 [[deps.Scratch]]
 deps = ["Dates"]
@@ -1490,26 +1478,26 @@ version = "1.24.0"
 
 [[deps.SpecialFunctions]]
 deps = ["ChainRulesCore", "IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_jll"]
-git-tree-sha1 = "a9e798cae4867e3a41cae2dd9eb60c047f1212db"
+git-tree-sha1 = "d75bda01f8c31ebb72df80a46c88b25d1c79c56d"
 uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
-version = "2.1.6"
+version = "2.1.7"
 
 [[deps.Static]]
 deps = ["IfElse"]
-git-tree-sha1 = "11f1b69a28b6e4ca1cc18342bfab7adb7ff3a090"
+git-tree-sha1 = "46638763d3a25ad7818a15d441e0c3446a10742d"
 uuid = "aedffcd0-7271-4cad-89d0-dc628f76c6d3"
-version = "0.7.3"
+version = "0.7.5"
 
 [[deps.StaticArrays]]
-deps = ["LinearAlgebra", "Random", "StaticArraysCore", "Statistics"]
-git-tree-sha1 = "9f8a5dc5944dc7fbbe6eb4180660935653b0a9d9"
+deps = ["LinearAlgebra", "Random", "Statistics"]
+git-tree-sha1 = "2bbd9f2e40afd197a1379aef05e0d85dba649951"
 uuid = "90137ffa-7385-5640-81b9-e52037218182"
-version = "1.5.0"
+version = "1.4.7"
 
 [[deps.StaticArraysCore]]
-git-tree-sha1 = "6edcea211d224fa551ec8a85debdc6d732f155dc"
+git-tree-sha1 = "66fe9eb253f910fe8cf161953880cfdaef01cdf0"
 uuid = "1e83bf80-4336-4d27-bf5d-d5a4f845583c"
-version = "1.0.0"
+version = "1.0.1"
 
 [[deps.Statistics]]
 deps = ["LinearAlgebra", "SparseArrays"]
@@ -1523,9 +1511,9 @@ version = "1.4.0"
 
 [[deps.StatsBase]]
 deps = ["DataAPI", "DataStructures", "LinearAlgebra", "LogExpFunctions", "Missings", "Printf", "Random", "SortingAlgorithms", "SparseArrays", "Statistics", "StatsAPI"]
-git-tree-sha1 = "642f08bf9ff9e39ccc7b710b2eb9a24971b52b1a"
+git-tree-sha1 = "48598584bacbebf7d30e20880438ed1d24b7c7d6"
 uuid = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
-version = "0.33.17"
+version = "0.33.18"
 
 [[deps.StatsFuns]]
 deps = ["ChainRulesCore", "HypergeometricFunctions", "InverseFunctions", "IrrationalConstants", "LogExpFunctions", "Reexport", "Rmath", "SpecialFunctions"]
@@ -1540,16 +1528,16 @@ uuid = "9672c7b4-1e72-59bd-8a11-6ac3964bc41f"
 version = "1.8.0"
 
 [[deps.StochasticDiffEq]]
-deps = ["Adapt", "ArrayInterface", "DataStructures", "DiffEqBase", "DiffEqJump", "DiffEqNoiseProcess", "DocStringExtensions", "FillArrays", "FiniteDiff", "ForwardDiff", "LevyArea", "LinearAlgebra", "Logging", "MuladdMacro", "NLsolve", "OrdinaryDiffEq", "Random", "RandomNumbers", "RecursiveArrayTools", "Reexport", "SciMLBase", "SparseArrays", "SparseDiffTools", "StaticArrays", "UnPack"]
-git-tree-sha1 = "fea4cc29ff7d392ceb29bb64a717e6ed128bb5ff"
+deps = ["Adapt", "ArrayInterface", "DataStructures", "DiffEqBase", "DiffEqNoiseProcess", "DocStringExtensions", "FillArrays", "FiniteDiff", "ForwardDiff", "JumpProcesses", "LevyArea", "LinearAlgebra", "Logging", "MuladdMacro", "NLsolve", "OrdinaryDiffEq", "Random", "RandomNumbers", "RecursiveArrayTools", "Reexport", "SciMLBase", "SparseArrays", "SparseDiffTools", "StaticArrays", "UnPack"]
+git-tree-sha1 = "fbefdd80ccbabf9d7c402dbaf845afde5f4cf33d"
 uuid = "789caeaf-c7a9-5a7d-9973-96adeb23e2a0"
-version = "6.49.1"
+version = "6.50.0"
 
 [[deps.StrideArraysCore]]
 deps = ["ArrayInterface", "CloseOpenIntervals", "IfElse", "LayoutPointers", "ManualMemory", "SIMDTypes", "Static", "ThreadingUtilities"]
-git-tree-sha1 = "367989c5c0c856fdf7e7f6577b384e63104fb854"
+git-tree-sha1 = "ac730bd978bf35f9fe45daa0bd1f51e493e97eb4"
 uuid = "7792a7ef-975c-4747-a70f-980b88e8d1da"
-version = "0.3.14"
+version = "0.3.15"
 
 [[deps.StructArrays]]
 deps = ["Adapt", "DataAPI", "StaticArrays", "Tables"]
@@ -1564,7 +1552,6 @@ uuid = "4607b0f0-06f3-5cda-b6b1-a6196a1729e9"
 [[deps.SuiteSparse_jll]]
 deps = ["Artifacts", "Libdl", "Pkg", "libblastrampoline_jll"]
 uuid = "bea87d4a-7f5b-5778-9afe-8cc45184846c"
-version = "5.10.1+0"
 
 [[deps.Sundials]]
 deps = ["CEnum", "DataStructures", "DiffEqBase", "Libdl", "LinearAlgebra", "Logging", "Reexport", "SparseArrays", "Sundials_jll"]
@@ -1581,7 +1568,6 @@ version = "5.2.1+0"
 [[deps.TOML]]
 deps = ["Dates"]
 uuid = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
-version = "1.0.0"
 
 [[deps.TableTraits]]
 deps = ["IteratorInterfaceExtensions"]
@@ -1598,7 +1584,6 @@ version = "1.7.0"
 [[deps.Tar]]
 deps = ["ArgTools", "SHA"]
 uuid = "a4e569a6-e804-4fa4-b0f3-eef7a1d5b13e"
-version = "1.10.0"
 
 [[deps.TensorCore]]
 deps = ["LinearAlgebra"]
@@ -1669,9 +1654,9 @@ version = "0.1.2"
 
 [[deps.VectorizationBase]]
 deps = ["ArrayInterface", "CPUSummary", "HostCPUFeatures", "IfElse", "LayoutPointers", "Libdl", "LinearAlgebra", "SIMDTypes", "Static"]
-git-tree-sha1 = "0453988844dd8ded9d63b3cdfe9e4e26b062c396"
+git-tree-sha1 = "39e55018bccc5a858217db32aa3d9e7decbefd0c"
 uuid = "3d5dd08c-fd9d-11e8-17fa-ed2836048c2f"
-version = "0.21.37"
+version = "0.21.40"
 
 [[deps.VertexSafeGraphs]]
 deps = ["Graphs"]
@@ -1832,7 +1817,6 @@ version = "1.4.0+3"
 [[deps.Zlib_jll]]
 deps = ["Libdl"]
 uuid = "83775a58-1f1d-513f-b197-d71354ab007a"
-version = "1.2.12+3"
 
 [[deps.Zstd_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1855,7 +1839,6 @@ version = "0.15.1+0"
 [[deps.libblastrampoline_jll]]
 deps = ["Artifacts", "Libdl", "OpenBLAS_jll"]
 uuid = "8e850b90-86db-534c-a0d3-1478176c7d93"
-version = "5.1.0+0"
 
 [[deps.libfdk_aac_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1878,12 +1861,10 @@ version = "1.3.7+1"
 [[deps.nghttp2_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "8e850ede-7688-5339-a07c-302acd2aaf8d"
-version = "1.41.0+1"
 
 [[deps.p7zip_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "3f19e933-33d8-53b3-aaab-bd5110c3b7a0"
-version = "17.4.0+0"
 
 [[deps.x264_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1905,23 +1886,36 @@ version = "0.9.1+5"
 """
 
 # ╔═╡ Cell order:
-# ╠═f527ceca-f2d1-11ec-3cc5-bd33fdb53d6e
-# ╠═cf2a4cec-ea32-4bd1-a56d-8fde23d3e31c
-# ╟─d777dcf0-600c-4bce-b6cf-da7e57b1c1ae
-# ╠═42638d65-5778-4776-b7f6-20550c515289
-# ╟─0f57818a-9608-4f24-84a0-b5579e72fc2d
-# ╟─b35cce8b-796c-4f5c-b312-68d7084d5e90
-# ╠═7eaf2748-335c-4c5b-a3b7-7942470fa29c
-# ╟─5db59da7-984a-4f90-9a90-6a35cb61778e
-# ╟─dc301dcf-2b27-431d-8604-1c94f6c6d353
-# ╟─59d4e977-7d25-4ef1-98de-9a2a712dfa6c
-# ╟─86eb471e-cedf-4e5e-bcac-84476eb21274
-# ╟─ad546f0a-fdfa-422c-8ed5-3e2b59f9cbfb
-# ╠═d2008fc9-dd22-4725-9355-dacb7ff5821b
-# ╟─d622eafe-f2d5-4992-ac3f-fabb392bb12a
-# ╟─a0662db2-84d5-473c-88a7-19066f8f9de6
-# ╟─40ae473c-3362-468d-a988-0e0c1d85b5ea
-# ╟─7862b57f-93c1-4293-8e83-57b7c18dc3fc
-# ╠═19903b9c-9d0a-438c-8dec-9488a69ba4be
+# ╠═38c4e220-d708-11ec-3968-fbbd41c26155
+# ╟─3eca675f-4243-47b5-8bd0-b34f774b73d3
+# ╟─e2271efe-9a67-4496-891b-46f076b367f3
+# ╟─62cba86d-4406-4d16-8715-b29bee7d3178
+# ╟─6d64cc27-1059-4dd7-8f17-1c6fd9a2eca0
+# ╠═4dc32b5a-5794-4d2d-844e-cdb80bec2e7b
+# ╟─aa22c728-662c-4fdb-aae9-b3b411e311e2
+# ╠═16a156b5-92ab-4e1c-ab70-c3b348186c57
+# ╟─77766c99-4142-4acb-a855-ab133e67aa66
+# ╟─ad67a3cb-a42f-451d-92a5-301559322c30
+# ╟─ce4da9bf-316b-45d2-8504-f2a63cdda247
+# ╠═29474ca0-839b-45de-a7bf-7d91c5ea59aa
+# ╟─794936ae-d9ae-4319-994f-4282c99c4238
+# ╟─8fc407f4-a242-4cdc-b7e0-062c8f5782d1
+# ╟─b13d261e-1c1b-41b0-ae86-e20cd2304727
+# ╟─f1f04dd4-0447-4e48-9bab-f34058a6a0f1
+# ╟─c3757398-060c-412c-997b-58331b2dee04
+# ╟─c803ed90-958c-4d0e-84d5-3e8cc9c8fbfe
+# ╠═b4ea8364-a582-443c-bdb1-46e75a5c4d4e
+# ╟─5018d342-0a51-4275-8c0f-1b5d253c2ec0
+# ╟─5afa3aff-af15-429b-a0fb-9a0dfcad740d
+# ╟─84a596c1-3a0a-4edd-a7ea-f3fcd8839c2a
+# ╟─91b2718a-a921-4bae-99c0-91ec9c7e6479
+# ╠═5a0b156e-b0b2-43b8-b15e-bcdb65c154bf
+# ╟─a3270d8b-f167-4fb9-bcc5-c62c91b39649
+# ╟─6528501f-3bb2-48a7-b24e-d32400033538
+# ╟─0d0d6d2f-56b2-4e01-b9a4-6e469eac90ad
+# ╟─76cfd5c8-6298-4ae2-9d2d-9e60deb12f49
+# ╟─0bf40552-b627-4fa7-b3ba-1d8c7ed4a568
+# ╟─2ac364c2-cbdd-49b4-9f26-9fe89382be5e
+# ╟─6b6a5e19-5298-4969-b1c9-699aa1cb2996
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
