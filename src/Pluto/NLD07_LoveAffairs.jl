@@ -23,9 +23,6 @@ using DifferentialEquations, Plots, ForwardDiff,IntervalRootFinding, StaticArray
 # ╔═╡ cf2a4cec-ea32-4bd1-a56d-8fde23d3e31c
 include("../NLD_utils.jl")
 
-# ╔═╡ 54dd97fe-4ae1-4f29-a30f-b2d11f8cbf62
-TableOfContents()
-
 # ╔═╡ d777dcf0-600c-4bce-b6cf-da7e57b1c1ae
 md"""
 # Nonlinear Dynamics of Love Affairs 💘
@@ -276,8 +273,8 @@ end
 @bind u2 (
 	PlutoUI.combine() do bind
 		md"""
-		x$0$: $(bind(Slider(-1.0:0.02:1.0,default=0.1;show_value=true))) 
-		y0: $(bind(Slider(-1.0:0.02:1.0,default=0.1;show_value=true))) \
+		x$0$: $(bind(Slider(-1.0:0.02:4.0,default=0.1;show_value=true))) 
+		y0: $(bind(Slider(-1.0:0.02:4.0,default=0.1;show_value=true))) \
 		"""
 	end
 )
@@ -397,7 +394,6 @@ end
 # ╠═673fa0ec-754a-41a7-884f-d153f411e41c
 # ╠═f527ceca-f2d1-11ec-3cc5-bd33fdb53d6e
 # ╠═cf2a4cec-ea32-4bd1-a56d-8fde23d3e31c
-# ╟─54dd97fe-4ae1-4f29-a30f-b2d11f8cbf62
 # ╟─d777dcf0-600c-4bce-b6cf-da7e57b1c1ae
 # ╠═42638d65-5778-4776-b7f6-20550c515289
 # ╟─0f57818a-9608-4f24-84a0-b5579e72fc2d
