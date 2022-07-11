@@ -146,7 +146,7 @@ function myquiver!(p1,x, y, u, v;
         plot!(p1,[x+u,x+u-v5[1]], [y+v,y+v-v5[2]], lc=lc, la=la)
         plot!(p1,[x+u,x+u-v4[1]], [y+v,y+v-v4[2]], lc=lc, la=la)
     end    
-    scatter!(p1,x, y, mc=color, ms=1.5, ratio=1, ma=0.5;legend=false,plotops...)
+    scatter!(p1,x, y, mc=color, ms=1.5, ma=0.5;legend=false,plotops...)
     for (x,y,u,v) in zip(x,y,u,v)
         arrow0!(p1,x,y,u*scale,v*scale,arrowscale,color,linealpha)
     end

@@ -15,7 +15,10 @@ macro bind(def, element)
 end
 
 # ╔═╡ c061212a-b7e5-420a-9fd2-350ff3ee807d
+# ╠═╡ disabled = true
+#=╠═╡
 using Pkg;Pkg.add("Plots");Pkg.add("PlutoUI");Pkg.add("DifferentialEquations");Pkg.add("ForwardDiff"); Pkg.add("StaticArrays"); Pkg.add("IntervalRootFinding")
+  ╠═╡ =#
 
 # ╔═╡ 8601d8d7-d4df-473f-b65d-0f03aeb8f5f4
 using PlutoUI, Plots, DifferentialEquations, ForwardDiff, IntervalRootFinding, StaticArrays
@@ -26,72 +29,92 @@ include("../NLD_utils.jl")
 # ╔═╡ 1f49c325-fc99-4b15-81ee-dc1c5bbe6f08
 gr();
 
-# ╔═╡ 4237b1cb-075a-49be-8f2c-a6eb9c5c9901
+# ╔═╡ c9f6e916-0c30-4ae6-b56a-cafda01db350
 md"""
-# Forced van der Pol
+# Duffing Oscillator
 
+We are going to see a system with a slightly more varied repertoire of behaviors and that later (by adding a forced term) is going to be our guide to enter the chaotic systems so we are going to study it in detail.
 
-$\dot{x} = y$
+This system is obtained by adding quadratic or cubic terms to the restoring force of an oscillator.
 
-$\dot{y} = -\mu y - kx$
+Starting from the linear equation of the Harmonic Oscilator
 
-Remember that $y$ represents the velocity of the oscillator, $\dot{y}$ the acceleration which is equal to the applied force (we assume a mass equal to 1) which appears in the right member of the second equation. In this equation $-kx$ represents the linear elastic force, while $-\mu y$ is the *friction*: a force that always opposes the velocity ( 𝜇>0 ) and that always slows down the oscillator. In the following, we are going to study different general forms for this friction, that in a general way we are going to express as a function of the position $x$ and the velocity $y$:
+$\dot{x}=y$
 
-$\dot{x} = y$
+$\dot{y}=-\gamma y - Kx$
 
-$\dot{y} = -F(x,y)y - kx$
+we replace the linear force $-Kx$ by the nonlinear force $\beta x - x^3$.
+In 1918 George Duffing published a paper systematically studying the influence of the different nonlinear terms in the oscillator, so this system is known as Duffing's oscillator.
 
-Linear Friction:
+A physical system (albeit somewhat artificial) that has this behavior can be assembled with a flexible metal tab placed between two magnets:
 
-$F(x,y)=\mu$
-
-We may now wonder what would happen if we were to apply a "negative friction" for small values of the amplitude of oscillation.
-
-Why? Because in this way we can prevent the oscillations from "dying". If the amplitude of the oscillation $x$ becomes very small (the system is slowed down by friction) a force appears that goes **in favor** of the velocity, injecting energy to the system, still for large oscillation amplitudes the dissipation that slows down the system wins. 
-
-In this way an equilibrium is reached in which self-oscillations are produced which are not extinguished. These oscillations in phase space are known as **limit cycles** and are invariant sets (attractors or repulsors) like fixed points. Note the difference with the oscillations and concentric orbits of the frictionless harmonic oscillator. Unlike the latter, relaxation oscillations (or limit cycles in general) are attractors, i.e. any nearby condition ends up converging to them. 
-
-How can we write this friction inversion for values of $x$ close to zero? 
-The simplest way is to use a quadratic nolinearity. A sinking parabola on the axis has negative values near $x=0$ and positive values for large values of $x$ (both positive and negative). Therefore we can replace linear friction by $\mu(x^2-1)$ . The resistance (or friction) as a function of the position of the oscillator would be:
-
-van der Pol's Friction:
-
-$F(x,y) = \mu(x^2-1)$
-
-And the system of differential equations is written:
-
-$\dot{x} = y$
-
-$\dot{y} = \mu (1 -x^2)y - x + A cos(\phi)$
-
-$\dot{\phi} = \omega$
 """
 
-# ╔═╡ 906dd4e2-b975-4eb4-8469-a25ea89668dc
-function fvdp!(du,u,p,t)
+# ╔═╡ a51cd197-9b85-4a17-91c2-44b99ec0d45b
+html"""
+<div>
+<img src="https://i.imgur.com/7THzWtE.png" width="300px">
+</div>
+"""
+
+# ╔═╡ dfd8837d-d437-4d2b-91ea-97c56c3ab150
+md"""
+If the power of the magnets does not exceed the rigidity of the tongue we have the situation of a single attractor in the middle (although it is not a free oscillation due to the presence of magnets). If the rigidity decreases (or the magnets get closer, or stronger magnets are placed) there are two situations of stable equilibrium (pointing to one or the other magnet) separated by an unstable point (which as we will see later is a saddle point).
+
+The Duffing oscillator can be written by replacing $-Kx$ in the equation of the Harmonic Oscillator by the proposed force $\beta x-x^3$:
+
+$\dot{x} = y$
+
+$\dot{y} = -\gamma y + \beta x - x^3$
+
+"""
+
+# ╔═╡ f654e114-f3f7-4202-9451-eff4778d753d
+md"""
+In the case of the tab with the magnets $x$ is the horizontal position of the tip, $y$ the speed (hence the first differential equation), $\gamma$ is the dissipation of air and friction (as in the case of the spring is a force that opposes the speed) and in $\beta$ is summarized the relationship between the strength of the magnets and the stiffness of the tab. 
+
+If $\beta$ is positive the magnets win (two attractors) and if $\beta$ is negative the stiffness wins (one attractor). Note that the cubic term is the one that always ends up winning, very far from equilibrium the force is always attractive, therefore the system will not explode.
+"""
+
+# ╔═╡ 34617d33-99c3-4b66-8440-1257ca2c0ce7
+function duffing!(du,u,p,t)
+    (γ,β)=p
     du[1] = u[2]
-    du[2] = p[1]*(1.0-u[1]*u[1])*u[2]-u[1]+p[2]*cos(u[3])
-    du[3] = p[3]
+    du[2] = -γ*u[2]+u[1]*(β-u[1]*u[1])
     du
-end;    
+end;  
 
-# ╔═╡ 7fbb3faa-1f3c-4c3e-bc58-90e50eaf6e7c
-gr()
+# ╔═╡ fad1f89d-c3cd-4927-b3bb-c23814007665
+md"""
+The fixed points will be those values ($x_*,y_*$) which make both equations equal to zero. The first equation is zero only for $y_*=0$. 
 
-# ╔═╡ 6282f7e6-4831-45ef-9b1d-3f077fdd74a4
-@bind pvdp (
-	PlutoUI.combine() do bind
-		md"""
-		μ: $(bind(Slider(0:0.02:4.0,default=0.1;show_value=true))) \
-		A: $(bind(Slider(0.0:0.02:3.0,default=0.0;show_value=true))) \
-		ω: $(bind(Slider(0:0.02:3.0,default=1.0;show_value=true))) \
-		ncycles: $(bind(Slider(12:10:200,default=12;show_value=true)))
-		"""
-	end
-)	
+In order to make zero the second equation, knowing that $y$ must be zero, we need that:
 
-# ╔═╡ 2d29b217-fe25-4bb1-9282-51b4932356cf
-flow2d_forced(fvdp!,[0.5,0.5,0],pvdp,2*pi/pvdp[3]; tcycles=10,ncycles=pvdp[4])
+$\beta x_* - x_*^3=0$
+
+This is a cubic curve and in general we have one or three fixed points depending on the value of $\beta$
+"""
+
+# ╔═╡ 2def64ae-091e-4868-87ee-987cd6ab456f
+html"""
+<div>
+<img src="https://i.imgur.com/4IMhywy.png" width="500px">
+</div>
+"""
+
+# ╔═╡ 52c86644-3a24-4ea8-88ec-c259f6c1069a
+md"""
+It is therefore sufficient to solve
+
+$\beta x_* = x_*^3$
+
+which has a trivial solution $x^*_1=0$ 
+ and then, only for the case of two symmetric solutions (which are obtained by dividing both members of the above equation by $x$ since it is different from 0) into
+$x^*_{2,3}=\pm\sqrt{\beta}$
+"""
+
+# ╔═╡ 1c1df8ca-382f-4887-80bf-0ae1dfc13e93
+flow2d_nullclines(duffing!,[0.12;0.2],50.0,[0.1,0.5];ylims=[-1.5,1.5],vectorfield=true,title="Duffing Oscillator")
 
 # ╔═╡ 6b52504e-805e-417e-8fb2-6473b47b0ad0
 md"""
@@ -118,12 +141,12 @@ $\dot{y} = -\mu y + \beta x -  x^3 + A cos(\phi)$
 $\dot{\phi} = \omega$
 """
 
-# ╔═╡ 4c3108b9-2328-42b7-9c69-bee0647e94b8
+# ╔═╡ 6b14f6c6-536b-4de2-b669-e0f1f34dbbe2
 function duffing_forced!(du,u,p,t)
-    (μ,β,A,ω)=p
+    (γ,β,A,ω)=p
     du[1] = u[2]
-    du[2] = -μ*u[2]+u[1]*(β-u[1]*u[1])+A*cos(u[3])
-    du[3] = ω
+    du[2] = -γ*u[2]+u[1]*(β-u[1]*u[1])+A*cos(u[3])
+	du[3] = ω
     du
 end;  
 
@@ -131,7 +154,7 @@ end;
 @bind pduff (
 	PlutoUI.combine() do bind
 		md"""
-		μ: $(bind(Slider(0:0.01:1.0,default=0.8;show_value=true))) \
+		γ: $(bind(Slider(0:0.01:1.0,default=0.8;show_value=true))) \
 		β: $(bind(Slider(-2.0:0.02:2.0,default=1.0;show_value=true))) \
 		A: $(bind(Slider(0.0:0.02:3.0,default=0.0;show_value=true))) \
 		ω: $(bind(Slider(0:0.02:3.0,default=1.0;show_value=true))) \
@@ -157,7 +180,7 @@ To determine the basins it is necessary to evolve a grid of several thousand ini
 
 # ╔═╡ 0a270882-fde3-4dcc-8cef-291e86a4f8c2
 md"""
-Select one: $(@bind sel1 Select([([0.14,1.0,0.1,1.0],[[1.0,0.0],[-1.0,0.0],[-1,0.7],[0.3,0.3]])=>"μ=0.14,β=1,A=0.1,ω=1",([0.14,1.0,0.14,1.0],[[1.1,0.0],[-0.8,0.0]])=>"μ=0.14,β=1,A=0.14,ω=1",([0.14,1.0,0.2,1.0],[[1.2,0.0],[-0.9,0.0]])=>"μ=0.14,β=1,A=0.2,ω=1",([0.14,1.0,0.24,1.0],[[1.2,0.0],[-0.9,0.0],[0.1,1.1]])=>"μ=0.14,β=1,A=0.24,ω=1"]))
+Select one: $(@bind sel1 Select([([0.14,1.0,0.1,1.0],[[1.0,0.0],[-1.0,0.0],[-1,0.7],[0.3,0.3]])=>"γ=0.14,β=1,A=0.1,ω=1",([0.14,1.0,0.14,1.0],[[1.1,0.0],[-0.8,0.0]])=>"γ=0.14,β=1,A=0.14,ω=1",([0.14,1.0,0.2,1.0],[[1.2,0.0],[-0.9,0.0]])=>"γ=0.14,β=1,A=0.2,ω=1",([0.14,1.0,0.24,1.0],[[1.2,0.0],[-0.9,0.0],[0.1,1.1]])=>"γ=0.14,β=1,A=0.24,ω=1"]))
 """
 
 # ╔═╡ dc6e3382-7239-48f1-a88d-bc12fda7cb73
@@ -199,17 +222,21 @@ input[type*="range"] {
 """
 
 # ╔═╡ Cell order:
-# ╠═c061212a-b7e5-420a-9fd2-350ff3ee807d
+# ╟─c061212a-b7e5-420a-9fd2-350ff3ee807d
 # ╠═8601d8d7-d4df-473f-b65d-0f03aeb8f5f4
 # ╠═09b22c30-bb22-4633-9939-2e97bb0beb5e
 # ╟─1f49c325-fc99-4b15-81ee-dc1c5bbe6f08
-# ╟─4237b1cb-075a-49be-8f2c-a6eb9c5c9901
-# ╠═906dd4e2-b975-4eb4-8469-a25ea89668dc
-# ╟─7fbb3faa-1f3c-4c3e-bc58-90e50eaf6e7c
-# ╟─2d29b217-fe25-4bb1-9282-51b4932356cf
-# ╟─6282f7e6-4831-45ef-9b1d-3f077fdd74a4
+# ╟─c9f6e916-0c30-4ae6-b56a-cafda01db350
+# ╟─a51cd197-9b85-4a17-91c2-44b99ec0d45b
+# ╟─dfd8837d-d437-4d2b-91ea-97c56c3ab150
+# ╟─f654e114-f3f7-4202-9451-eff4778d753d
+# ╠═34617d33-99c3-4b66-8440-1257ca2c0ce7
+# ╟─fad1f89d-c3cd-4927-b3bb-c23814007665
+# ╟─2def64ae-091e-4868-87ee-987cd6ab456f
+# ╟─52c86644-3a24-4ea8-88ec-c259f6c1069a
+# ╠═1c1df8ca-382f-4887-80bf-0ae1dfc13e93
 # ╟─6b52504e-805e-417e-8fb2-6473b47b0ad0
-# ╠═4c3108b9-2328-42b7-9c69-bee0647e94b8
+# ╠═6b14f6c6-536b-4de2-b669-e0f1f34dbbe2
 # ╟─37ddd39f-4de1-4eb0-a230-46181c7e64db
 # ╟─4ee77c37-0347-45c0-b101-b96fcb7e004d
 # ╟─8b29c214-4b49-4f44-9eb5-230899ec7321
