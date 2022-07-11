@@ -124,7 +124,7 @@ y(0) : $(@bind y0 Slider(-1.0:0.01:1.0,default=0.0;show_value=true)) \
 """
 
 # ╔═╡ eeb50040-b5fe-475f-954e-af70bfb48770
-flow2d_vectorfield(duffing!,[x0,y0],50.0,[γ,β])
+flow2d_vectorfield(duffing!,[x0,y0],50.0,[γ,β]; title="Duffing Oscillator. Vector Field")
 
 # ╔═╡ 970330b1-e37e-4a8d-91f5-a91d365a82b0
 md"""
@@ -221,7 +221,7 @@ In the graph below we plot the first nullcline in red and the second with a gree
 """
 
 # ╔═╡ 1c1df8ca-382f-4887-80bf-0ae1dfc13e93
-flow2d_nullclines(duffing!,[0.12;0.2],50.0,[0.15,0.5];vectorfield=true,regions=false,title="Duffing Oscillator")
+flow2d_nullclines(duffing!,[0.12;0.2],50.0,[0.15,0.5];vectorfield=true,regions=false,title="Duffing Oscillator. Vector Field and Nullclines")
 
 # ╔═╡ d6dd2280-e6b5-41b4-a2d6-d08e71d833b2
 md"""
@@ -272,7 +272,58 @@ The combination of the colors will give four different types of regions:
 """
 
 # ╔═╡ 8e14c209-4088-4570-b794-9df6c6e7e2a2
-flow2d_nullclines(duffing!,[0.15,0.5];vectorfield=true,title="Duffing Oscillator")
+flow2d_nullclines(duffing!,[0.15,0.5];vectorfield=true,title="Duffing Oscillator. Nullclines")
+
+# ╔═╡ 613fd8a4-f40b-4e9e-9e80-3c859f1fca79
+md"""
+# Stable and Unstable Manifolds of the Saddle Point
+
+Another representation that is very useful for inferring the flow in the whole phase space is that of the stable and unstable manifolds of the saddle points. And they are defined by being the particular trajectories than converge to the saddle point going forward (stable) or backwards (unstable) in time and are invariant to the flow.
+
+In particular the stable manifolds of the saddle points are relevant because they act as separatrices of the flow. To illustrate it better let's see it in the case of the flow above. We are only going to calculate the manifold of the saddle point for $\beta>0$.
+"""
+
+# ╔═╡ 30b42e19-b066-48aa-89d4-3ea79aabe330
+md"""
+γ : $(@bind γ2 Slider(0.0:0.01:1.0,default=0.7;show_value=true)) 
+β : $(@bind β2 Slider(0.0:0.01:1.0,default=0.7;show_value=true)) 
+"""
+
+# ╔═╡ 8cd210e2-f014-4233-992f-d3565e9904a7
+md"""
+Note how the coiling and winding of the manifold is modified with the parameter $\gamma$. The two branches of the unstable manifolds spiral around each of the attractors and the branches of the stable manifold spiral outward around the three fixed points. 
+
+For higher values of can be seen that the blue branches of the stable saddle manifold function as separatrices of the flow that will terminate at one or another fixed point. All the initial conditions that terminate in an attractor form the **basin of attraction** of the attractor. The stable manifolds are then forming the boundary between the two attractor basins.
+
+"""
+
+# ╔═╡ 7c99b3a9-5b92-4fa1-833b-1278c2e40cda
+md"""
+γ : $(@bind γ3 confirm(Slider(0.01:0.01:1.0,default=0.7;show_value=true))) \
+β : $(@bind β3 confirm(Slider(0.01:0.01:1.0,default=0.7;show_value=true))) \
+δ (resolution) $(@bind δ confirm(Slider(0.002:0.002:0.1,default=0.02;show_value=true))) \
+"""
+
+# ╔═╡ 96ff05e1-2d68-47fe-affc-9e17789f6305
+attractor_basin(duffing!,[γ3,β3],[[sqrt(β3),0.0],[-sqrt(β3),0]],0.1;
+    delta=δ,xlims=(-2.5,2.5),ylims=(-2.0,2.0),title="Duffing Oscillator. Attractor Basins")
+
+# ╔═╡ 255dfea1-0594-43c1-9333-9056ddce3a06
+function duffing_jac(u,p)
+  J = Array{Float64, 2}(undef, 2, 2)
+  J[1,1] = 0
+  J[1,2] = 1.0
+  J[2,1] = p[2]-2.0*u[1]*u[1]
+  J[2,2] = -p[1]
+  return J
+end;
+
+# ╔═╡ 7e365511-221e-4206-afd9-6dc99c302308
+begin
+	u0_array= [[-sqrt(β2);0],[0;0],[sqrt(β2);0]]	
+	flow2d_manifolds(duffing!,duffing_jac,u0_array,[γ2,β2];
+        tmax=100.0,delta=1e-5,xlims=[-2,2],ylims=[-2,2],title="Duffing Oscillator Stable and Unstable Manifolds")
+end	
 
 # ╔═╡ c7399360-fad1-466a-9324-f830b20b07a7
 TableOfContents(title="📚 Table of Contents", indent=true, depth=4, aside=true)
@@ -312,5 +363,12 @@ input[type*="range"] {
 # ╟─3685dce3-5cba-4845-ac99-3c663711f12f
 # ╟─fe46ce5c-0add-4b9b-bb47-3bd64f962b27
 # ╟─8e14c209-4088-4570-b794-9df6c6e7e2a2
+# ╟─613fd8a4-f40b-4e9e-9e80-3c859f1fca79
+# ╟─7e365511-221e-4206-afd9-6dc99c302308
+# ╟─30b42e19-b066-48aa-89d4-3ea79aabe330
+# ╟─8cd210e2-f014-4233-992f-d3565e9904a7
+# ╟─96ff05e1-2d68-47fe-affc-9e17789f6305
+# ╟─7c99b3a9-5b92-4fa1-833b-1278c2e40cda
+# ╟─255dfea1-0594-43c1-9333-9056ddce3a06
 # ╟─c7399360-fad1-466a-9324-f830b20b07a7
 # ╟─1f7f958e-b0c3-433f-bae9-3bf63da3de7a
