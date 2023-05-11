@@ -66,8 +66,8 @@ flow2d_vectorfield(reed!,[x03,0],tmax2,[μ,K2];title="Simple Reed Model")
 # ╔═╡ c45e6d60-3086-42f5-ba1b-df6de93827ed
 begin
 	sol4 = solve(ODEProblem(reed!, [x03,0], (0,tmax2), [μ,K2]))
-	pa4 = plot(sol4,vars=(0,1),legend=false,xlabel="t",ylabel="x")
-	pb4 = plot(sol4,vars=(0,2),legend=false,xlabel="t",ylabel="v")
+	pa4 = plot(sol4,idxs=(0,1),legend=false,xlabel="t",ylabel="x")
+	pb4 = plot(sol4,idxs=(0,2),legend=false,xlabel="t",ylabel="v")
 	plot!(pa4,[0,50.0],[0,0],c=:black)
 	plot!(pb4,[0,50.0],[0,0],c=:black)
 	plot(pa4,pb4,layout=(2,1),size=(900,400))
@@ -134,7 +134,7 @@ V : $(@bind V Slider(-1:0.001:1,default=0.02;show_value=true))
 begin
 	solbow = solve(ODEProblem(bow!, [x0b; v0b], (0, 250.0), [μb,V]));
 	p1 = plot(solbow,legend=false)
-	p2 = plot(solbow,vars=(1,2),legend=false,arrow=true)
+	p2 = plot(solbow,idxs=(1,2),legend=false,arrow=true)
 	plot(p1,p2,layout=(1,2),size = (900,450),title="Bowed String")
 end	
 

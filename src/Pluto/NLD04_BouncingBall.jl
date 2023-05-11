@@ -77,8 +77,8 @@ flow2d_vectorfield(ballsoft!,[h0,0],tmax1,[9.8,K,γ2];title="Ball Soft",xlims=[-
 # ╔═╡ 6e3ebd5c-b797-44f9-82ba-8ad9a18152eb
 begin
 	sol3 = solve(ODEProblem(ballsoft!, [h0,0], (0,tmax1), [9.8,K,γ2]))
-	pa3 = plot(sol3,vars=(0,1),legend=false,xlabel="t",ylabel="x")
-	pb3 = plot(sol3,vars=(0,2),legend=false,xlabel="t",ylabel="v")
+	pa3 = plot(sol3,idxs=(0,1),legend=false,xlabel="t",ylabel="x")
+	pb3 = plot(sol3,idxs=(0,2),legend=false,xlabel="t",ylabel="v")
 	plot!(pa3,[0,tmax1],[0,0],c=:black)
 	plot!(pb3,[0,tmax1],[0,0],c=:black)
 	plot(pa3,pb3,layout=(2,1),size=(900,400))
@@ -155,8 +155,8 @@ end;
 
 # ╔═╡ 3a3ad2f0-bfa8-47cb-9d07-1d4215dcad18
 begin
-	plot(sol1,vars=(1,2),plotdensity=5000,xlims=(-1,1),ylims=(-1,1),label="u1")
-	plot!(sol2,vars=(1,2),plotdensity=5000,xlims=(-1,1),ylims=(-1,1),label="u2")
+	plot(sol1,idxs=(1,2),plotdensity=5000,xlims=(-1,1),ylims=(-1,1),label="u1")
+	plot!(sol2,idxs=(1,2),plotdensity=5000,xlims=(-1,1),ylims=(-1,1),label="u2")
 	plot!(cos.(2*pi*(0:0.001:1)),sin.(2*pi*(0:0.001:1)),label="",size=(600,600))
 	scatter!(sol1.u[end][1:1],sol1.u[end][2:2], 
 	color=:blue,markersize=10,alpha=0.5,label="1")

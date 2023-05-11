@@ -140,7 +140,7 @@ begin
     ensamble_prob = EnsembleProblem(prob,prob_func=(prob,i,repeat;u0=u0_array)->(remake(prob,u0=u0[i])))
     sol = solve(ensamble_prob,EnsembleThreads(),trajectories=length(u0_array),
 		callback=DiscreteCallback(condition,affect!))
-    plot(sol,vars=(1,2),c=:black,arrow=true,xlims=(-1,1),ylims=(-1,1),linewidth=0.5,labels="",xlabel="x",ylabel="y",size = (400,400))
+    plot(sol,idxs=(1,2),c=:black,arrow=true,xlims=(-1,1),ylims=(-1,1),linewidth=0.5,labels="",xlabel="x",ylabel="y",size = (400,400))
 end
 
 # ╔═╡ c4da9d4d-6035-4792-9e58-5006bd566441
@@ -156,9 +156,9 @@ begin
 	end
 	sol1 = solve(EnsembleProblem(prob1,prob_func=prob_func),
 	    EnsembleThreads(),trajectories=length(u0_arr))
-	pn1 = plot(sol1,vars=(1,2),arrows=(:head,1.0),legend=false,xlabel="x",ylabel="y",
+	pn1 = plot(sol1,idxs=(1,2),arrows=(:head,1.0),legend=false,xlabel="x",ylabel="y",
 	    title="Attractor Node")
-	pn2 = plot(sol1,vars=(1,2),arrows=(:tail,1.0),legend=false,xlabel="x",ylabel="y",
+	pn2 = plot(sol1,idxs=(1,2),arrows=(:tail,1.0),legend=false,xlabel="x",ylabel="y",
 	    title="Repeller Node")
 	plot(pn1,pn2,layout=(1,2),size=(900,450))
 end	
@@ -175,9 +175,9 @@ begin
 	prob3 = ODEProblem(spiral1!, u0_arr[1], (0,5.0))
 	sol3 = solve(EnsembleProblem(prob3,prob_func=prob_func),
 	    EnsembleThreads(),trajectories=length(u0_arr))
-	pf1 = plot(sol3,vars=(1,2),arrows=(:head,1.0),legend=false,xlabel="x",ylabel="y",
+	pf1 = plot(sol3,idxs=(1,2),arrows=(:head,1.0),legend=false,xlabel="x",ylabel="y",
 	    title="Attractor Focus")
-	pf2 = plot(sol3,vars=(1,2),arrows=(:tail,1.0),legend=false,xlabel="x",ylabel="y",
+	pf2 = plot(sol3,idxs=(1,2),arrows=(:tail,1.0),legend=false,xlabel="x",ylabel="y",
 	    title="Repeller Focus")
 	plot(pf1,pf2,layout=(1,2),size=(900,450))
 end	
@@ -191,7 +191,7 @@ begin
 	prob2 = ODEProblem(saddle1!, u0_arr[1], (0,1.0))
 	sol2 = solve(EnsembleProblem(prob2,prob_func=prob_func),
 	    EnsembleThreads(),trajectories=length(u0_arr))
-	plot(sol2,vars=(1,2),arrows=true,legend=false,xlabel="x",ylabel="y",
+	plot(sol2,idxs=(1,2),arrows=true,legend=false,xlabel="x",ylabel="y",
 	    size=(400,400),fmt=:png,title="Saddle Point")
 end	
 
@@ -301,8 +301,8 @@ function flow2d(f::Function,u0::Vector{Float64},tmax::Float64,p;
     condition(u,t,integrator) = (u[1]*u[1]+u[2]*u[2]) > max(xrange*xrange,yrange*yrange)
     affect!(integrator) = terminate!(integrator)
     sol = solve(ODEProblem(f,u0,(0.0,tmax),p),callback=DiscreteCallback(condition,affect!))
-    p1 = plot(sol,vars=(0,1:2))
-    p2 = plot(sol,vars=(1,2),c=:black,arrow=true,xlims=xlims,ylims=ylims,labels="",xlabel="x",ylabel="y")
+    p1 = plot(sol,idxs=(0,1:2))
+    p2 = plot(sol,idxs=(1,2),c=:black,arrow=true,xlims=xlims,ylims=ylims,labels="",xlabel="x",ylabel="y")
     plot(p1,p2,layout=(1,2),size = size)
 end;
 

@@ -79,17 +79,17 @@ gr();
 sol = solve(ODEProblem(lorenz!,[0.1,0.1,5.0],(0.0,100),parl));
 
 # ╔═╡ 40597d23-a13c-4954-8fca-d6423e6b36a0
-plot(sol,vars=(1,2,3),label="lorenz")
+plot(sol,idxs=(1,2,3),label="lorenz")
 
 # ╔═╡ 7ab51dfc-d044-47f3-a725-695ece51653b
 gr()
 
 # ╔═╡ 3592613a-538c-49cd-a27e-65d41b8b9f5d
 begin 
-	p1 = plot(sol,vars=(1,2,3),legend=false,title="Lorenz")
-	p2 = plot(sol,vars=(0,1),label="x")
-	p3 = plot(sol,vars=(0,2),label="y")
-	p4 = plot(sol,vars=(0,3),label="z")
+	p1 = plot(sol,idxs=(1,2,3),legend=false,title="Lorenz")
+	p2 = plot(sol,idxs=(0,1),label="x")
+	p3 = plot(sol,idxs=(0,2),label="y")
+	p4 = plot(sol,idxs=(0,3),label="z")
 	plot(p1,p2,p3,p4,layout=@layout [a{0.5w} grid(3,1)])
 end	
 

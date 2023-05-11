@@ -183,7 +183,7 @@ begin
 	for s in sole.u
 		plot!(p1a,s.u,zero(s.u),alpha=0.2,arrows=true,)
 	end	
-	p2a = plot(sole,vars=(0,1),xlabel="t",ylabel="T")
+	p2a = plot(sole,idxs=(0,1),xlabel="t",ylabel="T")
 	plot(p1a,p2a,size=(900,400),layout=grid(2,1,heights=[0.2 ,0.8]))
 end	
 

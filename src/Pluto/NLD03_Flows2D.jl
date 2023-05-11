@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.9
+# v0.19.16
 
 using Markdown
 using InteractiveUtils
@@ -106,8 +106,8 @@ flow2d_vectorfield(oscharm!,[x0,y0],30.0,[k];title="Harmonic Oscillator")
 # ╔═╡ 3f64c1ef-4bcb-49ed-a2a9-bc041950d514
 begin
 	sol = solve(ODEProblem(oscharm!, [x0,y0], (0,30.0), [k]))
-	pa = plot(sol,vars=(0,1),legend=false,xlabel="t",ylabel="x")
-	pb = plot(sol,vars=(0,2),legend=false,xlabel="t",ylabel="v")
+	pa = plot(sol,idxs=(0,1),legend=false,xlabel="t",ylabel="x")
+	pb = plot(sol,idxs=(0,2),legend=false,xlabel="t",ylabel="v")
 	plot!(pa,[0,30],[0,0],c=:black)
 	plot!(pb,[0,30],[0,0],c=:black)
 	plot(pa,pb,layout=(2,1),size=(900,400))
@@ -151,8 +151,8 @@ flow2d_vectorfield(oscharmdamp!,[x02,y02],250.0,[k2,γ];title="Damped Harmonic O
 # ╔═╡ a7440fa6-8ae6-425c-93e0-7c3dfa53416e
 begin
 	sol2 = solve(ODEProblem(oscharmdamp!, [x02,y02], (0,50.0), [k2,γ]))
-	pa2 = plot(sol2,vars=(0,1),legend=false,xlabel="t",ylabel="x")
-	pb2 = plot(sol2,vars=(0,2),legend=false,xlabel="t",ylabel="v")
+	pa2 = plot(sol2,idxs=(0,1),legend=false,xlabel="t",ylabel="x")
+	pb2 = plot(sol2,idxs=(0,2),legend=false,xlabel="t",ylabel="v")
 	plot!(pa2,[0,50.0],[0,0],c=:black)
 	plot!(pb2,[0,50.0],[0,0],c=:black)
 	plot(pa2,pb2,layout=(2,1),size=(900,400))
@@ -216,8 +216,8 @@ flow2d_vectorfield(reed!,[x03,0],tmax2,[μ,K2];title="Simple Reed Model")
 # ╔═╡ c45e6d60-3086-42f5-ba1b-df6de93827ed
 begin
 	sol4 = solve(ODEProblem(reed!, [x03,0], (0,tmax2), [μ,K2]))
-	pa4 = plot(sol4,vars=(0,1),legend=false,xlabel="t",ylabel="x")
-	pb4 = plot(sol4,vars=(0,2),legend=false,xlabel="t",ylabel="v")
+	pa4 = plot(sol4,idxs=(0,1),legend=false,xlabel="t",ylabel="x")
+	pb4 = plot(sol4,idxs=(0,2),legend=false,xlabel="t",ylabel="v")
 	plot!(pa4,[0,50.0],[0,0],c=:black)
 	plot!(pb4,[0,50.0],[0,0],c=:black)
 	plot(pa4,pb4,layout=(2,1),size=(900,400))
@@ -309,7 +309,7 @@ V : $(@bind V Slider(-1:0.001:1,default=0.02;show_value=true))
 begin
 	solbow = solve(ODEProblem(bow!, [x0b; v0b], (0, 50.0), [μb,V]));
 	p1 = plot(solbow,legend=false)
-	p2 = plot(solbow,vars=(1,2),legend=false,arrow=true)
+	p2 = plot(solbow,idxs=(1,2),legend=false,arrow=true)
 	plot(p1,p2,layout=(1,2),size = (900,450),title="Bowed String")
 end	
 
@@ -341,7 +341,7 @@ end;
 
 # ╔═╡ 13b4722a-ab98-4d09-9d0f-998a0596887a
 begin
-	plot(sole1,vars=(1,2),xlabel="x",ylabel="y",c=:blue,alpha=0.5)
+	plot(sole1,idxs=(1,2),xlabel="x",ylabel="y",c=:blue,alpha=0.5)
 	plot!([-1.0,1.0],[0,0],c=:black,title="Damped Harmonic Oscillator")
 	plot!([0,0],[-1.0,1.0],c=:black,size = (800,800))
 	xlims!((-1,1))
@@ -363,7 +363,7 @@ end;
 
 # ╔═╡ 0cfeb6ad-605c-4e24-85ae-45be1339a79a
 begin
-	plot(sole2,vars=(1,2),xlabel="x",ylabel="y",c=:blue,alpha=0.3)
+	plot(sole2,idxs=(1,2),xlabel="x",ylabel="y",c=:blue,alpha=0.3)
 	plot!([-1.0,1.0],[0,0],c=:black,title="Simple Reed Model")
 	plot!([0,0],[-1.0,1.0],c=:black,size = (800,800))
 	xlims!((-1,1))
@@ -395,7 +395,7 @@ function plot_state_flow2D(u,xrange,yrange,t)
 end;
 
 # ╔═╡ b9a96700-0703-4b80-8c82-e028262ca6b8
-mutable struct Flow
+mutable struct Flux
     f::Function
     x0::Vector 
     t::Number
@@ -405,7 +405,7 @@ end
 # ╔═╡ c26b6f12-fd3d-4a96-9ca0-ddcf267e5a3c
 begin
 	reset
-	f1=Flow(oscharm!,[x0,y0],0.0,[])
+	f1=Flux(oscharm!,[x0,y0],0.0,[])
 	p0 = plot_state_flow2D([x0,y0],[-1.0,1.0],[-1.0,1.0],0.0);
 	p0b = plot(legend=false);
 end;
@@ -437,7 +437,7 @@ end
 # ╟─7cf3899a-a21c-4804-ba12-6543b1916cb1
 # ╟─b5dea9d8-ebae-4a8a-aaec-180f8c83fdfd
 # ╟─3f64c1ef-4bcb-49ed-a2a9-bc041950d514
-# ╟─c26b6f12-fd3d-4a96-9ca0-ddcf267e5a3c
+# ╠═c26b6f12-fd3d-4a96-9ca0-ddcf267e5a3c
 # ╟─9ca2ec27-8600-4d6f-8c9f-05e08ed137f3
 # ╠═8fef25bf-0633-4291-b27d-c3b6414147da
 # ╟─bf009c87-d4cd-4001-8bd2-c95e3581fc8d
@@ -449,7 +449,7 @@ end
 # ╠═2cd075b8-0fd1-481b-b230-1bf3a51f2d5f
 # ╟─7557f8d7-2654-41c2-a443-9d5a76622501
 # ╠═cb6d88cd-d6fb-4730-95a6-35a59224f35c
-# ╟─c45e6d60-3086-42f5-ba1b-df6de93827ed
+# ╠═c45e6d60-3086-42f5-ba1b-df6de93827ed
 # ╟─2c1199ef-6e95-43b8-92e8-690b3ea1d45c
 # ╟─a6624901-991d-4053-9270-ba1b54ec48ec
 # ╟─e94dd082-b9f5-4bc4-a530-37459881dcd0
@@ -457,16 +457,16 @@ end
 # ╟─9fc16286-ef4f-4808-8227-0e3f69bbbaec
 # ╟─3f61ca09-63d8-45ee-8cc5-f4296d165f17
 # ╠═ad89473b-73a5-4c3e-a3f9-f645e19b386b
-# ╟─8c710c72-6c9b-40ea-bd7c-dcc566a317e0
+# ╠═8c710c72-6c9b-40ea-bd7c-dcc566a317e0
 # ╟─82365a14-9870-43bc-b214-b1d248c5cd9d
 # ╟─877f1288-8c71-4a96-8cec-b2f5e9c4c688
 # ╟─940e5c21-2d93-4fa1-a8b2-c8b1eb20dd45
-# ╟─13b4722a-ab98-4d09-9d0f-998a0596887a
+# ╠═13b4722a-ab98-4d09-9d0f-998a0596887a
 # ╟─48a9bf5d-5c44-4c4e-b9e4-a1ee53a4a978
 # ╟─50929479-b635-4cd3-9491-038c555d3e60
-# ╟─0cfeb6ad-605c-4e24-85ae-45be1339a79a
-# ╟─7de645ef-ab42-47cd-b8be-f7533c94e066
-# ╟─f480e291-b67c-4a2f-9f44-914a340df81e
-# ╟─5bbb333e-47a3-464b-82f5-cb8053c5c733
-# ╟─64022ca2-6323-4428-b938-843e228d4922
-# ╟─b9a96700-0703-4b80-8c82-e028262ca6b8
+# ╠═0cfeb6ad-605c-4e24-85ae-45be1339a79a
+# ╠═7de645ef-ab42-47cd-b8be-f7533c94e066
+# ╠═f480e291-b67c-4a2f-9f44-914a340df81e
+# ╠═5bbb333e-47a3-464b-82f5-cb8053c5c733
+# ╠═64022ca2-6323-4428-b938-843e228d4922
+# ╠═b9a96700-0703-4b80-8c82-e028262ca6b8
