@@ -14,239 +14,81 @@ macro bind(def, element)
     end
 end
 
-# ╔═╡ 8601d8d7-d4df-473f-b65d-0f03aeb8f5f4
-using PlutoUI, Plots, DifferentialEquations, ForwardDiff, IntervalRootFinding, StaticArrays
+# ╔═╡ 66270ae2-1483-11ee-2f94-9fa61a5bff52
+using ModelingToolkit, DifferentialEquations, Plots, PlutoUI
 
-# ╔═╡ 09b22c30-bb22-4633-9939-2e97bb0beb5e
-include("../NLD_utils.jl")
+# ╔═╡ dd568e45-8431-4032-b535-2b440b6a8fc2
+@variables t x1(t)=1 x2(t)=1 x3(t)=1 x4(t)=1
 
-# ╔═╡ 1f49c325-fc99-4b15-81ee-dc1c5bbe6f08
-gr();
+# ╔═╡ b9b0ee31-f055-40a4-85c3-109695e48f92
+@parameters η1=1.85 η2=1.55 η3=0.77
 
-# ╔═╡ 6b52504e-805e-417e-8fb2-6473b47b0ad0
+# ╔═╡ fd5bb01b-6def-434a-a777-824c2e300e67
+D = Differential(t)
+
+# ╔═╡ 0ae113bf-b572-4bd9-9d69-96260ff880c8
+function dhopf!(du,u,p,t)
+	(η1,η2,η3) = p
+	du[1] = η1*(0.5*u[1]+u[2]-u[4]-u[1]*(0.6*u[1]+u[1]*u[1]))
+	du[2] = -η3*u[1]
+	du[3] = (1+sqrt(2))*u[4]
+	du[4] = (2-sqrt(2))*(u[1]-u[3]-η2*u[4])
+end
+
+# ╔═╡ 2001e25f-a361-40ab-aec6-b5a8bf4c8be0
+eqs = [D(x1) ~ η1*(0.5*x1+x2-x4-x1*(0.6*x1+x1*x1))
+	D(x2) ~ -η3*x1
+	D(x3) ~ (1+sqrt(2))*x4
+	D(x4) ~ (2-sqrt(2))*(x1-x3-η2*x4)]
+
+# ╔═╡ 63c97c2a-d0c4-441b-940a-91011e7f1caa
+@named sys = ODESystem(eqs, t)
+
+# ╔═╡ 9794ee2f-8411-4679-8ac4-05770eb860b8
+simpsys = structural_simplify(sys)
+
+# ╔═╡ 9da4331a-7c0e-4a67-8bae-3594e798c07a
+prob = ODEProblem(simpsys, [], (0,100.0))
+
+# ╔═╡ c0051142-7135-4677-962f-26f6148739f7
+
+
+# ╔═╡ 39a9a118-39da-45bb-baa9-6f767ad5e50a
+#phase_portrait(dhopf!,[η1,η2,η3];tmax=tmax,xlims=[0,4],ylims=[0,4])
+
+# ╔═╡ e76f9756-9804-4b7c-8fba-b6811a78084e
 md"""
-# Forced Duffing Oscillator
-
-Let us see now a periodic forced system where the response is much more irregular. We return to the Duffing oscillator (with linear friction). Recall that we arrived at this system by first writing the equation for the harmonic oscillator in its general form with a restoring force $K(x)$
-
-$\dot{x}=y$ 
-
-$\dot{y}=-\mu y + K(x)$
-
-and choosing a restoring force with a linear and a cubic term:
-
-$K(x) = \beta x - x^3$
-
-As for large values of $x$ the cubic term will dominate, it is guaranteed that the system is globally attracting (if $x$ is positive $-K(x)$ is very negative and vice versa).
-
-The Duffing oscillator is NOT a self oscillator because it has no negative friction (energy injection). 
-
-In the case of the Duffing oscillator we introduce the forcing as a periodic force with two control parameters: the angular frequency $\omega$ and the amplitude of the forcing $A$. Since it is a force, it is added as a term in the second equation, together with the restoring force and the nonlinear dissipation . 
-
-However, before writing the equations it is worth remembering that when we defined a dynamical system we said that the evolution rules, given by the differential equations, were fixed and did not change in time. Yet, we can always write a time-dependent system by 'inventing' time as a new variable, or in the case of a periodic function, the phase of the forcing $\phi$. Thus we can write the forced Duffing oscillator as follows:
-
-$\dot{x} = y$ 
-
-$\dot{y} = -\mu y + \beta x -  x^3 + A cos(\phi)$ 
-
-$\dot{\phi} = \omega$
-
-at the cost of adding one more dimension, the flow is now 3D. The evolution of the third variable is trivial since as it corresponds to the phase it advances linearly in time as $\omega t$. 
-
-Since this variable enters in the first two equations only through a sine function we can consider the third dimension to be periodic (formally we could consider the space formed by the product of a plane and a circle in the third variable). This sound strange but it can be represented as an infinite horizontal space between a ground and a ceil, and making the identity between the ground and the ceil, so every trayectory that goed through the ceil appears immediately at the ground in  the same point y viceversa. 
-
-If we project in the plane we must take into account that now on the phase space (or rather on its projection) we are going to see trajectories that cross but that correspond to two different coordinates.
+p1 $(@bind p1 Slider(1.7:0.001:2.5,default=1.85;show_value=true)) 
+p2 $(@bind p2 Slider(1.4:0.001:2.0,default=1.55;show_value=true)) \
+p3 $(@bind p3 Slider(0.5:0.001:1.0,default=0.75;show_value=true)) 
+tmax $(@bind tmax Slider(200:10:1000,default=100;show_value=true)) \
 """
 
-# ╔═╡ 6b14f6c6-536b-4de2-b669-e0f1f34dbbe2
-function duffing_forced!(du,u,p,t)
-    (γ,β,A,ω)=p
-    du[1] = u[2]
-    du[2] = -γ*u[2]+u[1]*(β-u[1]*u[1])+A*cos(u[3])
-	du[3] = ω
-    du
-end;  
+# ╔═╡ 39ccc3cb-7119-4302-b332-481bf9624ae0
+prob1 = ODEProblem(dhopf!, [1,1,0,0], (0,tmax),[p1,p2,p3])
 
-# ╔═╡ 4ee77c37-0347-45c0-b101-b96fcb7e004d
-@bind pduff (
-	PlutoUI.combine() do bind
-		md"""
-		γ: $(bind(Slider(0:0.01:1.0,default=0.8;show_value=true))) 
-		β: $(bind(Slider(-2.0:0.02:2.0,default=1.0;show_value=true))) \
-		A: $(bind(Slider(0.0:0.02:3.0,default=0.0;show_value=true))) 
-		ω: $(bind(Slider(0:0.02:3.0,default=1.0;show_value=true))) \
-		x0: $(bind(Slider(-2.0:0.02:2.0,default=1.0;show_value=true))) 
-		ncycles: $(bind(Slider(1:10:200,default=1;show_value=true)))
-		"""
-	end
-)	
+# ╔═╡ ebb5d99f-ef6d-49bc-9cca-e078cb331d95
+sol = solve(prob1);
 
-# ╔═╡ 37ddd39f-4de1-4eb0-a230-46181c7e64db
-flow2d_forced(duffing_forced!,[pduff[5],0.0,0.0],pduff,2*pi/pduff[4];tcycles=0,ncycles=pduff[6],xlims=(-2,2),ylims=(-1.5,1.5))
-
-# ╔═╡ 4fe120b9-f5f6-4dcf-a560-535ec98b8f72
-md"""
-# Poincaré section
-
-A very useful representation for quasi-periodic periodic flows (and as we will see later also chaotic) is the Poincaré section (or Poincaré map). For three-dimensional flows it consists of taking a plane that is transverse to the flow (i.e. no orbit is parallel to it) and taking the intersection of the trajectories with this plane as points $x_i$.
-
-We can then study the dynamics of these points on the plane of the Poincaré section as a map (hence the name Poincaré map): $x_{i+1}=P(x_i)$
-where the function $P$ is obtained by calculating the trajectory from the point given by the intersection of the flow over the plane $x_i$ 
- to the next intersection with the plane $x_{i+1}$
- (see figure)
-"""
-
-# ╔═╡ c30e6a34-bb1c-43a6-b5b4-87fecf3c4211
-html"""
-<div>
-<img src="https://i.imgur.com/raoe46x.gif" width="250px">
-</div>
-"""
-
-# ╔═╡ de2a21bb-e875-4dab-b3f2-c40dfa02dfb3
-md"""
-Then a periodic orbit in the original flow corresponds to a fixed point in the map, if the orbit has a period equal to the time of return to the plane, or to periodic points (which return after an integer number of iterations to the same point) if the closed orbit crosses the plane several times.
-
-For the case of forced systems the choice of the Poincaré section is obvious because since the third dimension is periodic it is sufficient to choose a plane of constant phase. Without loss of generality we can choose the ground $\phi=0$. In this case the points on the Poincaré section correspond to the points on the previous graph.
-"""
-
-# ╔═╡ 7addbab2-b219-4a77-b7a1-56af59e028be
-poincare_forced(duffing_forced!,[0.5,0.5,0],pduff,2*pi/pduff[4]; tcycles=10,ncycles=100,size=(900,600))
-
-# ╔═╡ fbd1ace7-7d18-4e9b-aa32-4003fd5cd542
-md"""
-# Parameter exploration 
-
-As you can see by playing a little with the parameters, the repertoire of behaviors is highly varied. A good way to explore it is to start from the unforced system $A=0$ with and a fixed value of the other parameters (remember the effect that $\gamma$ and $\beta$ had on the original system). For example, with we have the double well potential. In that case remember that we had a saddle type fixed point at the origin and symmetric attractor foci at $x^*_{2,3}=\pm\sqrt{\beta}$. 
-
-For small $A$ values the attractors are transformed into *stable limit cycles* with the period of the forcing. For intermediate $A$ values other attractor cycles appear (through a saddle-node bifurcation of limit cycles) surrounding the smaller limit cycle. Stable limit cycles may also appear surrounding both wells and with different period values as integer multiplies of the forcing.
-
-On the other hand, the saddle point of the unforced system becomes a saddle-type limit cycle, i.e. it is not an attractor (except in a certain direction), but as in 2D systems it organizes the flow. Later we will see that the stable and unstable manifolds of the saddle orbit (which are actually like folded sheets in 3D) are important to understand the organization of the flow and the occurrence of chaos.
-
-The coexistence of these attractor limit cycles already makes the behavior more complex and unpredictable (try varying the initial condition along the horizontal axis for example for the values ($\gamma=0.1,\beta=1,A=0.1,\omega=1$) to see the different possible destinations depending on the starting point or $A=0.24$ for a more complex behavior).
-
-However for certain values of parameters and initial conditions the orbit never seems to converge to an attractor and is left spinning following an irregular path (e.g. for $\gamma=0.1,\beta=1,A=0.1,\omega=1$ ). We will see that this is a new type of attractor (called "strange" and having fractal structure) and that it is a signature of chaos.
-
-But first let's explore the coexistence of attractors and define the basin of attraction of an attractor. If we explore different initial conditions in the case suggested above with values of $A=0.1$ and $A=0.24$:
-"""
-
-# ╔═╡ 8b29c214-4b49-4f44-9eb5-230899ec7321
-md"""
-# Attraction Basins
-
-An important notion that will allow us to characterize the growing complexity of the behavior of this system is that of the basin of attraction.
-
-The basin of attraction of a certain attractor (for example a limit cycle that in the Poincare section corresponds to a fixed point or a set of periodic points), is defined by all those initial conditions that converge to the attractor for long times.
-
-To determine the basins it is necessary to evolve a grid of several thousand initial conditions over several cycles, therefore the graphs that follow can be very demanding. Run first with a low value of delta (the grid resolution) and make sure that Julia is taking in Threads.nthreads() the full number of processors in order to parallelize the problem.
-"""
-
-# ╔═╡ 0a270882-fde3-4dcc-8cef-291e86a4f8c2
-md"""
-Select one: $(@bind sel1 Select([([0.14,1.0,0.1,1.0],[[1.0,0.0],[-1.0,0.0],[-1,0.7],[0.3,0.3]])=>"γ=0.14,β=1,A=0.1,ω=1",([0.14,1.0,0.14,1.0],[[1.1,0.0],[-0.8,0.0]])=>"γ=0.14,β=1,A=0.14,ω=1",([0.14,1.0,0.2,1.0],[[1.2,0.0],[-0.9,0.0]])=>"γ=0.14,β=1,A=0.2,ω=1",([0.14,1.0,0.24,1.0],[[1.2,0.0],[-0.9,0.0],[0.1,1.1]])=>"γ=0.14,β=1,A=0.24,ω=1"]))
-"""
-
-# ╔═╡ dc6e3382-7239-48f1-a88d-bc12fda7cb73
-attractor_basin(duffing_forced!,sel1[1],sel1[2],0.3;delta=0.01,tmax=30*pi,xlims=(-2.5,2.5),ylims=(-2.0,2.0))
-
-# ╔═╡ 3078878b-a2f8-40f5-9398-401682ebb2f5
-md"""
-# Strange Attractor
-
-For greater values of $A$, the trajectories no longer converge to limit cycles but istead they approach to a set with a fractal structure known as a **strange attractor**. On the Poincare section is a set of points that, unlike the one generated by a torus formed by quasiperiodic orbits, is not confined to a curve. Let's see the poincare section for a value $A=0.27$ that gives rise to a strange attractor:
-"""
-
-# ╔═╡ 64e04ff2-6662-4775-93cd-85a915487478
-poincare_forced(duffing_forced!,[0.5,0.5,0],[0.14,1.0,0.27,1.0],2*pi; tcycles=30,ncycles=50000,size=(900,600))
-
-# ╔═╡ 19d2efe0-f5bc-4353-af5e-e16e424edd38
-md"""
-Do not confuse this structure with that of the basins of attraction. These points are the limit set (which in the case of cycles correspond to a single point) and are formed by infinite points that form a fractal structure. In this case the basin of attraction occupies the whole plane but for other values of can coexist with periodical orbits.
-
-If we zoom in to a detail of the attractor we see that it has a structure with even more detail:
-"""
-
-# ╔═╡ bb2042f9-84bf-452e-be4b-b60b8550e787
-poincare_forced_zoom(duffing_forced!,[0.5,0.5,0],[0.14,1,0.27,1],2*pi;npts=30000,maxiter=1000,size=(900,600),xlims=[-0.75,-0.5],ylims=[0,0.2])
-
-# ╔═╡ 6e2672fa-670c-4a6a-ac1d-3aa897a6210f
-md"""
-# Unstable and Stable Manifolds of the Saddle in the Poincare Section
-
-To understand how chaos develops (we will give a more rigorous definition later) it is useful to study the stable and unstable manifolds of the saddle orbit (or the saddle point of the map). 
-"""
-
-# ╔═╡ 7b41aa57-598c-4f87-ba26-ec3c54a12024
-md"""
-Select one: $(@bind sel2 Select([([0.14,1.0,0.1,1.0],[-0.05,0.0],1500)=>"γ=0.14,β=1,A=0.1,ω=1",([0.14,1.0,0.14,1.0],[-0.07,0.0],2500)=>"γ=0.14,β=1,A=0.14,ω=1",([0.14,1.0,0.24,1.0],[-0.1,0.0],5500)=>"γ=0.14,β=1,A=0.24,ω=1",([0.14,1.0,0.27,1.0],[-0.1,0.0],5500)=>"γ=0.14,β=1,A=0.27,ω=1"]))
-"""
-
-# ╔═╡ 5e7d4da9-1ba7-44fd-b5ca-8931fa6dc00c
-function duffing_jac(u,p)
-  J = Array{Float64, 2}(undef, 3, 3)
-  J[1,1] = 0
-  J[1,2] = 1.0
-  J[1,3] = 0.0  
-  J[2,1] = p[2]-3.0*u[1]*u[1]
-  J[2,2] = -p[1]  
-  J[2,3] = -p[3]*sin(u[3]) 
-  J[3,1] = 0.0
-  J[3,2] = 0.0
-  J[3,3] = 0.0  
-  return J
-end;
-
-# ╔═╡ 788140f8-9705-4784-8089-4bb4c942c3a8
+# ╔═╡ ba873076-94c8-48ca-8cb2-c6acae09195f
 begin
-	p = sel2[1]
-	period = 2*pi
-	npts = 1500
-	us,conv = saddle_orbit2D(duffing_forced!,sel2[2],p,period)
-	if conv
-	    #println(us)
-	    p1=saddle_manifolds_forced(duffing_forced!,duffing_jac,us,p,period;ncycles=[8,2],npts=npts,delta=10^(-4))
-		if (p[3]<0.27)
-	    	poincare_forced!(p1,duffing_forced!,[1.2,0.0,0.0],p, period; tcycles=40,ncycles=41,msize=3.0,col=:black)
-	    	poincare_forced!(p1,duffing_forced!,[-0.8,0.0,0.0],p, period; tcycles=40,ncycles=41,msize=3.0,col=:black)
-			if (p[3]<0.14)
-	    		poincare_forced!(p1,duffing_forced!,[-1,0.7,0.0],p, period; tcycles=40,ncycles=41,msize=3.0,col=:black)
-	    		poincare_forced!(p1,duffing_forced!,[0.3,0.3,0.0],p, period; tcycles=40,ncycles=41,msize=3.0,col=:black)
-			end
-		end	
-	    xlims!(p1,(-2.5,2.5)); ylims!(p1,(-1.5,1.5))
-		title!(p1,"Forced Duffing Oscillator. γ=0.14, β=1, A=0.14, ω=1")
-	end	
+	plot(sol,idxs=(1,2))
+	plot!(sol,idxs=(3,4))
 end	
-
-# ╔═╡ c7399360-fad1-466a-9324-f830b20b07a7
-TableOfContents(title="📚 Table of Contents", indent=true, depth=4, aside=true)
-
-# ╔═╡ 1f7f958e-b0c3-433f-bae9-3bf63da3de7a
-html"""
-<style>
-input[type*="range"] {
-	width: 30%;
-}
-</style>
-"""
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
-ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
-IntervalRootFinding = "d2bf35a9-74e0-55ec-b149-d360ff49b807"
+ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
 DifferentialEquations = "~7.8.0"
-ForwardDiff = "~0.10.35"
-IntervalRootFinding = "~0.5.11"
+ModelingToolkit = "~8.60.0"
 Plots = "~1.38.16"
 PlutoUI = "~0.7.51"
-StaticArrays = "~1.5.26"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -255,18 +97,29 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.9.1"
 manifest_format = "2.0"
-project_hash = "dd56d316515b53d3e95f887017e594572f657f08"
+project_hash = "5df2f6d0090943fcd63eb2f61c134f4abf44c239"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "891771fcf2db8427453eed9eee66847fda5abcc3"
 uuid = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
 version = "0.1.4"
 
+[[deps.AbstractAlgebra]]
+deps = ["GroupsCore", "InteractiveUtils", "LinearAlgebra", "MacroTools", "Preferences", "Random", "RandomExtensions", "SparseArrays", "Test"]
+git-tree-sha1 = "1bd8a536c949eb3de9b58042d57790ded6b70fa6"
+uuid = "c3fe647b-3220-5bb0-a1ea-a7954cac585d"
+version = "0.30.9"
+
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
 git-tree-sha1 = "8eaf9f1b4921132a4cff3f36a1d9ba923b14a481"
 uuid = "6e696c72-6542-2067-7265-42206c756150"
 version = "1.1.4"
+
+[[deps.AbstractTrees]]
+git-tree-sha1 = "faa260e4cb5aba097a73fab382dd4b5819d8ec8c"
+uuid = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
+version = "0.4.4"
 
 [[deps.Adapt]]
 deps = ["LinearAlgebra", "Requires"]
@@ -334,6 +187,11 @@ version = "0.17.28"
 [[deps.Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 
+[[deps.Bijections]]
+git-tree-sha1 = "fe4f8c5ee7f76f2198d5c2a06d3961c249cce7bd"
+uuid = "e2ed5e7c-b2de-5872-ae92-c73ca462fb04"
+version = "0.1.4"
+
 [[deps.BitFlags]]
 git-tree-sha1 = "43b1a4a8f797c1cddadf60499a8a077d4af2cd2d"
 uuid = "d1d4a3ce-64b1-5f1a-9ba4-7e7e69966f35"
@@ -368,17 +226,11 @@ git-tree-sha1 = "89e0654ed8c7aebad6d5ad235d6242c2d737a928"
 uuid = "2a0fbf3d-bb9c-48f3-b0a9-814d99fd7ab9"
 version = "0.2.3"
 
-[[deps.CRlibm]]
-deps = ["CRlibm_jll"]
-git-tree-sha1 = "32abd86e3c2025db5172aa182b982debed519834"
-uuid = "96374032-68de-5a5b-8d9e-752f78720389"
-version = "1.0.1"
-
-[[deps.CRlibm_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "e329286945d0cfc04456972ea732551869af1cfc"
-uuid = "4e9b3aee-d8a1-5a3d-ad8b-7d824db253f0"
-version = "1.0.1+0"
+[[deps.CSTParser]]
+deps = ["Tokenize"]
+git-tree-sha1 = "3ddd48d200eb8ddf9cb3e0189fc059fd49b97c1f"
+uuid = "00ebfdb7-1f24-5e51-bd34-a7502290713f"
+version = "3.3.6"
 
 [[deps.Cairo_jll]]
 deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
@@ -434,6 +286,17 @@ git-tree-sha1 = "fc08e5930ee9a4e03f84bfb5211cb54e7769758a"
 uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
 version = "0.12.10"
 
+[[deps.Combinatorics]]
+git-tree-sha1 = "08c8b6831dc00bfea825826be0bc8336fc369860"
+uuid = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
+version = "1.0.2"
+
+[[deps.CommonMark]]
+deps = ["Crayons", "JSON", "PrecompileTools", "URIs"]
+git-tree-sha1 = "532c4185d3c9037c0237546d817858b23cf9e071"
+uuid = "a80b9123-70ca-4bc0-993e-6e3bcb318db6"
+version = "0.8.12"
+
 [[deps.CommonSolve]]
 git-tree-sha1 = "0eee5eb66b1cf62cd6ad1b460238e60e4b09400c"
 uuid = "38540f10-b2f7-11e9-35d8-d573e4eb0ff2"
@@ -460,6 +323,11 @@ deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
 version = "1.0.2+0"
 
+[[deps.CompositeTypes]]
+git-tree-sha1 = "02d2316b7ffceff992f3096ae48c7829a8aa0638"
+uuid = "b152e2b5-7a66-4b01-a709-34e65c35f657"
+version = "0.1.3"
+
 [[deps.ConcurrentUtilities]]
 deps = ["Serialization", "Sockets"]
 git-tree-sha1 = "96d823b94ba8d187a6d8f0826e731195a74b90e9"
@@ -471,14 +339,11 @@ deps = ["LinearAlgebra"]
 git-tree-sha1 = "738fec4d684a9a6ee9598a8bfee305b26831f28c"
 uuid = "187b0558-2788-49d3-abe0-74a17ed4e7c9"
 version = "1.5.2"
+weakdeps = ["IntervalSets", "StaticArrays"]
 
     [deps.ConstructionBase.extensions]
     ConstructionBaseIntervalSetsExt = "IntervalSets"
     ConstructionBaseStaticArraysExt = "StaticArrays"
-
-    [deps.ConstructionBase.weakdeps]
-    IntervalSets = "8197267c-284f-5f27-9208-e0e47529a953"
-    StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [[deps.Contour]]
 git-tree-sha1 = "d05d9e7b7aedff4e5b51a029dced05cfb6125781"
@@ -490,6 +355,11 @@ deps = ["Markdown"]
 git-tree-sha1 = "fcbb72b032692610bfbdb15018ac16a36cf2e406"
 uuid = "adafc99b-e345-5852-983c-f28acb93d879"
 version = "0.3.1"
+
+[[deps.Crayons]]
+git-tree-sha1 = "249fe38abf76d48563e2f4556bebd215aa317e15"
+uuid = "a8cc5b0e-0ffa-5ad4-8c14-923d3ee1735f"
+version = "4.1.1"
 
 [[deps.DataAPI]]
 git-tree-sha1 = "8da84edb865b0b5b0100c0666a9bc9a0b71c553c"
@@ -617,6 +487,12 @@ git-tree-sha1 = "2fb1e02f2b635d0845df5d7c167fec4dd739b00d"
 uuid = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 version = "0.9.3"
 
+[[deps.DomainSets]]
+deps = ["CompositeTypes", "IntervalSets", "LinearAlgebra", "Random", "StaticArrays", "Statistics"]
+git-tree-sha1 = "698124109da77b6914f64edd696be8dccf90229e"
+uuid = "5b8099bc-c8ec-5219-889f-1d9e522a28bf"
+version = "0.6.6"
+
 [[deps.Downloads]]
 deps = ["ArgTools", "FileWatching", "LibCURL", "NetworkOptions"]
 uuid = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
@@ -628,15 +504,16 @@ git-tree-sha1 = "5837a837389fccf076445fce071c8ddaea35a566"
 uuid = "fa6b7ba4-c1ee-5f82-b5fc-ecf0adba8f74"
 version = "0.6.8"
 
+[[deps.DynamicPolynomials]]
+deps = ["DataStructures", "Future", "LinearAlgebra", "MultivariatePolynomials", "MutableArithmetics", "Pkg", "Reexport", "Test"]
+git-tree-sha1 = "8b84876e31fa39479050e2d3395c4b3b210db8b0"
+uuid = "7c1d4256-1411-5781-91ec-d7bc3513ac07"
+version = "0.4.6"
+
 [[deps.EnumX]]
 git-tree-sha1 = "bdb1942cd4c45e3c678fd11569d5cccd80976237"
 uuid = "4e289a0a-7415-4d19-859d-a7e5c4648b56"
 version = "1.0.4"
-
-[[deps.ErrorfreeArithmetic]]
-git-tree-sha1 = "d6863c556f1142a061532e79f611aa46be201686"
-uuid = "90fa49ef-747e-5e6f-a989-263ba693cf1a"
-version = "0.5.2"
 
 [[deps.ExceptionUnwrapping]]
 deps = ["Test"]
@@ -689,12 +566,6 @@ deps = ["LinearAlgebra"]
 git-tree-sha1 = "c1293a93193f0ae94be7cf338d33e162c39d8788"
 uuid = "29a986be-02c6-4525-aec4-84b980013641"
 version = "1.2.9"
-
-[[deps.FastRounding]]
-deps = ["ErrorfreeArithmetic", "LinearAlgebra"]
-git-tree-sha1 = "6344aa18f654196be82e62816935225b3b9abe44"
-uuid = "fa42c844-2597-5d31-933b-ebd51ab2693f"
-version = "0.3.1"
 
 [[deps.FileWatching]]
 uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
@@ -818,6 +689,11 @@ git-tree-sha1 = "d3b3624125c1474292d0d8ed0f65554ac37ddb23"
 uuid = "7746bdde-850d-59dc-9ae8-88ece973131d"
 version = "2.74.0+2"
 
+[[deps.Glob]]
+git-tree-sha1 = "97285bbd5230dd766e9ef6749b80fc617126d496"
+uuid = "c27321d9-0574-5035-807b-f59d2c89b15c"
+version = "1.3.1"
+
 [[deps.Graphite2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "344bf40dcab1073aca04aa0df4fb092f920e4011"
@@ -834,6 +710,18 @@ version = "1.8.0"
 git-tree-sha1 = "53bb909d1151e57e2484c3d1b53e19552b887fb2"
 uuid = "42e2da0e-8278-4e71-bc24-59509adca0fe"
 version = "1.0.2"
+
+[[deps.Groebner]]
+deps = ["AbstractAlgebra", "Combinatorics", "Logging", "MultivariatePolynomials", "Primes", "Random", "SnoopPrecompile"]
+git-tree-sha1 = "c8b55b624a83f60bcd6574cc999ad148d0a47dd6"
+uuid = "0b43b601-686d-58a3-8a1c-6623616c7cd4"
+version = "0.3.6"
+
+[[deps.GroupsCore]]
+deps = ["Markdown", "Random"]
+git-tree-sha1 = "9e1a5e9f3b81ad6a5c613d181664a0efc6fe6dd7"
+uuid = "d5909c97-4eac-4ecc-a3dc-fdd0858a4120"
+version = "0.4.0"
 
 [[deps.HTTP]]
 deps = ["Base64", "CodecZlib", "ConcurrentUtilities", "Dates", "ExceptionUnwrapping", "Logging", "LoggingExtras", "MbedTLS", "NetworkOptions", "OpenSSL", "Random", "SimpleBufferStream", "Sockets", "URIs", "UUIDs"]
@@ -887,21 +775,20 @@ git-tree-sha1 = "5cd07aab533df5170988219191dfad0519391428"
 uuid = "d25df0c9-e2be-5dd7-82c8-3ad0b3e990b9"
 version = "0.1.3"
 
+[[deps.IntegerMathUtils]]
+git-tree-sha1 = "70f65ced5129d36dbf200b07c51ea8a955294660"
+uuid = "18e54dd8-cb9d-406c-a71d-865a43cbb235"
+version = "0.1.1"
+
 [[deps.InteractiveUtils]]
 deps = ["Markdown"]
 uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 
-[[deps.IntervalArithmetic]]
-deps = ["CRlibm", "FastRounding", "LinearAlgebra", "Markdown", "Random", "RecipesBase", "RoundingEmulator", "SetRounding", "StaticArrays"]
-git-tree-sha1 = "5ab7744289be503d76a944784bac3f2df7b809af"
-uuid = "d1acc4aa-44c8-5952-acd4-ba5d80a2a253"
-version = "0.20.9"
-
-[[deps.IntervalRootFinding]]
-deps = ["ForwardDiff", "IntervalArithmetic", "LinearAlgebra", "Polynomials", "Reexport", "StaticArrays"]
-git-tree-sha1 = "b92e9e2b356146918c4f3f3845571abcf0501594"
-uuid = "d2bf35a9-74e0-55ec-b149-d360ff49b807"
-version = "0.5.11"
+[[deps.IntervalSets]]
+deps = ["Dates", "Random", "Statistics"]
+git-tree-sha1 = "16c0cc91853084cb5f58a78bd209513900206ce6"
+uuid = "8197267c-284f-5f27-9208-e0e47529a953"
+version = "0.7.4"
 
 [[deps.IrrationalConstants]]
 git-tree-sha1 = "630b497eafcc20001bba38a4651b327dcfc491d2"
@@ -936,6 +823,12 @@ deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "6f2675ef130a300a112286de91973805fcc5ffbc"
 uuid = "aacddb02-875f-59d6-b918-886e6ef4fbf8"
 version = "2.1.91+0"
+
+[[deps.JuliaFormatter]]
+deps = ["CSTParser", "CommonMark", "DataStructures", "Glob", "Pkg", "PrecompileTools", "Tokenize"]
+git-tree-sha1 = "60567b51bd9e1e19ae2fd8a54dcd6bc5994727f0"
+uuid = "98e50ef6-434e-11e9-1051-2b60c6c9e899"
+version = "1.0.34"
 
 [[deps.JumpProcesses]]
 deps = ["ArrayInterface", "DataStructures", "DiffEqBase", "DocStringExtensions", "FunctionWrappers", "Graphs", "LinearAlgebra", "Markdown", "PoissonRandom", "Random", "RandomNumbers", "RecursiveArrayTools", "Reexport", "SciMLBase", "StaticArrays", "TreeViews", "UnPack"]
@@ -983,6 +876,17 @@ version = "2.10.1+0"
 git-tree-sha1 = "f2355693d6778a178ade15952b7ac47a4ff97996"
 uuid = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 version = "1.3.0"
+
+[[deps.LabelledArrays]]
+deps = ["ArrayInterface", "ChainRulesCore", "ForwardDiff", "LinearAlgebra", "MacroTools", "PreallocationTools", "RecursiveArrayTools", "StaticArrays"]
+git-tree-sha1 = "cd04158424635efd05ff38d5f55843397b7416a9"
+uuid = "2ee39098-c373-598a-b85f-a56591580800"
+version = "1.14.0"
+
+[[deps.LambertW]]
+git-tree-sha1 = "c5ffc834de5d61d00d2b0e18c96267cffc21f648"
+uuid = "984bce1d-4616-540c-a9ee-88d1112d94c9"
+version = "0.4.6"
 
 [[deps.Latexify]]
 deps = ["Formatting", "InteractiveUtils", "LaTeXStrings", "MacroTools", "Markdown", "OrderedCollections", "Printf", "Requires"]
@@ -1157,6 +1061,11 @@ git-tree-sha1 = "65f28ad4b594aebe22157d6fac869786a255b7eb"
 uuid = "6c6e2e6c-3030-632d-7369-2d6c69616d65"
 version = "0.1.4"
 
+[[deps.MLStyle]]
+git-tree-sha1 = "bc38dff0548128765760c79eb7388a4b37fae2c8"
+uuid = "d8e11817-5142-5d16-987a-aa16d5891078"
+version = "0.4.17"
+
 [[deps.MacroTools]]
 deps = ["Markdown", "Random"]
 git-tree-sha1 = "42324d08725e200c23d4dfb549e0d5d89dede2d2"
@@ -1197,6 +1106,18 @@ version = "1.1.0"
 [[deps.Mmap]]
 uuid = "a63ad114-7e13-5084-954f-fe012c677804"
 
+[[deps.ModelingToolkit]]
+deps = ["AbstractTrees", "ArrayInterface", "Combinatorics", "Compat", "ConstructionBase", "DataStructures", "DiffEqBase", "DiffEqCallbacks", "DiffRules", "Distributed", "Distributions", "DocStringExtensions", "DomainSets", "ForwardDiff", "FunctionWrappersWrappers", "Graphs", "IfElse", "InteractiveUtils", "JuliaFormatter", "JumpProcesses", "LabelledArrays", "Latexify", "Libdl", "LinearAlgebra", "MLStyle", "MacroTools", "NaNMath", "RecursiveArrayTools", "Reexport", "RuntimeGeneratedFunctions", "SciMLBase", "Serialization", "Setfield", "SimpleNonlinearSolve", "SparseArrays", "SpecialFunctions", "StaticArrays", "SymbolicIndexingInterface", "SymbolicUtils", "Symbolics", "URIs", "UnPack", "Unitful"]
+git-tree-sha1 = "b1b549c39471514b6a51f099f9787e33a74e3193"
+uuid = "961ee093-0014-501f-94e3-6117800e7a78"
+version = "8.60.0"
+
+    [deps.ModelingToolkit.extensions]
+    MTKDeepDiffsExt = "DeepDiffs"
+
+    [deps.ModelingToolkit.weakdeps]
+    DeepDiffs = "ab62b9b5-e342-54a8-a765-a90f495de1a6"
+
 [[deps.MozillaCACerts_jll]]
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
 version = "2022.10.11"
@@ -1205,6 +1126,18 @@ version = "2022.10.11"
 git-tree-sha1 = "cac9cc5499c25554cba55cd3c30543cff5ca4fab"
 uuid = "46d2c3a1-f734-5fdb-9937-b9b9aeba4221"
 version = "0.2.4"
+
+[[deps.MultivariatePolynomials]]
+deps = ["ChainRulesCore", "DataStructures", "LinearAlgebra", "MutableArithmetics"]
+git-tree-sha1 = "eaa98afe2033ffc0629f9d0d83961d66a021dfcc"
+uuid = "102ac46a-7ee4-5c85-9060-abc95bfdeaa3"
+version = "0.4.7"
+
+[[deps.MutableArithmetics]]
+deps = ["LinearAlgebra", "SparseArrays", "Test"]
+git-tree-sha1 = "964cb1a7069723727025ae295408747a0b36a854"
+uuid = "d8a4904e-b15c-11e9-3269-09a3773c0cb0"
+version = "1.3.0"
 
 [[deps.NLSolversBase]]
 deps = ["DiffResults", "Distributed", "FiniteDiff", "ForwardDiff"]
@@ -1392,22 +1325,6 @@ git-tree-sha1 = "240d7170f5ffdb285f9427b92333c3463bf65bf6"
 uuid = "1d0040c9-8b98-4ee7-8388-3f51789ca0ad"
 version = "0.2.1"
 
-[[deps.Polynomials]]
-deps = ["LinearAlgebra", "RecipesBase"]
-git-tree-sha1 = "3aa2bb4982e575acd7583f01531f241af077b163"
-uuid = "f27b6e38-b328-58d1-80ce-0feddd5e7a45"
-version = "3.2.13"
-
-    [deps.Polynomials.extensions]
-    PolynomialsChainRulesCoreExt = "ChainRulesCore"
-    PolynomialsMakieCoreExt = "MakieCore"
-    PolynomialsMutableArithmeticsExt = "MutableArithmetics"
-
-    [deps.Polynomials.weakdeps]
-    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-    MakieCore = "20f20a25-4f0e-4fdf-b5d1-57303727442b"
-    MutableArithmetics = "d8a4904e-b15c-11e9-3269-09a3773c0cb0"
-
 [[deps.PositiveFactorizations]]
 deps = ["LinearAlgebra"]
 git-tree-sha1 = "17275485f373e6673f7e7f97051f703ed5b15b20"
@@ -1438,6 +1355,12 @@ git-tree-sha1 = "7eb1686b4f04b82f96ed7a4ea5890a4f0c7a09f1"
 uuid = "21216c6a-2e73-6563-6e65-726566657250"
 version = "1.4.0"
 
+[[deps.Primes]]
+deps = ["IntegerMathUtils"]
+git-tree-sha1 = "311a2aa90a64076ea0fac2ad7492e914e6feeb81"
+uuid = "27ebfcd6-29c5-5fa9-bf4b-fb8fc14df3ae"
+version = "0.5.3"
+
 [[deps.Printf]]
 deps = ["Unicode"]
 uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
@@ -1467,6 +1390,12 @@ deps = ["Random", "RandomNumbers"]
 git-tree-sha1 = "552f30e847641591ba3f39fd1bed559b9deb0ef3"
 uuid = "74087812-796a-5b5d-8853-05524746bad3"
 version = "1.6.1"
+
+[[deps.RandomExtensions]]
+deps = ["Random", "SparseArrays"]
+git-tree-sha1 = "062986376ce6d394b23d5d90f01d81426113a3c9"
+uuid = "fb686558-2515-59ef-acaa-46db3789a887"
+version = "0.4.3"
 
 [[deps.RandomNumbers]]
 deps = ["Random", "Requires"]
@@ -1543,16 +1472,11 @@ git-tree-sha1 = "6ed52fdd3382cf21947b15e8870ac0ddbff736da"
 uuid = "f50d1b31-88e8-58de-be2c-1cc44531875f"
 version = "0.4.0+0"
 
-[[deps.RoundingEmulator]]
-git-tree-sha1 = "40b9edad2e5287e05bd413a38f61a8ff55b9557b"
-uuid = "5eaf0fd0-dfba-4ccb-bf02-d820a40db705"
-version = "0.2.1"
-
 [[deps.RuntimeGeneratedFunctions]]
 deps = ["ExprTools", "SHA", "Serialization"]
-git-tree-sha1 = "237edc1563bbf078629b4f8d194bd334e97907cf"
+git-tree-sha1 = "0b9b18d6236e9ab2b092defaacdffd929d572642"
 uuid = "7e49a35a-f44a-4d26-94aa-eba1b4ca6b47"
-version = "0.5.11"
+version = "0.5.9"
 
 [[deps.SHA]]
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
@@ -1595,11 +1519,6 @@ version = "1.2.0"
 
 [[deps.Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
-
-[[deps.SetRounding]]
-git-tree-sha1 = "d7a25e439d07a17b7cdf97eecee504c50fedf5f6"
-uuid = "3cc68bcd-71a2-5612-b932-767ffbe40ab0"
-version = "0.2.1"
 
 [[deps.Setfield]]
 deps = ["ConstructionBase", "Future", "MacroTools", "StaticArraysCore"]
@@ -1796,6 +1715,18 @@ git-tree-sha1 = "f8ab052bfcbdb9b48fad2c80c873aa0d0344dfe5"
 uuid = "2efcf032-c050-4f8e-a9bb-153293bab1f5"
 version = "0.2.2"
 
+[[deps.SymbolicUtils]]
+deps = ["AbstractTrees", "Bijections", "ChainRulesCore", "Combinatorics", "ConstructionBase", "DataStructures", "DocStringExtensions", "DynamicPolynomials", "IfElse", "LabelledArrays", "LinearAlgebra", "MultivariatePolynomials", "NaNMath", "Setfield", "SparseArrays", "SpecialFunctions", "StaticArrays", "TimerOutputs", "Unityper"]
+git-tree-sha1 = "5cb1f963f82e7b81305102dd69472fcd3e0e1483"
+uuid = "d1185830-fcd6-423d-90d6-eec64667417b"
+version = "1.0.5"
+
+[[deps.Symbolics]]
+deps = ["ArrayInterface", "ConstructionBase", "DataStructures", "DiffRules", "Distributions", "DocStringExtensions", "DomainSets", "Groebner", "IfElse", "LaTeXStrings", "LambertW", "Latexify", "Libdl", "LinearAlgebra", "MacroTools", "Markdown", "NaNMath", "RecipesBase", "Reexport", "Requires", "RuntimeGeneratedFunctions", "SciMLBase", "Setfield", "SparseArrays", "SpecialFunctions", "StaticArrays", "SymbolicUtils", "TreeViews"]
+git-tree-sha1 = "c4e5688a9a5a2f4088cd1a779b0742be31cbe9aa"
+uuid = "0c5d862f-8b57-4792-8d23-62f2024744c7"
+version = "5.5.0"
+
 [[deps.TOML]]
 deps = ["Dates"]
 uuid = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
@@ -1833,6 +1764,17 @@ deps = ["ManualMemory"]
 git-tree-sha1 = "c97f60dd4f2331e1a495527f80d242501d2f9865"
 uuid = "8290d209-cae3-49c0-8002-c8c24d57dab5"
 version = "0.5.1"
+
+[[deps.TimerOutputs]]
+deps = ["ExprTools", "Printf"]
+git-tree-sha1 = "f548a9e9c490030e545f72074a41edfd0e5bcdd7"
+uuid = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
+version = "0.5.23"
+
+[[deps.Tokenize]]
+git-tree-sha1 = "90538bf898832b6ebd900fa40f223e695970e3a5"
+uuid = "0796e94c-ce3b-5d07-9a54-7f471281c624"
+version = "0.5.25"
 
 [[deps.TranscodingStreams]]
 deps = ["Random", "Test"]
@@ -1903,6 +1845,12 @@ deps = ["LaTeXStrings", "Latexify", "Unitful"]
 git-tree-sha1 = "e2d817cc500e960fdbafcf988ac8436ba3208bfd"
 uuid = "45397f5d-5981-4c77-b2b3-fc36d6e9b728"
 version = "1.6.3"
+
+[[deps.Unityper]]
+deps = ["ConstructionBase"]
+git-tree-sha1 = "d5f4ec8c22db63bd3ccb239f640e895cfde145aa"
+uuid = "a7c27f48-0311-42f6-a7f8-2c11e75eb415"
+version = "0.1.2"
 
 [[deps.Unzip]]
 git-tree-sha1 = "ca0969166a028236229f63514992fc073799bb78"
@@ -2159,30 +2107,20 @@ version = "1.4.1+0"
 """
 
 # ╔═╡ Cell order:
-# ╠═8601d8d7-d4df-473f-b65d-0f03aeb8f5f4
-# ╠═09b22c30-bb22-4633-9939-2e97bb0beb5e
-# ╟─1f49c325-fc99-4b15-81ee-dc1c5bbe6f08
-# ╟─6b52504e-805e-417e-8fb2-6473b47b0ad0
-# ╠═6b14f6c6-536b-4de2-b669-e0f1f34dbbe2
-# ╠═37ddd39f-4de1-4eb0-a230-46181c7e64db
-# ╟─4ee77c37-0347-45c0-b101-b96fcb7e004d
-# ╟─4fe120b9-f5f6-4dcf-a560-535ec98b8f72
-# ╟─c30e6a34-bb1c-43a6-b5b4-87fecf3c4211
-# ╟─de2a21bb-e875-4dab-b3f2-c40dfa02dfb3
-# ╟─7addbab2-b219-4a77-b7a1-56af59e028be
-# ╟─fbd1ace7-7d18-4e9b-aa32-4003fd5cd542
-# ╟─8b29c214-4b49-4f44-9eb5-230899ec7321
-# ╟─0a270882-fde3-4dcc-8cef-291e86a4f8c2
-# ╟─dc6e3382-7239-48f1-a88d-bc12fda7cb73
-# ╟─3078878b-a2f8-40f5-9398-401682ebb2f5
-# ╟─64e04ff2-6662-4775-93cd-85a915487478
-# ╟─19d2efe0-f5bc-4353-af5e-e16e424edd38
-# ╠═bb2042f9-84bf-452e-be4b-b60b8550e787
-# ╟─6e2672fa-670c-4a6a-ac1d-3aa897a6210f
-# ╟─7b41aa57-598c-4f87-ba26-ec3c54a12024
-# ╟─788140f8-9705-4784-8089-4bb4c942c3a8
-# ╟─5e7d4da9-1ba7-44fd-b5ca-8931fa6dc00c
-# ╟─c7399360-fad1-466a-9324-f830b20b07a7
-# ╟─1f7f958e-b0c3-433f-bae9-3bf63da3de7a
+# ╠═66270ae2-1483-11ee-2f94-9fa61a5bff52
+# ╠═dd568e45-8431-4032-b535-2b440b6a8fc2
+# ╠═b9b0ee31-f055-40a4-85c3-109695e48f92
+# ╠═fd5bb01b-6def-434a-a777-824c2e300e67
+# ╠═0ae113bf-b572-4bd9-9d69-96260ff880c8
+# ╠═2001e25f-a361-40ab-aec6-b5a8bf4c8be0
+# ╠═63c97c2a-d0c4-441b-940a-91011e7f1caa
+# ╠═9794ee2f-8411-4679-8ac4-05770eb860b8
+# ╠═9da4331a-7c0e-4a67-8bae-3594e798c07a
+# ╠═39ccc3cb-7119-4302-b332-481bf9624ae0
+# ╠═ebb5d99f-ef6d-49bc-9cca-e078cb331d95
+# ╠═ba873076-94c8-48ca-8cb2-c6acae09195f
+# ╠═c0051142-7135-4677-962f-26f6148739f7
+# ╠═39a9a118-39da-45bb-baa9-6f767ad5e50a
+# ╠═e76f9756-9804-4b7c-8fba-b6811a78084e
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

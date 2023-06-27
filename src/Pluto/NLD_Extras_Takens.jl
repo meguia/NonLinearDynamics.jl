@@ -14,238 +14,158 @@ macro bind(def, element)
     end
 end
 
-# ╔═╡ 8601d8d7-d4df-473f-b65d-0f03aeb8f5f4
-using PlutoUI, Plots, DifferentialEquations, ForwardDiff, IntervalRootFinding, StaticArrays
+# ╔═╡ fce7054d-cb51-45af-a3d1-e370fd3d9850
+using Plots, Interact, DifferentialEquations, Setfield, ForwardDiff, PlutoUI, IntervalRootFinding, StaticArrays
 
-# ╔═╡ 09b22c30-bb22-4633-9939-2e97bb0beb5e
+# ╔═╡ 4c0c95b4-1479-11ee-214c-65b5f776f5ea
 include("../NLD_utils.jl")
 
-# ╔═╡ 1f49c325-fc99-4b15-81ee-dc1c5bbe6f08
-gr();
+# ╔═╡ 13414ced-643d-4710-8023-a5bf3c59d32b
+import BifurcationKit as BK
 
-# ╔═╡ 6b52504e-805e-417e-8fb2-6473b47b0ad0
+# ╔═╡ ccd5d840-06c3-4138-999a-24c5ff7cb7aa
 md"""
-# Forced Duffing Oscillator
+# Bogdanov-Takens bifurcation (codimension 2)
 
-Let us see now a periodic forced system where the response is much more irregular. We return to the Duffing oscillator (with linear friction). Recall that we arrived at this system by first writing the equation for the harmonic oscillator in its general form with a restoring force $K(x)$
+The bifurcations (of codimension 1) we have seen so far can be characterized in two groups:
 
-$\dot{x}=y$ 
+- Those that happen when a real eigenvalue becomes zero. Generically we have a saddle-node bifurcation, but also a pitchfork or a transcritical one if other symmetry conditions are given.
+- The one that happens when the real part of two conjugate complex eigenvalues becomes zero. In that case we have a Hopf bifurcation.
 
-$\dot{y}=-\mu y + K(x)$
+Clearly the first case can happen in a 1D system (or one of higher dimension along a particular direction), while the second we need at least a 2D system to have two eigenvalues, but it takes only one parameter to control it (to move the real part). 
 
-and choosing a restoring force with a linear and a cubic term:
+But if we are in a 2D system, couldn't it happen that **both** eigenvalues become zero simultaneously? Clearly if we look at the eigenvalue expression we will need at least two parameters to adjust this point. On the other hand that two eigenvalues cross zero along the real axis would be something like two saddle-nodes happening at the same time, but it could also be seen as a Hopf bifurcation with imaginary part zero. That is, this type of "degenerate" bifurcation has inside it at least two saddle-nodes (like the cusp) and a Hopf. 
 
-$K(x) = \beta x - x^3$
+This codimension 2 bifurcation is known as double zero or Bogdanov-Takens (or Takens-Bogdanov). The normal form is characterized by having the following Jacobian:
 
-As for large values of $x$ the cubic term will dominate, it is guaranteed that the system is globally attracting (if $x$ is positive $-K(x)$ is very negative and vice versa).
+$\begin{pmatrix}0 & 1\\0 & 0\end{pmatrix}$
 
-The Duffing oscillator is NOT a self oscillator because it has no negative friction (energy injection). 
+which "induces" the following nonlinear terms to appear (in Bogdanov's version):
 
-In the case of the Duffing oscillator we introduce the forcing as a periodic force with two control parameters: the angular frequency $\omega$ and the amplitude of the forcing $A$. Since it is a force, it is added as a term in the second equation, together with the restoring force and the nonlinear dissipation . 
+$\dot{x} = y$
 
-However, before writing the equations it is worth remembering that when we defined a dynamical system we said that the evolution rules, given by the differential equations, were fixed and did not change in time. Yet, we can always write a time-dependent system by 'inventing' time as a new variable, or in the case of a periodic function, the phase of the forcing $\phi$. Thus we can write the forced Duffing oscillator as follows:
+$\dot{y} = x^2-xy$
 
-$\dot{x} = y$ 
+Note that we did not introduce any parameters yet, this is the "pure" singularity. To extend this in parameter space (or dynamical systems to be more precise) it is necessary to do an **unfolding**, and here there are several possibilities, let's take the one done by Guckenheimer & Holmes:
 
-$\dot{y} = -\mu y + \beta x -  x^3 + A cos(\phi)$ 
+$\dot{x} = y$
 
-$\dot{\phi} = \omega$
+$\dot{y} = \mu_1+\mu_2x+ x^2 -xy$
 
-at the cost of adding one more dimension, the flow is now 3D. The evolution of the third variable is trivial since as it corresponds to the phase it advances linearly in time as $\omega t$. 
+Let's study the bifurcations directly without worrying about the solutions yet because this system (like the saddle node in the plane) has divergent trajectories.
 
-Since this variable enters in the first two equations only through a sine function we can consider the third dimension to be periodic (formally we could consider the space formed by the product of a plane and a circle in the third variable). This sound strange but it can be represented as an infinite horizontal space between a ground and a ceil, and making the identity between the ground and the ceil, so every trayectory that goed through the ceil appears immediately at the ground in  the same point y viceversa. 
+Since we have terms up to quadratic order we will be able to have generically two fixed points or none. Always located on the horizontal axis $y=0$ and with the $x$ coordinate at:
 
-If we project in the plane we must take into account that now on the phase space (or rather on its projection) we are going to see trajectories that cross but that correspond to two different coordinates.
+$x_{\pm}=-\frac{\mu_2}{2}\pm \sqrt{\frac{\mu_2^2}{4}-\mu_1}$
+
+The positive sign corresponds to the fixed point on the right and the negative sign to the fixed point on the left (when they exist).
+
+the condition for existence of the fixed points is that the interior of the root is positive which gives us a condition to draw a saddle-node bifurcation curve in the plane $(\mu_1,\mu_2)$:
+
+SN : $\mu_1=\frac{\mu_2^2}{4}$
+
+On the other hand the Jacobian evaluated at the fixed points (preserving the order $pm$) is written as:
+
+$\begin{pmatrix}0 & 1\\
+\pm 2\sqrt{\frac{\mu_2^2}{4}-\mu_1} & \frac{\mu_2}{2}\mp \sqrt{\frac{\mu_2^2}{4}-\mu_1}
+\end{pmatrix}$
+
+Which gives us the determinant:
+
+$\Delta = \mp 2\sqrt{\frac{\mu_2^2}{4}-\mu_1}$
+
+which for the fixed point on the right is always negative (saddle point) and for the one on the left positive. For the latter we evaluate the trace (we only keep the sign below):
+
+$\tau = \frac{\mu_2}{2}+\sqrt{\frac{\mu_2^2}{4}-\mu_1}$
+
+since the root is positive when $\mu_2<0$, the trace will become zero when $\mu_1=0$. This gives us the condition to trace the Hopf bifurcation curve in the plane $(\mu_1,\mu_2)$:
+
+Hopf: $\mu_2>0$  , $\mu_1=0$
+
+This curve meets the SN parabola at the point $(0,0)$ so as we anticipated at this singular point we have an SN curve and a Hopf curve occurring simultaneously. The complete bifurcation diagram (taken from Scholarpedia) is:
+
+
+Notice that there is an additional curve (in red) that corresponds to a global bifurcation (homoclinic connection). 
+
+We have already seen this bifurcation! And with this same normal form, but arbitrarily fixing $\mu_2=-1$. This is a homoclinic bifurcation or saddle loop. The change from region (3) to (4) is the one we described when we saw this bifurcation. The limit cycle originating from the Hopf curve grows until it touches the saddle and saddle varieties and forms a loop. On the other side of the bifurcation there is no limit cycle and the unstable saddle manifold feeds an attractor focus. 
+
+Explore how the moieties are modified in the graph below and try to locate when the homoclinic connection occurs. As a guide we show on the right the bifurcation diagram with the analytic SN and Hopf curves and in dotted line the homoclinic that occurs (we will not show the deduction of that) when:
+
+HC: $\mu_1 = -\frac{6}{25}\mu_2^2$ ,  $\mu_2<0$
 """
 
-# ╔═╡ 6b14f6c6-536b-4de2-b669-e0f1f34dbbe2
-function duffing_forced!(du,u,p,t)
-    (γ,β,A,ω)=p
-    du[1] = u[2]
-    du[2] = -γ*u[2]+u[1]*(β-u[1]*u[1])+A*cos(u[3])
-	du[3] = ω
+# ╔═╡ 7dfefdc3-4d5c-4c5d-9855-66dbb2efc26c
+md"""
+## Bogdanov Takens with cubic terms
+
+As can be seen the BT bifurcation presents a very interesting and varied dynamics, with minimal alterations in the parameters we can go from oscillatory behaviors, creation of pairs of fixed points and infinite period orbits (HC connections). The problem with the above system is that it has diverging trajectories, so we need to add higher order terms (which will not alter the BT bifurcation but may change the bifurcation diagram outside that point) to ensure that the trajectories do not diverge. Back there are several alternatives, let's follow the one proposed by Mindlin:
+
+$\dot{x} = y$
+
+$\dot{y} = \mu_1+\mu_2x+ x^2 -xy - x^3 -x^2y$ 
+
+In this case by having cubic terms we will have in general one or three fixed points, as in the case of the cusp the fixed points go from 1 to 3 through chair node bifurcations that occur in pairs of distinct points. In fact the cubic terms introduce a cusp in addition to the Bogdanov-Takens.
+
+Let us see how the varieties are organized from these new terms.
+
+"""
+
+# ╔═╡ 335db94d-98ba-4dc5-ae09-0d4544c00ade
+function takens3!(du,u,p,t)
+    du[1]=u[2]
+    du[2]=p[1]+u[1]*(p[2]-u[2]+u[1]*(1-u[1]-u[2]))
     du
-end;  
+end    
 
-# ╔═╡ 4ee77c37-0347-45c0-b101-b96fcb7e004d
-@bind pduff (
-	PlutoUI.combine() do bind
-		md"""
-		γ: $(bind(Slider(0:0.01:1.0,default=0.8;show_value=true))) 
-		β: $(bind(Slider(-2.0:0.02:2.0,default=1.0;show_value=true))) \
-		A: $(bind(Slider(0.0:0.02:3.0,default=0.0;show_value=true))) 
-		ω: $(bind(Slider(0:0.02:3.0,default=1.0;show_value=true))) \
-		x0: $(bind(Slider(-2.0:0.02:2.0,default=1.0;show_value=true))) 
-		ncycles: $(bind(Slider(1:10:200,default=1;show_value=true)))
-		"""
-	end
-)	
-
-# ╔═╡ 37ddd39f-4de1-4eb0-a230-46181c7e64db
-flow2d_forced(duffing_forced!,[pduff[5],0.0,0.0],pduff,2*pi/pduff[4];tcycles=0,ncycles=pduff[6],xlims=(-2,2),ylims=(-1.5,1.5))
-
-# ╔═╡ 4fe120b9-f5f6-4dcf-a560-535ec98b8f72
+# ╔═╡ 8e470606-784f-4b02-9a43-2a351b7b8dbe
 md"""
-# Poincaré section
-
-A very useful representation for quasi-periodic periodic flows (and as we will see later also chaotic) is the Poincaré section (or Poincaré map). For three-dimensional flows it consists of taking a plane that is transverse to the flow (i.e. no orbit is parallel to it) and taking the intersection of the trajectories with this plane as points $x_i$.
-
-We can then study the dynamics of these points on the plane of the Poincaré section as a map (hence the name Poincaré map): $x_{i+1}=P(x_i)$
-where the function $P$ is obtained by calculating the trajectory from the point given by the intersection of the flow over the plane $x_i$ 
- to the next intersection with the plane $x_{i+1}$
- (see figure)
+μ1 $(@bind μ1 Slider(-0.12:0.001:0.02,default=-0.01;show_value=true)) 
+μ2 $(@bind μ2 Slider(-0.3:0.001:0.0,default=-0.15;show_value=true)) \
+tmax $(@bind tmax Slider(100:10:400,default=100;show_value=true)) \
 """
 
-# ╔═╡ c30e6a34-bb1c-43a6-b5b4-87fecf3c4211
-html"""
-<div>
-<img src="https://i.imgur.com/raoe46x.gif" width="250px">
-</div>
-"""
+# ╔═╡ 5852171c-8d21-454e-8121-c8fe9a9a9409
+phase_portrait(takens3!,[μ1,μ2];tmax=tmax,xlims=[-1,1],ylims=[-0.5,0.5])
 
-# ╔═╡ de2a21bb-e875-4dab-b3f2-c40dfa02dfb3
+# ╔═╡ b6afd11a-b7f0-40af-8d8d-283840784ebb
 md"""
-Then a periodic orbit in the original flow corresponds to a fixed point in the map, if the orbit has a period equal to the time of return to the plane, or to periodic points (which return after an integer number of iterations to the same point) if the closed orbit crosses the plane several times.
-
-For the case of forced systems the choice of the Poincaré section is obvious because since the third dimension is periodic it is sufficient to choose a plane of constant phase. Without loss of generality we can choose the ground $\phi=0$. In this case the points on the Poincaré section correspond to the points on the previous graph.
+# Bifurcation Analysis
 """
 
-# ╔═╡ 7addbab2-b219-4a77-b7a1-56af59e028be
-poincare_forced(duffing_forced!,[0.5,0.5,0],pduff,2*pi/pduff[4]; tcycles=10,ncycles=100,size=(900,600))
-
-# ╔═╡ fbd1ace7-7d18-4e9b-aa32-4003fd5cd542
-md"""
-# Parameter exploration 
-
-As you can see by playing a little with the parameters, the repertoire of behaviors is highly varied. A good way to explore it is to start from the unforced system $A=0$ with and a fixed value of the other parameters (remember the effect that $\gamma$ and $\beta$ had on the original system). For example, with we have the double well potential. In that case remember that we had a saddle type fixed point at the origin and symmetric attractor foci at $x^*_{2,3}=\pm\sqrt{\beta}$. 
-
-For small $A$ values the attractors are transformed into *stable limit cycles* with the period of the forcing. For intermediate $A$ values other attractor cycles appear (through a saddle-node bifurcation of limit cycles) surrounding the smaller limit cycle. Stable limit cycles may also appear surrounding both wells and with different period values as integer multiplies of the forcing.
-
-On the other hand, the saddle point of the unforced system becomes a saddle-type limit cycle, i.e. it is not an attractor (except in a certain direction), but as in 2D systems it organizes the flow. Later we will see that the stable and unstable manifolds of the saddle orbit (which are actually like folded sheets in 3D) are important to understand the organization of the flow and the occurrence of chaos.
-
-The coexistence of these attractor limit cycles already makes the behavior more complex and unpredictable (try varying the initial condition along the horizontal axis for example for the values ($\gamma=0.1,\beta=1,A=0.1,\omega=1$) to see the different possible destinations depending on the starting point or $A=0.24$ for a more complex behavior).
-
-However for certain values of parameters and initial conditions the orbit never seems to converge to an attractor and is left spinning following an irregular path (e.g. for $\gamma=0.1,\beta=1,A=0.1,\omega=1$ ). We will see that this is a new type of attractor (called "strange" and having fractal structure) and that it is a signature of chaos.
-
-But first let's explore the coexistence of attractors and define the basin of attraction of an attractor. If we explore different initial conditions in the case suggested above with values of $A=0.1$ and $A=0.24$:
-"""
-
-# ╔═╡ 8b29c214-4b49-4f44-9eb5-230899ec7321
-md"""
-# Attraction Basins
-
-An important notion that will allow us to characterize the growing complexity of the behavior of this system is that of the basin of attraction.
-
-The basin of attraction of a certain attractor (for example a limit cycle that in the Poincare section corresponds to a fixed point or a set of periodic points), is defined by all those initial conditions that converge to the attractor for long times.
-
-To determine the basins it is necessary to evolve a grid of several thousand initial conditions over several cycles, therefore the graphs that follow can be very demanding. Run first with a low value of delta (the grid resolution) and make sure that Julia is taking in Threads.nthreads() the full number of processors in order to parallelize the problem.
-"""
-
-# ╔═╡ 0a270882-fde3-4dcc-8cef-291e86a4f8c2
-md"""
-Select one: $(@bind sel1 Select([([0.14,1.0,0.1,1.0],[[1.0,0.0],[-1.0,0.0],[-1,0.7],[0.3,0.3]])=>"γ=0.14,β=1,A=0.1,ω=1",([0.14,1.0,0.14,1.0],[[1.1,0.0],[-0.8,0.0]])=>"γ=0.14,β=1,A=0.14,ω=1",([0.14,1.0,0.2,1.0],[[1.2,0.0],[-0.9,0.0]])=>"γ=0.14,β=1,A=0.2,ω=1",([0.14,1.0,0.24,1.0],[[1.2,0.0],[-0.9,0.0],[0.1,1.1]])=>"γ=0.14,β=1,A=0.24,ω=1"]))
-"""
-
-# ╔═╡ dc6e3382-7239-48f1-a88d-bc12fda7cb73
-attractor_basin(duffing_forced!,sel1[1],sel1[2],0.3;delta=0.01,tmax=30*pi,xlims=(-2.5,2.5),ylims=(-2.0,2.0))
-
-# ╔═╡ 3078878b-a2f8-40f5-9398-401682ebb2f5
-md"""
-# Strange Attractor
-
-For greater values of $A$, the trajectories no longer converge to limit cycles but istead they approach to a set with a fractal structure known as a **strange attractor**. On the Poincare section is a set of points that, unlike the one generated by a torus formed by quasiperiodic orbits, is not confined to a curve. Let's see the poincare section for a value $A=0.27$ that gives rise to a strange attractor:
-"""
-
-# ╔═╡ 64e04ff2-6662-4775-93cd-85a915487478
-poincare_forced(duffing_forced!,[0.5,0.5,0],[0.14,1.0,0.27,1.0],2*pi; tcycles=30,ncycles=50000,size=(900,600))
-
-# ╔═╡ 19d2efe0-f5bc-4353-af5e-e16e424edd38
-md"""
-Do not confuse this structure with that of the basins of attraction. These points are the limit set (which in the case of cycles correspond to a single point) and are formed by infinite points that form a fractal structure. In this case the basin of attraction occupies the whole plane but for other values of can coexist with periodical orbits.
-
-If we zoom in to a detail of the attractor we see that it has a structure with even more detail:
-"""
-
-# ╔═╡ bb2042f9-84bf-452e-be4b-b60b8550e787
-poincare_forced_zoom(duffing_forced!,[0.5,0.5,0],[0.14,1,0.27,1],2*pi;npts=30000,maxiter=1000,size=(900,600),xlims=[-0.75,-0.5],ylims=[0,0.2])
-
-# ╔═╡ 6e2672fa-670c-4a6a-ac1d-3aa897a6210f
-md"""
-# Unstable and Stable Manifolds of the Saddle in the Poincare Section
-
-To understand how chaos develops (we will give a more rigorous definition later) it is useful to study the stable and unstable manifolds of the saddle orbit (or the saddle point of the map). 
-"""
-
-# ╔═╡ 7b41aa57-598c-4f87-ba26-ec3c54a12024
-md"""
-Select one: $(@bind sel2 Select([([0.14,1.0,0.1,1.0],[-0.05,0.0],1500)=>"γ=0.14,β=1,A=0.1,ω=1",([0.14,1.0,0.14,1.0],[-0.07,0.0],2500)=>"γ=0.14,β=1,A=0.14,ω=1",([0.14,1.0,0.24,1.0],[-0.1,0.0],5500)=>"γ=0.14,β=1,A=0.24,ω=1",([0.14,1.0,0.27,1.0],[-0.1,0.0],5500)=>"γ=0.14,β=1,A=0.27,ω=1"]))
-"""
-
-# ╔═╡ 5e7d4da9-1ba7-44fd-b5ca-8931fa6dc00c
-function duffing_jac(u,p)
-  J = Array{Float64, 2}(undef, 3, 3)
-  J[1,1] = 0
-  J[1,2] = 1.0
-  J[1,3] = 0.0  
-  J[2,1] = p[2]-3.0*u[1]*u[1]
-  J[2,2] = -p[1]  
-  J[2,3] = -p[3]*sin(u[3]) 
-  J[3,1] = 0.0
-  J[3,2] = 0.0
-  J[3,3] = 0.0  
-  return J
-end;
-
-# ╔═╡ 788140f8-9705-4784-8089-4bb4c942c3a8
+# ╔═╡ cfb716e1-b802-4ab1-8cb9-5764b5a1d220
 begin
-	p = sel2[1]
-	period = 2*pi
-	npts = 1500
-	us,conv = saddle_orbit2D(duffing_forced!,sel2[2],p,period)
-	if conv
-	    #println(us)
-	    p1=saddle_manifolds_forced(duffing_forced!,duffing_jac,us,p,period;ncycles=[8,2],npts=npts,delta=10^(-4))
-		if (p[3]<0.27)
-	    	poincare_forced!(p1,duffing_forced!,[1.2,0.0,0.0],p, period; tcycles=40,ncycles=41,msize=3.0,col=:black)
-	    	poincare_forced!(p1,duffing_forced!,[-0.8,0.0,0.0],p, period; tcycles=40,ncycles=41,msize=3.0,col=:black)
-			if (p[3]<0.14)
-	    		poincare_forced!(p1,duffing_forced!,[-1,0.7,0.0],p, period; tcycles=40,ncycles=41,msize=3.0,col=:black)
-	    		poincare_forced!(p1,duffing_forced!,[0.3,0.3,0.0],p, period; tcycles=40,ncycles=41,msize=3.0,col=:black)
-			end
-		end	
-	    xlims!(p1,(-2.5,2.5)); ylims!(p1,(-1.5,1.5))
-		title!(p1,"Forced Duffing Oscillator. γ=0.14, β=1, A=0.14, ω=1")
-	end	
+	takens3(u,p) = takens3!(similar(u),u,p,0)
+	opts1 = BK.ContinuationPar(pMin=-0.1,pMax=0.2, ds = 0.001, dsmax = 0.02,detectBifurcation=3)
+	prob1 = BK.BifurcationProblem(takens3, [-0.1;-0.1], [-0.1,-0.1], (@lens _[1]))
+	br1 = BK.continuation(prob1, BK.PALC(tangent=BK.Bordered()),opts1)
+	plot(br1,xlabel="\\mu_1",title="BT Cubica \\mu_2 =-0.1")
 end	
 
-# ╔═╡ c7399360-fad1-466a-9324-f830b20b07a7
-TableOfContents(title="📚 Table of Contents", indent=true, depth=4, aside=true)
-
-# ╔═╡ 1f7f958e-b0c3-433f-bae9-3bf63da3de7a
-html"""
-<style>
-input[type*="range"] {
-	width: 30%;
-}
-</style>
-"""
+# ╔═╡ d0f5d608-9688-4e18-8a39-a510beb76dce
+plot(br1, vars = (:param, :x))
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
+BifurcationKit = "0f109fa4-8a5d-4b75-95aa-f515264e7665"
 DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+Interact = "c601a237-2ae4-5e1e-952c-7a85b0c7eef1"
 IntervalRootFinding = "d2bf35a9-74e0-55ec-b149-d360ff49b807"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+Setfield = "efcf1570-3423-57d1-acb7-fd33fddbac46"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
+BifurcationKit = "~0.2.9"
 DifferentialEquations = "~7.8.0"
 ForwardDiff = "~0.10.35"
+Interact = "~0.10.5"
 IntervalRootFinding = "~0.5.11"
 Plots = "~1.38.16"
 PlutoUI = "~0.7.51"
+Setfield = "~1.1.1"
 StaticArrays = "~1.5.26"
 """
 
@@ -255,7 +175,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.9.1"
 manifest_format = "2.0"
-project_hash = "dd56d316515b53d3e95f887017e594572f657f08"
+project_hash = "4c6c5f9b470bb073ad66fb57d81c466683ca2bd4"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "891771fcf2db8427453eed9eee66847fda5abcc3"
@@ -287,6 +207,18 @@ deps = ["LinearAlgebra", "Random", "StaticArrays"]
 git-tree-sha1 = "62e51b39331de8911e4a7ff6f5aaf38a5f4cc0ae"
 uuid = "ec485272-7323-5ecc-a04f-4719b315124d"
 version = "0.2.0"
+
+[[deps.Arpack]]
+deps = ["Arpack_jll", "Libdl", "LinearAlgebra", "Logging"]
+git-tree-sha1 = "91ca22c4b8437da89b030f08d71db55a379ce958"
+uuid = "7d9fca2a-8960-54d3-9f78-7d1dccf2cb97"
+version = "0.5.3"
+
+[[deps.Arpack_jll]]
+deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "OpenBLAS_jll", "Pkg"]
+git-tree-sha1 = "5ba6c757e8feccf03a1554dfaf3e26b3cfc7fd5e"
+uuid = "68821587-b530-5797-8361-c406ea357684"
+version = "3.5.1+1"
 
 [[deps.ArrayInterface]]
 deps = ["Adapt", "LinearAlgebra", "Requires", "SparseArrays", "SuiteSparse"]
@@ -325,6 +257,12 @@ version = "1.0.7"
 [[deps.Artifacts]]
 uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
 
+[[deps.AssetRegistry]]
+deps = ["Distributed", "JSON", "Pidfile", "SHA", "Test"]
+git-tree-sha1 = "b25e88db7944f98789130d7b503276bc34bc098e"
+uuid = "bf4720bc-e11a-5d0c-854e-bdca1663c893"
+version = "0.1.0"
+
 [[deps.BandedMatrices]]
 deps = ["ArrayLayouts", "FillArrays", "LinearAlgebra", "PrecompileTools", "SparseArrays"]
 git-tree-sha1 = "9ad46355045491b12eab409dee73e9de46293aa2"
@@ -333,6 +271,12 @@ version = "0.17.28"
 
 [[deps.Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
+
+[[deps.BifurcationKit]]
+deps = ["ArnoldiMethod", "Arpack", "BlockArrays", "DataStructures", "Dates", "DocStringExtensions", "FastGaussQuadrature", "ForwardDiff", "IterativeSolvers", "KrylovKit", "LinearAlgebra", "LinearMaps", "Parameters", "Printf", "RecipesBase", "RecursiveArrayTools", "Reexport", "Requires", "SciMLBase", "Setfield", "SparseArrays", "StructArrays"]
+git-tree-sha1 = "efb1c7a013c12400ed6b67aaf3087129026e1f7f"
+uuid = "0f109fa4-8a5d-4b75-95aa-f515264e7665"
+version = "0.2.9"
 
 [[deps.BitFlags]]
 git-tree-sha1 = "43b1a4a8f797c1cddadf60499a8a077d4af2cd2d"
@@ -344,6 +288,12 @@ deps = ["Static"]
 git-tree-sha1 = "0c5f81f47bbbcf4aea7b2959135713459170798b"
 uuid = "62783981-4cbd-42fc-bca8-16325de8dc4b"
 version = "0.1.5"
+
+[[deps.BlockArrays]]
+deps = ["ArrayLayouts", "FillArrays", "LinearAlgebra"]
+git-tree-sha1 = "bed8cfec0c348753a79d915cc82999c395299297"
+uuid = "8e7c35d0-a365-5155-bbbb-fb81a777f24e"
+version = "0.16.33"
 
 [[deps.BoundaryValueDiffEq]]
 deps = ["BandedMatrices", "DiffEqBase", "FiniteDiff", "ForwardDiff", "LinearAlgebra", "NLsolve", "Reexport", "SciMLBase", "SparseArrays"]
@@ -379,6 +329,12 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "e329286945d0cfc04456972ea732551869af1cfc"
 uuid = "4e9b3aee-d8a1-5a3d-ad8b-7d824db253f0"
 version = "1.0.1+0"
+
+[[deps.CSSUtil]]
+deps = ["Colors", "JSON", "Markdown", "Measures", "WebIO"]
+git-tree-sha1 = "b9fb4b464ec10e860abe251b91d4d049934f7399"
+uuid = "70588ee8-6100-5070-97c1-3cb50ed05fe8"
+version = "0.1.1"
 
 [[deps.Cairo_jll]]
 deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
@@ -684,6 +640,12 @@ git-tree-sha1 = "acebe244d53ee1b461970f8910c235b259e772ef"
 uuid = "9aa1b823-49e4-5ca5-8b0f-3971ec8bab6a"
 version = "0.3.2"
 
+[[deps.FastGaussQuadrature]]
+deps = ["LinearAlgebra", "SpecialFunctions", "StaticArrays"]
+git-tree-sha1 = "0f478d8bad6f52573fb7658a263af61f3d96e43a"
+uuid = "442a2c76-b920-505d-bb47-c5924d526838"
+version = "0.5.1"
+
 [[deps.FastLapackInterface]]
 deps = ["LinearAlgebra"]
 git-tree-sha1 = "c1293a93193f0ae94be7cf338d33e162c39d8788"
@@ -771,6 +733,12 @@ deps = ["FunctionWrappers"]
 git-tree-sha1 = "b104d487b34566608f8b4e1c39fb0b10aa279ff8"
 uuid = "77dc65aa-8811-40c2-897b-53d922fa7daf"
 version = "0.1.3"
+
+[[deps.FunctionalCollections]]
+deps = ["Test"]
+git-tree-sha1 = "04cb9cfaa6ba5311973994fe3496ddec19b6292a"
+uuid = "de31a74c-ac4f-5751-b3fd-e18cd04993ca"
+version = "0.5.0"
 
 [[deps.Future]]
 deps = ["Random"]
@@ -887,6 +855,18 @@ git-tree-sha1 = "5cd07aab533df5170988219191dfad0519391428"
 uuid = "d25df0c9-e2be-5dd7-82c8-3ad0b3e990b9"
 version = "0.1.3"
 
+[[deps.Interact]]
+deps = ["CSSUtil", "InteractBase", "JSON", "Knockout", "Observables", "OrderedCollections", "Reexport", "WebIO", "Widgets"]
+git-tree-sha1 = "c5091992248c7134af7c90554305c600d5d9012b"
+uuid = "c601a237-2ae4-5e1e-952c-7a85b0c7eef1"
+version = "0.10.5"
+
+[[deps.InteractBase]]
+deps = ["Base64", "CSSUtil", "Colors", "Dates", "JSExpr", "JSON", "Knockout", "Observables", "OrderedCollections", "Random", "WebIO", "Widgets"]
+git-tree-sha1 = "aa5daeff326db0a9126a225b58ca04ae12f57259"
+uuid = "d3863d7c-f0c8-5437-a7b4-3ae773c01009"
+version = "0.10.10"
+
 [[deps.InteractiveUtils]]
 deps = ["Markdown"]
 uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
@@ -908,6 +888,12 @@ git-tree-sha1 = "630b497eafcc20001bba38a4651b327dcfc491d2"
 uuid = "92d709cd-6900-40b7-9082-c6be49f344b6"
 version = "0.2.2"
 
+[[deps.IterativeSolvers]]
+deps = ["LinearAlgebra", "Printf", "Random", "RecipesBase", "SparseArrays"]
+git-tree-sha1 = "1169632f425f79429f245113b775a0e3d121457c"
+uuid = "42fd0dbc-a981-5370-80f2-aaf504508153"
+version = "0.9.2"
+
 [[deps.IteratorInterfaceExtensions]]
 git-tree-sha1 = "a3f24677c21f5bbe9d2a714f95dcd58337fb2856"
 uuid = "82899510-4779-5014-852e-03e436cf321d"
@@ -924,6 +910,12 @@ deps = ["Preferences"]
 git-tree-sha1 = "abc9885a7ca2052a736a600f7fa66209f96506e1"
 uuid = "692b3bcd-3c85-4b1f-b108-f13ce0eb3210"
 version = "1.4.1"
+
+[[deps.JSExpr]]
+deps = ["JSON", "MacroTools", "Observables", "WebIO"]
+git-tree-sha1 = "b413a73785b98474d8af24fd4c8a975e31df3658"
+uuid = "97c1335a-c9c5-57fe-bc5d-ec35cebe8660"
+version = "0.5.4"
 
 [[deps.JSON]]
 deps = ["Dates", "Mmap", "Parsers", "Unicode"]
@@ -949,11 +941,23 @@ git-tree-sha1 = "764164ed65c30738750965d55652db9c94c59bfe"
 uuid = "ef3ab10e-7fda-4108-b977-705223b18434"
 version = "0.4.0"
 
+[[deps.Knockout]]
+deps = ["JSExpr", "JSON", "Observables", "Test", "WebIO"]
+git-tree-sha1 = "91835de56d816864f1c38fb5e3fad6eb1e741271"
+uuid = "bcebb21b-c2e3-54f8-a781-646b90f6d2cc"
+version = "0.2.6"
+
 [[deps.Krylov]]
 deps = ["LinearAlgebra", "Printf", "SparseArrays"]
 git-tree-sha1 = "0356a64062656b0cbb43c504ad5de338251f4bda"
 uuid = "ba0b0d4f-ebba-5204-a429-3ac8c609bfb7"
 version = "0.9.1"
+
+[[deps.KrylovKit]]
+deps = ["ChainRulesCore", "GPUArraysCore", "LinearAlgebra", "Printf"]
+git-tree-sha1 = "1a5e1d9941c783b0119897d29f2eb665d876ecf3"
+uuid = "0b1a1467-8014-51b9-945f-bf0ae24f4b77"
+version = "0.6.0"
 
 [[deps.LAME_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1096,6 +1100,16 @@ version = "7.2.0"
 deps = ["Libdl", "OpenBLAS_jll", "libblastrampoline_jll"]
 uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
+[[deps.LinearMaps]]
+deps = ["LinearAlgebra", "SparseArrays", "Statistics"]
+git-tree-sha1 = "a1348b9b7c87d45fa859314d56e8a87ace20561e"
+uuid = "7a12625a-238d-50fd-b39a-03d52299707e"
+version = "3.10.1"
+weakdeps = ["ChainRulesCore"]
+
+    [deps.LinearMaps.extensions]
+    LinearMapsChainRulesCoreExt = "ChainRulesCore"
+
 [[deps.LinearSolve]]
 deps = ["ArrayInterface", "DocStringExtensions", "EnumX", "FastLapackInterface", "GPUArraysCore", "InteractiveUtils", "KLU", "Krylov", "LinearAlgebra", "PrecompileTools", "Preferences", "RecursiveFactorization", "Reexport", "Requires", "SciMLBase", "SciMLOperators", "Setfield", "SparseArrays", "Sparspak", "SuiteSparse", "UnPack"]
 git-tree-sha1 = "c6a6f78167d7b7c19dfb7148161d7f1962a0b361"
@@ -1234,6 +1248,11 @@ git-tree-sha1 = "2a7f28c62eb2c16b9c375c38f664cdcf22313cf5"
 uuid = "8913a72c-1f9b-4ce2-8d82-65094dcecaec"
 version = "1.8.0"
 
+[[deps.Observables]]
+git-tree-sha1 = "6862738f9796b3edc1c09d0890afce4eca9e7e93"
+uuid = "510215fc-4207-5dde-b226-833fc4488ee2"
+version = "0.5.4"
+
 [[deps.OffsetArrays]]
 deps = ["Adapt"]
 git-tree-sha1 = "82d7c9e310fe55aa54996e6f7f94674e2a38fcb4"
@@ -1319,6 +1338,12 @@ deps = ["Dates", "PrecompileTools", "UUIDs"]
 git-tree-sha1 = "4b2e829ee66d4218e0cef22c0a64ee37cf258c29"
 uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
 version = "2.7.1"
+
+[[deps.Pidfile]]
+deps = ["FileWatching", "Test"]
+git-tree-sha1 = "2d8aaf8ee10df53d0dfb9b8ee44ae7c04ced2b03"
+uuid = "fa939f87-e72e-5be4-a000-7fc836dbe307"
+version = "1.3.0"
 
 [[deps.Pipe]]
 git-tree-sha1 = "6842804e7867b115ca9de748a0cf6b364523c16d"
@@ -1769,6 +1794,12 @@ git-tree-sha1 = "602a8bef17c744f1de965979398597dfa50e1a2f"
 uuid = "7792a7ef-975c-4747-a70f-980b88e8d1da"
 version = "0.4.15"
 
+[[deps.StructArrays]]
+deps = ["Adapt", "DataAPI", "GPUArraysCore", "StaticArraysCore", "Tables"]
+git-tree-sha1 = "521a0e828e98bb69042fec1809c1b5a680eb7389"
+uuid = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
+version = "0.6.15"
+
 [[deps.SuiteSparse]]
 deps = ["Libdl", "LinearAlgebra", "Serialization", "SparseArrays"]
 uuid = "4607b0f0-06f3-5cda-b6b1-a6196a1729e9"
@@ -1932,6 +1963,24 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "4528479aa01ee1b3b4cd0e6faef0e04cf16466da"
 uuid = "2381bf8a-dfd0-557d-9999-79630e7b1b91"
 version = "1.25.0+0"
+
+[[deps.WebIO]]
+deps = ["AssetRegistry", "Base64", "Distributed", "FunctionalCollections", "JSON", "Logging", "Observables", "Pkg", "Random", "Requires", "Sockets", "UUIDs", "WebSockets", "Widgets"]
+git-tree-sha1 = "0eef0765186f7452e52236fa42ca8c9b3c11c6e3"
+uuid = "0f1e0344-ec1d-5b48-a673-e5cf874b6c29"
+version = "0.8.21"
+
+[[deps.WebSockets]]
+deps = ["Base64", "Dates", "HTTP", "Logging", "Sockets"]
+git-tree-sha1 = "4162e95e05e79922e44b9952ccbc262832e4ad07"
+uuid = "104b5d7c-a370-577a-8038-80a2059c5097"
+version = "1.6.0"
+
+[[deps.Widgets]]
+deps = ["Colors", "Dates", "Observables", "OrderedCollections"]
+git-tree-sha1 = "fcdae142c1cfc7d89de2d11e08721d0f2f86c98a"
+uuid = "cc8bc4a8-27d6-5769-a93b-9d913e69aa62"
+version = "0.6.6"
 
 [[deps.XML2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libiconv_jll", "Pkg", "Zlib_jll"]
@@ -2159,30 +2208,16 @@ version = "1.4.1+0"
 """
 
 # ╔═╡ Cell order:
-# ╠═8601d8d7-d4df-473f-b65d-0f03aeb8f5f4
-# ╠═09b22c30-bb22-4633-9939-2e97bb0beb5e
-# ╟─1f49c325-fc99-4b15-81ee-dc1c5bbe6f08
-# ╟─6b52504e-805e-417e-8fb2-6473b47b0ad0
-# ╠═6b14f6c6-536b-4de2-b669-e0f1f34dbbe2
-# ╠═37ddd39f-4de1-4eb0-a230-46181c7e64db
-# ╟─4ee77c37-0347-45c0-b101-b96fcb7e004d
-# ╟─4fe120b9-f5f6-4dcf-a560-535ec98b8f72
-# ╟─c30e6a34-bb1c-43a6-b5b4-87fecf3c4211
-# ╟─de2a21bb-e875-4dab-b3f2-c40dfa02dfb3
-# ╟─7addbab2-b219-4a77-b7a1-56af59e028be
-# ╟─fbd1ace7-7d18-4e9b-aa32-4003fd5cd542
-# ╟─8b29c214-4b49-4f44-9eb5-230899ec7321
-# ╟─0a270882-fde3-4dcc-8cef-291e86a4f8c2
-# ╟─dc6e3382-7239-48f1-a88d-bc12fda7cb73
-# ╟─3078878b-a2f8-40f5-9398-401682ebb2f5
-# ╟─64e04ff2-6662-4775-93cd-85a915487478
-# ╟─19d2efe0-f5bc-4353-af5e-e16e424edd38
-# ╠═bb2042f9-84bf-452e-be4b-b60b8550e787
-# ╟─6e2672fa-670c-4a6a-ac1d-3aa897a6210f
-# ╟─7b41aa57-598c-4f87-ba26-ec3c54a12024
-# ╟─788140f8-9705-4784-8089-4bb4c942c3a8
-# ╟─5e7d4da9-1ba7-44fd-b5ca-8931fa6dc00c
-# ╟─c7399360-fad1-466a-9324-f830b20b07a7
-# ╟─1f7f958e-b0c3-433f-bae9-3bf63da3de7a
+# ╠═fce7054d-cb51-45af-a3d1-e370fd3d9850
+# ╠═13414ced-643d-4710-8023-a5bf3c59d32b
+# ╠═4c0c95b4-1479-11ee-214c-65b5f776f5ea
+# ╟─ccd5d840-06c3-4138-999a-24c5ff7cb7aa
+# ╟─7dfefdc3-4d5c-4c5d-9855-66dbb2efc26c
+# ╠═335db94d-98ba-4dc5-ae09-0d4544c00ade
+# ╠═5852171c-8d21-454e-8121-c8fe9a9a9409
+# ╠═8e470606-784f-4b02-9a43-2a351b7b8dbe
+# ╟─b6afd11a-b7f0-40af-8d8d-283840784ebb
+# ╠═cfb716e1-b802-4ab1-8cb9-5764b5a1d220
+# ╠═d0f5d608-9688-4e18-8a39-a510beb76dce
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

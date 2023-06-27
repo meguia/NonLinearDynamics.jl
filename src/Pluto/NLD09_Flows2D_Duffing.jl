@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.9
+# v0.19.26
 
 using Markdown
 using InteractiveUtils
@@ -13,12 +13,6 @@ macro bind(def, element)
         el
     end
 end
-
-# ╔═╡ c061212a-b7e5-420a-9fd2-350ff3ee807d
-# ╠═╡ disabled = true
-#=╠═╡
-using Pkg;Pkg.add("Plots");Pkg.add("PlutoUI");Pkg.add("DifferentialEquations");Pkg.add("ForwardDiff"); Pkg.add("StaticArrays"); Pkg.add("IntervalRootFinding")
-  ╠═╡ =#
 
 # ╔═╡ 8601d8d7-d4df-473f-b65d-0f03aeb8f5f4
 using PlutoUI, Plots, DifferentialEquations, ForwardDiff, IntervalRootFinding, StaticArrays
