@@ -14,158 +14,58 @@ macro bind(def, element)
     end
 end
 
-# ╔═╡ fce7054d-cb51-45af-a3d1-e370fd3d9850
-using Plots, Interact, DifferentialEquations, Setfield, ForwardDiff, PlutoUI, IntervalRootFinding, StaticArrays
+# ╔═╡ 45047118-156c-11ee-2ef1-f3e884a0906f
+using  DifferentialEquations, Plots, PlutoUI, ForwardDiff, StaticArrays, IntervalRootFinding
 
-# ╔═╡ 4c0c95b4-1479-11ee-214c-65b5f776f5ea
+# ╔═╡ af2c3a0b-17ba-492c-a056-87f8da087b01
 include("../NLD_utils.jl")
 
-# ╔═╡ 13414ced-643d-4710-8023-a5bf3c59d32b
-import BifurcationKit as BK
-
-# ╔═╡ ccd5d840-06c3-4138-999a-24c5ff7cb7aa
-md"""
-# Bogdanov-Takens bifurcation (codimension 2)
-
-The bifurcations (of codimension 1) we have seen so far can be characterized in two groups:
-
-- Those that happen when a real eigenvalue becomes zero. Generically we have a saddle-node bifurcation, but also a pitchfork or a transcritical one if other symmetry conditions are given.
-- The one that happens when the real part of two conjugate complex eigenvalues becomes zero. In that case we have a Hopf bifurcation.
-
-Clearly the first case can happen in a 1D system (or one of higher dimension along a particular direction), while the second we need at least a 2D system to have two eigenvalues, but it takes only one parameter to control it (to move the real part). 
-
-But if we are in a 2D system, couldn't it happen that **both** eigenvalues become zero simultaneously? Clearly if we look at the eigenvalue expression we will need at least two parameters to adjust this point. On the other hand that two eigenvalues cross zero along the real axis would be something like two saddle-nodes happening at the same time, but it could also be seen as a Hopf bifurcation with imaginary part zero. That is, this type of "degenerate" bifurcation has inside it at least two saddle-nodes (like the cusp) and a Hopf. 
-
-This codimension 2 bifurcation is known as double zero or Bogdanov-Takens (or Takens-Bogdanov). The normal form is characterized by having the following Jacobian:
-
-$\begin{pmatrix}0 & 1\\0 & 0\end{pmatrix}$
-
-which "induces" the following nonlinear terms to appear (in Bogdanov's version):
-
-$\dot{x} = y$
-
-$\dot{y} = x^2-xy$
-
-Note that we did not introduce any parameters yet, this is the "pure" singularity. To extend this in parameter space (or dynamical systems to be more precise) it is necessary to do an **unfolding**, and here there are several possibilities, let's take the one done by Guckenheimer & Holmes:
-
-$\dot{x} = y$
-
-$\dot{y} = \mu_1+\mu_2x+ x^2 -xy$
-
-Let's study the bifurcations directly without worrying about the solutions yet because this system (like the saddle node in the plane) has divergent trajectories.
-
-Since we have terms up to quadratic order we will be able to have generically two fixed points or none. Always located on the horizontal axis $y=0$ and with the $x$ coordinate at:
-
-$x_{\pm}=-\frac{\mu_2}{2}\pm \sqrt{\frac{\mu_2^2}{4}-\mu_1}$
-
-The positive sign corresponds to the fixed point on the right and the negative sign to the fixed point on the left (when they exist).
-
-the condition for existence of the fixed points is that the interior of the root is positive which gives us a condition to draw a saddle-node bifurcation curve in the plane $(\mu_1,\mu_2)$:
-
-SN : $\mu_1=\frac{\mu_2^2}{4}$
-
-On the other hand the Jacobian evaluated at the fixed points (preserving the order $pm$) is written as:
-
-$\begin{pmatrix}0 & 1\\
-\pm 2\sqrt{\frac{\mu_2^2}{4}-\mu_1} & \frac{\mu_2}{2}\mp \sqrt{\frac{\mu_2^2}{4}-\mu_1}
-\end{pmatrix}$
-
-Which gives us the determinant:
-
-$\Delta = \mp 2\sqrt{\frac{\mu_2^2}{4}-\mu_1}$
-
-which for the fixed point on the right is always negative (saddle point) and for the one on the left positive. For the latter we evaluate the trace (we only keep the sign below):
-
-$\tau = \frac{\mu_2}{2}+\sqrt{\frac{\mu_2^2}{4}-\mu_1}$
-
-since the root is positive when $\mu_2<0$, the trace will become zero when $\mu_1=0$. This gives us the condition to trace the Hopf bifurcation curve in the plane $(\mu_1,\mu_2)$:
-
-Hopf: $\mu_2>0$  , $\mu_1=0$
-
-This curve meets the SN parabola at the point $(0,0)$ so as we anticipated at this singular point we have an SN curve and a Hopf curve occurring simultaneously. The complete bifurcation diagram (taken from Scholarpedia) is:
-
-
-Notice that there is an additional curve (in red) that corresponds to a global bifurcation (homoclinic connection). 
-
-We have already seen this bifurcation! And with this same normal form, but arbitrarily fixing $\mu_2=-1$. This is a homoclinic bifurcation or saddle loop. The change from region (3) to (4) is the one we described when we saw this bifurcation. The limit cycle originating from the Hopf curve grows until it touches the saddle and saddle varieties and forms a loop. On the other side of the bifurcation there is no limit cycle and the unstable saddle manifold feeds an attractor focus. 
-
-Explore how the moieties are modified in the graph below and try to locate when the homoclinic connection occurs. As a guide we show on the right the bifurcation diagram with the analytic SN and Hopf curves and in dotted line the homoclinic that occurs (we will not show the deduction of that) when:
-
-HC: $\mu_1 = -\frac{6}{25}\mu_2^2$ ,  $\mu_2<0$
-"""
-
-# ╔═╡ 7dfefdc3-4d5c-4c5d-9855-66dbb2efc26c
-md"""
-## Bogdanov Takens with cubic terms
-
-As can be seen the BT bifurcation presents a very interesting and varied dynamics, with minimal alterations in the parameters we can go from oscillatory behaviors, creation of pairs of fixed points and infinite period orbits (HC connections). The problem with the above system is that it has diverging trajectories, so we need to add higher order terms (which will not alter the BT bifurcation but may change the bifurcation diagram outside that point) to ensure that the trajectories do not diverge. Back there are several alternatives, let's follow the one proposed by Mindlin:
-
-$\dot{x} = y$
-
-$\dot{y} = \mu_1+\mu_2x+ x^2 -xy - x^3 -x^2y$ 
-
-In this case by having cubic terms we will have in general one or three fixed points, as in the case of the cusp the fixed points go from 1 to 3 through chair node bifurcations that occur in pairs of distinct points. In fact the cubic terms introduce a cusp in addition to the Bogdanov-Takens.
-
-Let us see how the varieties are organized from these new terms.
-
-"""
-
-# ╔═╡ 335db94d-98ba-4dc5-ae09-0d4544c00ade
-function takens3!(du,u,p,t)
-    du[1]=u[2]
-    du[2]=p[1]+u[1]*(p[2]-u[2]+u[1]*(1-u[1]-u[2]))
-    du
-end    
-
-# ╔═╡ 8e470606-784f-4b02-9a43-2a351b7b8dbe
-md"""
-μ1 $(@bind μ1 Slider(-0.12:0.001:0.02,default=-0.01;show_value=true)) 
-μ2 $(@bind μ2 Slider(-0.3:0.001:0.0,default=-0.15;show_value=true)) \
-tmax $(@bind tmax Slider(100:10:400,default=100;show_value=true)) \
-"""
-
-# ╔═╡ 5852171c-8d21-454e-8121-c8fe9a9a9409
-phase_portrait(takens3!,[μ1,μ2];tmax=tmax,xlims=[-1,1],ylims=[-0.5,0.5])
-
-# ╔═╡ b6afd11a-b7f0-40af-8d8d-283840784ebb
-md"""
-# Bifurcation Analysis
-"""
-
-# ╔═╡ cfb716e1-b802-4ab1-8cb9-5764b5a1d220
-begin
-	takens3(u,p) = takens3!(similar(u),u,p,0)
-	opts1 = BK.ContinuationPar(pMin=-0.1,pMax=0.2, ds = 0.001, dsmax = 0.02,detectBifurcation=3)
-	prob1 = BK.BifurcationProblem(takens3, [-0.1;-0.1], [-0.1,-0.1], (@lens _[1]))
-	br1 = BK.continuation(prob1, BK.PALC(tangent=BK.Bordered()),opts1)
-	plot(br1,xlabel="\\mu_1",title="BT Cubica \\mu_2 =-0.1")
+# ╔═╡ fdbb3f29-8de6-49b3-99e6-6b8aede86a8d
+function ghopf!(du,u,p,t)
+	(η1,η2,γ) = p
+	du[1] = u[2]-u[1]*(η1+γ*u[1]*(1+u[1]))
+	du[2] = -u[1]+u[2]*(η2-2*γ*u[2]*u[2])
 end	
 
-# ╔═╡ d0f5d608-9688-4e18-8a39-a510beb76dce
-plot(br1, vars = (:param, :x))
+# ╔═╡ 095bd3fb-03ec-4f40-bd56-76c08e802a2a
+u0_arr=[[xi,0] for xi=-1.01:0.1:-0.1]
+
+# ╔═╡ 13d05f5e-76ee-4a77-a876-92cf1e708312
+md"""
+η1 $(@bind η1 Slider(0:0.001:2.0,default=0.85;show_value=true)) 
+η2 $(@bind η2 Slider(0:0.001:2.0,default=0.55;show_value=true)) \
+γ $(@bind γ Slider(0.002:0.001:0.1,default=0.01;show_value=true)) 
+tmax $(@bind tmax Slider(10:10:1000,default=100;show_value=true)) \
+"""
+
+# ╔═╡ 69c13d15-4ee4-4961-9ec0-72825fbeef5c
+prob = ODEProblem(ghopf!, [0.001,0.001], (0,tmax),[η1,η2,γ])
+
+# ╔═╡ 16e6ce75-c342-492e-ba9d-2ae210453d42
+ensamble_prob = EnsembleProblem(prob,prob_func=(prob,i,repeat;u0=u0_arr)->(remake(prob,u0=u0[i])))
+
+# ╔═╡ a5087e7a-80e2-425a-b1c5-3348e90261da
+sol = solve(ensamble_prob,EnsembleThreads(),trajectories=length(u0_arr));
+
+# ╔═╡ a045f8a8-ab78-4aa3-b08f-4788df7c5b29
+plot(sol,idxs=(1,2), xlim=(-5,5),ylim=(-5,5), linecolor=:black,linealpha=0.05)
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
-BifurcationKit = "0f109fa4-8a5d-4b75-95aa-f515264e7665"
 DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
-Interact = "c601a237-2ae4-5e1e-952c-7a85b0c7eef1"
 IntervalRootFinding = "d2bf35a9-74e0-55ec-b149-d360ff49b807"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-Setfield = "efcf1570-3423-57d1-acb7-fd33fddbac46"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
-BifurcationKit = "~0.2.9"
 DifferentialEquations = "~7.8.0"
 ForwardDiff = "~0.10.35"
-Interact = "~0.10.5"
 IntervalRootFinding = "~0.5.11"
 Plots = "~1.38.16"
 PlutoUI = "~0.7.51"
-Setfield = "~1.1.1"
 StaticArrays = "~1.5.26"
 """
 
@@ -175,7 +75,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.9.1"
 manifest_format = "2.0"
-project_hash = "4c6c5f9b470bb073ad66fb57d81c466683ca2bd4"
+project_hash = "dd56d316515b53d3e95f887017e594572f657f08"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "891771fcf2db8427453eed9eee66847fda5abcc3"
@@ -207,18 +107,6 @@ deps = ["LinearAlgebra", "Random", "StaticArrays"]
 git-tree-sha1 = "62e51b39331de8911e4a7ff6f5aaf38a5f4cc0ae"
 uuid = "ec485272-7323-5ecc-a04f-4719b315124d"
 version = "0.2.0"
-
-[[deps.Arpack]]
-deps = ["Arpack_jll", "Libdl", "LinearAlgebra", "Logging"]
-git-tree-sha1 = "91ca22c4b8437da89b030f08d71db55a379ce958"
-uuid = "7d9fca2a-8960-54d3-9f78-7d1dccf2cb97"
-version = "0.5.3"
-
-[[deps.Arpack_jll]]
-deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "OpenBLAS_jll", "Pkg"]
-git-tree-sha1 = "5ba6c757e8feccf03a1554dfaf3e26b3cfc7fd5e"
-uuid = "68821587-b530-5797-8361-c406ea357684"
-version = "3.5.1+1"
 
 [[deps.ArrayInterface]]
 deps = ["Adapt", "LinearAlgebra", "Requires", "SparseArrays", "SuiteSparse"]
@@ -257,12 +145,6 @@ version = "1.0.7"
 [[deps.Artifacts]]
 uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
 
-[[deps.AssetRegistry]]
-deps = ["Distributed", "JSON", "Pidfile", "SHA", "Test"]
-git-tree-sha1 = "b25e88db7944f98789130d7b503276bc34bc098e"
-uuid = "bf4720bc-e11a-5d0c-854e-bdca1663c893"
-version = "0.1.0"
-
 [[deps.BandedMatrices]]
 deps = ["ArrayLayouts", "FillArrays", "LinearAlgebra", "PrecompileTools", "SparseArrays"]
 git-tree-sha1 = "9ad46355045491b12eab409dee73e9de46293aa2"
@@ -271,12 +153,6 @@ version = "0.17.28"
 
 [[deps.Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
-
-[[deps.BifurcationKit]]
-deps = ["ArnoldiMethod", "Arpack", "BlockArrays", "DataStructures", "Dates", "DocStringExtensions", "FastGaussQuadrature", "ForwardDiff", "IterativeSolvers", "KrylovKit", "LinearAlgebra", "LinearMaps", "Parameters", "Printf", "RecipesBase", "RecursiveArrayTools", "Reexport", "Requires", "SciMLBase", "Setfield", "SparseArrays", "StructArrays"]
-git-tree-sha1 = "efb1c7a013c12400ed6b67aaf3087129026e1f7f"
-uuid = "0f109fa4-8a5d-4b75-95aa-f515264e7665"
-version = "0.2.9"
 
 [[deps.BitFlags]]
 git-tree-sha1 = "43b1a4a8f797c1cddadf60499a8a077d4af2cd2d"
@@ -288,12 +164,6 @@ deps = ["Static"]
 git-tree-sha1 = "0c5f81f47bbbcf4aea7b2959135713459170798b"
 uuid = "62783981-4cbd-42fc-bca8-16325de8dc4b"
 version = "0.1.5"
-
-[[deps.BlockArrays]]
-deps = ["ArrayLayouts", "FillArrays", "LinearAlgebra"]
-git-tree-sha1 = "bed8cfec0c348753a79d915cc82999c395299297"
-uuid = "8e7c35d0-a365-5155-bbbb-fb81a777f24e"
-version = "0.16.33"
 
 [[deps.BoundaryValueDiffEq]]
 deps = ["BandedMatrices", "DiffEqBase", "FiniteDiff", "ForwardDiff", "LinearAlgebra", "NLsolve", "Reexport", "SciMLBase", "SparseArrays"]
@@ -329,12 +199,6 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "e329286945d0cfc04456972ea732551869af1cfc"
 uuid = "4e9b3aee-d8a1-5a3d-ad8b-7d824db253f0"
 version = "1.0.1+0"
-
-[[deps.CSSUtil]]
-deps = ["Colors", "JSON", "Markdown", "Measures", "WebIO"]
-git-tree-sha1 = "b9fb4b464ec10e860abe251b91d4d049934f7399"
-uuid = "70588ee8-6100-5070-97c1-3cb50ed05fe8"
-version = "0.1.1"
 
 [[deps.Cairo_jll]]
 deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
@@ -640,12 +504,6 @@ git-tree-sha1 = "acebe244d53ee1b461970f8910c235b259e772ef"
 uuid = "9aa1b823-49e4-5ca5-8b0f-3971ec8bab6a"
 version = "0.3.2"
 
-[[deps.FastGaussQuadrature]]
-deps = ["LinearAlgebra", "SpecialFunctions", "StaticArrays"]
-git-tree-sha1 = "0f478d8bad6f52573fb7658a263af61f3d96e43a"
-uuid = "442a2c76-b920-505d-bb47-c5924d526838"
-version = "0.5.1"
-
 [[deps.FastLapackInterface]]
 deps = ["LinearAlgebra"]
 git-tree-sha1 = "c1293a93193f0ae94be7cf338d33e162c39d8788"
@@ -733,12 +591,6 @@ deps = ["FunctionWrappers"]
 git-tree-sha1 = "b104d487b34566608f8b4e1c39fb0b10aa279ff8"
 uuid = "77dc65aa-8811-40c2-897b-53d922fa7daf"
 version = "0.1.3"
-
-[[deps.FunctionalCollections]]
-deps = ["Test"]
-git-tree-sha1 = "04cb9cfaa6ba5311973994fe3496ddec19b6292a"
-uuid = "de31a74c-ac4f-5751-b3fd-e18cd04993ca"
-version = "0.5.0"
 
 [[deps.Future]]
 deps = ["Random"]
@@ -855,18 +707,6 @@ git-tree-sha1 = "5cd07aab533df5170988219191dfad0519391428"
 uuid = "d25df0c9-e2be-5dd7-82c8-3ad0b3e990b9"
 version = "0.1.3"
 
-[[deps.Interact]]
-deps = ["CSSUtil", "InteractBase", "JSON", "Knockout", "Observables", "OrderedCollections", "Reexport", "WebIO", "Widgets"]
-git-tree-sha1 = "c5091992248c7134af7c90554305c600d5d9012b"
-uuid = "c601a237-2ae4-5e1e-952c-7a85b0c7eef1"
-version = "0.10.5"
-
-[[deps.InteractBase]]
-deps = ["Base64", "CSSUtil", "Colors", "Dates", "JSExpr", "JSON", "Knockout", "Observables", "OrderedCollections", "Random", "WebIO", "Widgets"]
-git-tree-sha1 = "aa5daeff326db0a9126a225b58ca04ae12f57259"
-uuid = "d3863d7c-f0c8-5437-a7b4-3ae773c01009"
-version = "0.10.10"
-
 [[deps.InteractiveUtils]]
 deps = ["Markdown"]
 uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
@@ -888,12 +728,6 @@ git-tree-sha1 = "630b497eafcc20001bba38a4651b327dcfc491d2"
 uuid = "92d709cd-6900-40b7-9082-c6be49f344b6"
 version = "0.2.2"
 
-[[deps.IterativeSolvers]]
-deps = ["LinearAlgebra", "Printf", "Random", "RecipesBase", "SparseArrays"]
-git-tree-sha1 = "1169632f425f79429f245113b775a0e3d121457c"
-uuid = "42fd0dbc-a981-5370-80f2-aaf504508153"
-version = "0.9.2"
-
 [[deps.IteratorInterfaceExtensions]]
 git-tree-sha1 = "a3f24677c21f5bbe9d2a714f95dcd58337fb2856"
 uuid = "82899510-4779-5014-852e-03e436cf321d"
@@ -910,12 +744,6 @@ deps = ["Preferences"]
 git-tree-sha1 = "abc9885a7ca2052a736a600f7fa66209f96506e1"
 uuid = "692b3bcd-3c85-4b1f-b108-f13ce0eb3210"
 version = "1.4.1"
-
-[[deps.JSExpr]]
-deps = ["JSON", "MacroTools", "Observables", "WebIO"]
-git-tree-sha1 = "b413a73785b98474d8af24fd4c8a975e31df3658"
-uuid = "97c1335a-c9c5-57fe-bc5d-ec35cebe8660"
-version = "0.5.4"
 
 [[deps.JSON]]
 deps = ["Dates", "Mmap", "Parsers", "Unicode"]
@@ -941,23 +769,11 @@ git-tree-sha1 = "764164ed65c30738750965d55652db9c94c59bfe"
 uuid = "ef3ab10e-7fda-4108-b977-705223b18434"
 version = "0.4.0"
 
-[[deps.Knockout]]
-deps = ["JSExpr", "JSON", "Observables", "Test", "WebIO"]
-git-tree-sha1 = "91835de56d816864f1c38fb5e3fad6eb1e741271"
-uuid = "bcebb21b-c2e3-54f8-a781-646b90f6d2cc"
-version = "0.2.6"
-
 [[deps.Krylov]]
 deps = ["LinearAlgebra", "Printf", "SparseArrays"]
 git-tree-sha1 = "0356a64062656b0cbb43c504ad5de338251f4bda"
 uuid = "ba0b0d4f-ebba-5204-a429-3ac8c609bfb7"
 version = "0.9.1"
-
-[[deps.KrylovKit]]
-deps = ["ChainRulesCore", "GPUArraysCore", "LinearAlgebra", "Printf"]
-git-tree-sha1 = "1a5e1d9941c783b0119897d29f2eb665d876ecf3"
-uuid = "0b1a1467-8014-51b9-945f-bf0ae24f4b77"
-version = "0.6.0"
 
 [[deps.LAME_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1100,16 +916,6 @@ version = "7.2.0"
 deps = ["Libdl", "OpenBLAS_jll", "libblastrampoline_jll"]
 uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
-[[deps.LinearMaps]]
-deps = ["LinearAlgebra", "SparseArrays", "Statistics"]
-git-tree-sha1 = "a1348b9b7c87d45fa859314d56e8a87ace20561e"
-uuid = "7a12625a-238d-50fd-b39a-03d52299707e"
-version = "3.10.1"
-weakdeps = ["ChainRulesCore"]
-
-    [deps.LinearMaps.extensions]
-    LinearMapsChainRulesCoreExt = "ChainRulesCore"
-
 [[deps.LinearSolve]]
 deps = ["ArrayInterface", "DocStringExtensions", "EnumX", "FastLapackInterface", "GPUArraysCore", "InteractiveUtils", "KLU", "Krylov", "LinearAlgebra", "PrecompileTools", "Preferences", "RecursiveFactorization", "Reexport", "Requires", "SciMLBase", "SciMLOperators", "Setfield", "SparseArrays", "Sparspak", "SuiteSparse", "UnPack"]
 git-tree-sha1 = "c6a6f78167d7b7c19dfb7148161d7f1962a0b361"
@@ -1248,11 +1054,6 @@ git-tree-sha1 = "2a7f28c62eb2c16b9c375c38f664cdcf22313cf5"
 uuid = "8913a72c-1f9b-4ce2-8d82-65094dcecaec"
 version = "1.8.0"
 
-[[deps.Observables]]
-git-tree-sha1 = "6862738f9796b3edc1c09d0890afce4eca9e7e93"
-uuid = "510215fc-4207-5dde-b226-833fc4488ee2"
-version = "0.5.4"
-
 [[deps.OffsetArrays]]
 deps = ["Adapt"]
 git-tree-sha1 = "82d7c9e310fe55aa54996e6f7f94674e2a38fcb4"
@@ -1338,12 +1139,6 @@ deps = ["Dates", "PrecompileTools", "UUIDs"]
 git-tree-sha1 = "4b2e829ee66d4218e0cef22c0a64ee37cf258c29"
 uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
 version = "2.7.1"
-
-[[deps.Pidfile]]
-deps = ["FileWatching", "Test"]
-git-tree-sha1 = "2d8aaf8ee10df53d0dfb9b8ee44ae7c04ced2b03"
-uuid = "fa939f87-e72e-5be4-a000-7fc836dbe307"
-version = "1.3.0"
 
 [[deps.Pipe]]
 git-tree-sha1 = "6842804e7867b115ca9de748a0cf6b364523c16d"
@@ -1575,9 +1370,9 @@ version = "0.2.1"
 
 [[deps.RuntimeGeneratedFunctions]]
 deps = ["ExprTools", "SHA", "Serialization"]
-git-tree-sha1 = "237edc1563bbf078629b4f8d194bd334e97907cf"
+git-tree-sha1 = "0b9b18d6236e9ab2b092defaacdffd929d572642"
 uuid = "7e49a35a-f44a-4d26-94aa-eba1b4ca6b47"
-version = "0.5.11"
+version = "0.5.9"
 
 [[deps.SHA]]
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
@@ -1794,12 +1589,6 @@ git-tree-sha1 = "602a8bef17c744f1de965979398597dfa50e1a2f"
 uuid = "7792a7ef-975c-4747-a70f-980b88e8d1da"
 version = "0.4.15"
 
-[[deps.StructArrays]]
-deps = ["Adapt", "DataAPI", "GPUArraysCore", "StaticArraysCore", "Tables"]
-git-tree-sha1 = "521a0e828e98bb69042fec1809c1b5a680eb7389"
-uuid = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
-version = "0.6.15"
-
 [[deps.SuiteSparse]]
 deps = ["Libdl", "LinearAlgebra", "Serialization", "SparseArrays"]
 uuid = "4607b0f0-06f3-5cda-b6b1-a6196a1729e9"
@@ -1963,24 +1752,6 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "4528479aa01ee1b3b4cd0e6faef0e04cf16466da"
 uuid = "2381bf8a-dfd0-557d-9999-79630e7b1b91"
 version = "1.25.0+0"
-
-[[deps.WebIO]]
-deps = ["AssetRegistry", "Base64", "Distributed", "FunctionalCollections", "JSON", "Logging", "Observables", "Pkg", "Random", "Requires", "Sockets", "UUIDs", "WebSockets", "Widgets"]
-git-tree-sha1 = "0eef0765186f7452e52236fa42ca8c9b3c11c6e3"
-uuid = "0f1e0344-ec1d-5b48-a673-e5cf874b6c29"
-version = "0.8.21"
-
-[[deps.WebSockets]]
-deps = ["Base64", "Dates", "HTTP", "Logging", "Sockets"]
-git-tree-sha1 = "4162e95e05e79922e44b9952ccbc262832e4ad07"
-uuid = "104b5d7c-a370-577a-8038-80a2059c5097"
-version = "1.6.0"
-
-[[deps.Widgets]]
-deps = ["Colors", "Dates", "Observables", "OrderedCollections"]
-git-tree-sha1 = "fcdae142c1cfc7d89de2d11e08721d0f2f86c98a"
-uuid = "cc8bc4a8-27d6-5769-a93b-9d913e69aa62"
-version = "0.6.6"
 
 [[deps.XML2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libiconv_jll", "Pkg", "Zlib_jll"]
@@ -2208,16 +1979,14 @@ version = "1.4.1+0"
 """
 
 # ╔═╡ Cell order:
-# ╠═fce7054d-cb51-45af-a3d1-e370fd3d9850
-# ╠═13414ced-643d-4710-8023-a5bf3c59d32b
-# ╠═4c0c95b4-1479-11ee-214c-65b5f776f5ea
-# ╟─ccd5d840-06c3-4138-999a-24c5ff7cb7aa
-# ╠═7dfefdc3-4d5c-4c5d-9855-66dbb2efc26c
-# ╠═335db94d-98ba-4dc5-ae09-0d4544c00ade
-# ╠═5852171c-8d21-454e-8121-c8fe9a9a9409
-# ╠═8e470606-784f-4b02-9a43-2a351b7b8dbe
-# ╟─b6afd11a-b7f0-40af-8d8d-283840784ebb
-# ╠═cfb716e1-b802-4ab1-8cb9-5764b5a1d220
-# ╠═d0f5d608-9688-4e18-8a39-a510beb76dce
+# ╠═45047118-156c-11ee-2ef1-f3e884a0906f
+# ╠═af2c3a0b-17ba-492c-a056-87f8da087b01
+# ╠═fdbb3f29-8de6-49b3-99e6-6b8aede86a8d
+# ╠═69c13d15-4ee4-4961-9ec0-72825fbeef5c
+# ╠═095bd3fb-03ec-4f40-bd56-76c08e802a2a
+# ╠═16e6ce75-c342-492e-ba9d-2ae210453d42
+# ╠═a5087e7a-80e2-425a-b1c5-3348e90261da
+# ╠═a045f8a8-ab78-4aa3-b08f-4788df7c5b29
+# ╠═13d05f5e-76ee-4a77-a876-92cf1e708312
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
