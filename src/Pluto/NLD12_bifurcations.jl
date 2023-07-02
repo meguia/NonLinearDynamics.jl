@@ -14,87 +14,16 @@ macro bind(def, element)
     end
 end
 
-# ╔═╡ fce7054d-cb51-45af-a3d1-e370fd3d9850
+# ╔═╡ 5e1d221c-18f7-11ee-20bc-b5624af0581e
 using Plots, Interact, DifferentialEquations, Setfield, ForwardDiff, PlutoUI, IntervalRootFinding, StaticArrays
 
-# ╔═╡ 4c0c95b4-1479-11ee-214c-65b5f776f5ea
+# ╔═╡ f1702b1b-4902-4e43-adb9-402adab2a4b5
 include("../NLD_utils.jl")
 
-# ╔═╡ 13414ced-643d-4710-8023-a5bf3c59d32b
+# ╔═╡ 1e046183-5180-4e65-94ed-2ef6ee869c3c
 import BifurcationKit as BK
 
-# ╔═╡ ccd5d840-06c3-4138-999a-24c5ff7cb7aa
-md"""
-# Bogdanov-Takens bifurcation (codimension 2)
-
-The bifurcations (of codimension 1) we have seen so far can be characterized in two groups:
-
-- Those that happen when a real eigenvalue becomes zero. Generically we have a saddle-node bifurcation, but also a pitchfork or a transcritical one if other symmetry conditions are given.
-- The one that happens when the real part of two conjugate complex eigenvalues becomes zero. In that case we have a Hopf bifurcation.
-
-Clearly the first case can happen in a 1D system (or one of higher dimension along a particular direction), while the second we need at least a 2D system to have two eigenvalues, but it takes only one parameter to control it (to move the real part). 
-
-But if we are in a 2D system, couldn't it happen that **both** eigenvalues become zero simultaneously? Clearly if we look at the eigenvalue expression we will need at least two parameters to adjust this point. On the other hand that two eigenvalues cross zero along the real axis would be something like two saddle-nodes happening at the same time, but it could also be seen as a Hopf bifurcation with imaginary part zero. That is, this type of "degenerate" bifurcation has inside it at least two saddle-nodes (like the cusp) and a Hopf. 
-
-This codimension 2 bifurcation is known as double zero or Bogdanov-Takens (or Takens-Bogdanov). The normal form is characterized by having the following Jacobian:
-
-$\begin{pmatrix}0 & 1\\0 & 0\end{pmatrix}$
-
-which "induces" the following nonlinear terms to appear (in Bogdanov's version):
-
-$\dot{x} = y$
-
-$\dot{y} = x^2-xy$
-
-Note that we did not introduce any parameters yet, this is the "pure" singularity. To extend this in parameter space (or dynamical systems to be more precise) it is necessary to do an **unfolding**, and here there are several possibilities, let's take the one done by Guckenheimer & Holmes:
-
-$\dot{x} = y$
-
-$\dot{y} = \mu_1+\mu_2x+ x^2 -xy$
-
-Let's study the bifurcations directly without worrying about the solutions yet because this system (like the saddle node in the plane) has divergent trajectories.
-
-Since we have terms up to quadratic order we will be able to have generically two fixed points or none. Always located on the horizontal axis $y=0$ and with the $x$ coordinate at:
-
-$x_{\pm}=-\frac{\mu_2}{2}\pm \sqrt{\frac{\mu_2^2}{4}-\mu_1}$
-
-The positive sign corresponds to the fixed point on the right and the negative sign to the fixed point on the left (when they exist).
-
-the condition for existence of the fixed points is that the interior of the root is positive which gives us a condition to draw a saddle-node bifurcation curve in the plane $(\mu_1,\mu_2)$:
-
-SN : $\mu_1=\frac{\mu_2^2}{4}$
-
-On the other hand the Jacobian evaluated at the fixed points (preserving the order $pm$) is written as:
-
-$\begin{pmatrix}0 & 1\\
-\pm 2\sqrt{\frac{\mu_2^2}{4}-\mu_1} & \frac{\mu_2}{2}\mp \sqrt{\frac{\mu_2^2}{4}-\mu_1}
-\end{pmatrix}$
-
-Which gives us the determinant:
-
-$\Delta = \mp 2\sqrt{\frac{\mu_2^2}{4}-\mu_1}$
-
-which for the fixed point on the right is always negative (saddle point) and for the one on the left positive. For the latter we evaluate the trace (we only keep the sign below):
-
-$\tau = \frac{\mu_2}{2}+\sqrt{\frac{\mu_2^2}{4}-\mu_1}$
-
-since the root is positive when $\mu_2<0$, the trace will become zero when $\mu_1=0$. This gives us the condition to trace the Hopf bifurcation curve in the plane $(\mu_1,\mu_2)$:
-
-Hopf: $\mu_2>0$  , $\mu_1=0$
-
-This curve meets the SN parabola at the point $(0,0)$ so as we anticipated at this singular point we have an SN curve and a Hopf curve occurring simultaneously. The complete bifurcation diagram (taken from Scholarpedia) is:
-
-
-Notice that there is an additional curve (in red) that corresponds to a global bifurcation (homoclinic connection). 
-
-We have already seen this bifurcation! And with this same normal form, but arbitrarily fixing $\mu_2=-1$. This is a homoclinic bifurcation or saddle loop. The change from region (3) to (4) is the one we described when we saw this bifurcation. The limit cycle originating from the Hopf curve grows until it touches the saddle and saddle varieties and forms a loop. On the other side of the bifurcation there is no limit cycle and the unstable saddle manifold feeds an attractor focus. 
-
-Explore how the moieties are modified in the graph below and try to locate when the homoclinic connection occurs. As a guide we show on the right the bifurcation diagram with the analytic SN and Hopf curves and in dotted line the homoclinic that occurs (we will not show the deduction of that) when:
-
-HC: $\mu_1 = -\frac{6}{25}\mu_2^2$ ,  $\mu_2<0$
-"""
-
-# ╔═╡ 7dfefdc3-4d5c-4c5d-9855-66dbb2efc26c
+# ╔═╡ 77fd29b5-4cc6-4461-ab16-3f0720643dee
 md"""
 ## Bogdanov Takens with cubic terms
 
@@ -110,22 +39,106 @@ Let us see how the varieties are organized from these new terms.
 
 """
 
-# ╔═╡ 335db94d-98ba-4dc5-ae09-0d4544c00ade
+# ╔═╡ 4380968c-9421-4c34-82bd-850c3027b676
 function takens3!(du,u,p,t)
     du[1]=u[2]
     du[2]=p[1]+u[1]*(p[2]-u[2]+u[1]*(1-u[1]-u[2]))
     du
 end    
 
-# ╔═╡ 8e470606-784f-4b02-9a43-2a351b7b8dbe
+# ╔═╡ e65f74c0-edf0-4378-ab3d-5e848bda5d2f
 md"""
-μ1 $(@bind μ1 Slider(-0.12:0.001:0.02,default=-0.01;show_value=true)) 
-μ2 $(@bind μ2 Slider(-0.3:0.001:0.0,default=-0.15;show_value=true)) \
-tmax $(@bind tmax Slider(100:10:400,default=100;show_value=true)) \
+# Bifurcation Analysis
+
+## Single parameter Hopf
 """
 
-# ╔═╡ 5852171c-8d21-454e-8121-c8fe9a9a9409
-phase_portrait(takens3!,[μ1,μ2];tmax=tmax,xlims=[-1,1],ylims=[-0.5,0.5])
+# ╔═╡ b4574225-ff15-44f5-82e2-5eb779a16c49
+begin
+	p = (μ1=0.1,μ2=-0.1)
+	μ1 = @lens _.μ1
+	μ2 = @lens _.μ2
+	takens3(u,p) = takens3!(similar(u),u,p,0) # out of place method
+	u0 = [0.9,-0.1] #initial condition
+end	
+
+# ╔═╡ 6ed8af70-4918-4dc2-b419-d87c8f35cfb9
+md"""
+μ2 $(@bind mu_2 Slider(-0.4:0.005:0,default=-0.15;show_value=true)) 
+"""
+
+# ╔═╡ 90461200-bc32-4f01-ac06-a7e9b81966df
+begin
+	# define the bifurcation problem
+	prob1 = BK.BifurcationProblem(takens3, u0, set(p,μ2,mu_2), μ1, recordFromSolution = (x, p) -> (x = x[1], y = x[2]))
+	# continuation options
+	opts_br = BK.ContinuationPar(pMin=-0.2,pMax=0.1, ds = -0.001, dsmax = 0.02, detectBifurcation=3, nInversion=8)
+	# continuation of equilibria
+	br1 = BK.continuation(prob1, BK.PALC(tangent=BK.Bordered()),opts_br)
+	scene = plot(br1,xlabel="\\mu_1",title=string("BT Cubica \\mu_2 = ",mu_2));
+end
+
+# ╔═╡ fa557b12-9017-4166-ac5b-ead0c3e108b0
+for n = 1:(length(br1.specialpoint)-1)
+	print(BK.getNormalForm(br1, n))
+	println()
+end	
+
+# ╔═╡ 4b0d25fc-551b-48e6-b4db-154c12b8391f
+md"""
+## Continuacion de la Saddle Node > CUSP
+"""
+
+# ╔═╡ ffb2f68b-493e-4ae9-8626-3eb5a49b0e17
+begin
+	# we generate a new branch for a fixed value of μ2
+	prob1b = BK.BifurcationProblem(takens3, u0, set(p,μ2,-0.1), μ1, recordFromSolution = (x, p) -> (x = x[1], y = x[2]))
+	br1b = BK.continuation(prob1b, BK.PALC(tangent=BK.Bordered()),opts_br)
+	opts_br2 = BK.ContinuationPar(pMin=-0.4,pMax=0.3, ds = -0.001, dsmax = 0.02,nInversion=6)
+	# continuation of critical point 
+	br2 = BK.continuation(br1b, 1, μ2, opts_br2,detectCodim2Bifurcation=2,updateMinAugEveryStep = 1)
+	scene2 = plot(br2);
+end
+
+# ╔═╡ 29b9b64a-19fa-470f-9596-45f67b30b983
+BK.getNormalForm(br2, 1)
+
+# ╔═╡ 41f4608f-fad2-4202-a9be-c0a3dc5a379b
+md"""
+## Continuacion de la Hopf > BOGDANOV TAKENS
+"""
+
+# ╔═╡ b5e04981-da64-4e1d-b7d5-e9a34028b26b
+begin
+	# we generate a new branch for another fixed value of μ2
+	prob1c = BK.BifurcationProblem(takens3, u0, set(p,μ2,-0.3), μ1, recordFromSolution = (x, p) -> (x = x[1], y = x[2]))
+	br1c = BK.continuation(prob1c, BK.PALC(tangent=BK.Bordered()),opts_br)
+	opts_br3 = BK.ContinuationPar(pMin=-0.3,pMax=0.1, ds = 0.001, dsmax = 0.02,nInversion=6)
+	# continuation of critical point 3 (Hopf)
+	br3 = BK.continuation(br1c, 3, μ2, opts_br3,detectCodim2Bifurcation=2,updateMinAugEveryStep = 1)
+end
+
+# ╔═╡ b143e725-7d5f-45e1-ad32-523766b579bc
+begin
+	plot(br2,branchlabel="SN")
+	plot!(br3,branchlabel="Hopf")
+end	
+
+# ╔═╡ 311c4ba1-be7f-465a-b38d-bbb635305ca1
+br3.specialpoint[1]
+
+# ╔═╡ 4bb8c192-7dc0-4780-acfb-34f189a3df4a
+# Esto es para ensancha la caja por defecto
+html"""
+<style>
+	main {
+		margin: 0 auto;
+		max-width: 1800px;
+    	padding-left: max(160px, 10%);
+    	padding-right: max(160px, 10%);
+	}
+</style>
+"""
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -161,9 +174,9 @@ manifest_format = "2.0"
 project_hash = "4c6c5f9b470bb073ad66fb57d81c466683ca2bd4"
 
 [[deps.ADTypes]]
-git-tree-sha1 = "891771fcf2db8427453eed9eee66847fda5abcc3"
+git-tree-sha1 = "e58c18d2312749847a74f5be80bb0fa53da102bd"
 uuid = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
-version = "0.1.4"
+version = "0.1.5"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -1084,14 +1097,16 @@ deps = ["Libdl", "OpenBLAS_jll", "libblastrampoline_jll"]
 uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [[deps.LinearMaps]]
-deps = ["LinearAlgebra", "SparseArrays", "Statistics"]
-git-tree-sha1 = "a1348b9b7c87d45fa859314d56e8a87ace20561e"
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "62f9b2762cc107667b137af621e951f52e020a0f"
 uuid = "7a12625a-238d-50fd-b39a-03d52299707e"
-version = "3.10.1"
-weakdeps = ["ChainRulesCore"]
+version = "3.10.2"
+weakdeps = ["ChainRulesCore", "SparseArrays", "Statistics"]
 
     [deps.LinearMaps.extensions]
     LinearMapsChainRulesCoreExt = "ChainRulesCore"
+    LinearMapsSparseArraysExt = "SparseArrays"
+    LinearMapsStatisticsExt = "Statistics"
 
 [[deps.LinearSolve]]
 deps = ["ArrayInterface", "DocStringExtensions", "EnumX", "FastLapackInterface", "GPUArraysCore", "InteractiveUtils", "KLU", "Krylov", "LinearAlgebra", "PrecompileTools", "Preferences", "RecursiveFactorization", "Reexport", "Requires", "SciMLBase", "SciMLOperators", "Setfield", "SparseArrays", "Sparspak", "SuiteSparse", "UnPack"]
@@ -2191,13 +2206,23 @@ version = "1.4.1+0"
 """
 
 # ╔═╡ Cell order:
-# ╠═fce7054d-cb51-45af-a3d1-e370fd3d9850
-# ╠═13414ced-643d-4710-8023-a5bf3c59d32b
-# ╠═4c0c95b4-1479-11ee-214c-65b5f776f5ea
-# ╟─ccd5d840-06c3-4138-999a-24c5ff7cb7aa
-# ╟─7dfefdc3-4d5c-4c5d-9855-66dbb2efc26c
-# ╠═335db94d-98ba-4dc5-ae09-0d4544c00ade
-# ╟─8e470606-784f-4b02-9a43-2a351b7b8dbe
-# ╠═5852171c-8d21-454e-8121-c8fe9a9a9409
+# ╠═5e1d221c-18f7-11ee-20bc-b5624af0581e
+# ╠═1e046183-5180-4e65-94ed-2ef6ee869c3c
+# ╠═f1702b1b-4902-4e43-adb9-402adab2a4b5
+# ╟─77fd29b5-4cc6-4461-ab16-3f0720643dee
+# ╠═4380968c-9421-4c34-82bd-850c3027b676
+# ╟─e65f74c0-edf0-4378-ab3d-5e848bda5d2f
+# ╠═b4574225-ff15-44f5-82e2-5eb779a16c49
+# ╠═6ed8af70-4918-4dc2-b419-d87c8f35cfb9
+# ╠═90461200-bc32-4f01-ac06-a7e9b81966df
+# ╟─fa557b12-9017-4166-ac5b-ead0c3e108b0
+# ╟─4b0d25fc-551b-48e6-b4db-154c12b8391f
+# ╠═ffb2f68b-493e-4ae9-8626-3eb5a49b0e17
+# ╠═29b9b64a-19fa-470f-9596-45f67b30b983
+# ╟─41f4608f-fad2-4202-a9be-c0a3dc5a379b
+# ╠═b5e04981-da64-4e1d-b7d5-e9a34028b26b
+# ╠═b143e725-7d5f-45e1-ad32-523766b579bc
+# ╠═311c4ba1-be7f-465a-b38d-bbb635305ca1
+# ╟─4bb8c192-7dc0-4780-acfb-34f189a3df4a
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
