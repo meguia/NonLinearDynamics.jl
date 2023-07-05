@@ -27,7 +27,7 @@ import BifurcationKit as BK
 md"""
 ## Bogdanov Takens with cubic terms
 
-As can be seen the BT bifurcation presents a very interesting and varied dynamics, with minimal alterations in the parameters we can go from oscillatory behaviors, creation of pairs of fixed points and infinite period orbits (HC connections). The problem with the above system is that it has diverging trajectories, so we need to add higher order terms (which will not alter the BT bifurcation but may change the bifurcation diagram outside that point) to ensure that the trajectories do not diverge. Back there are several alternatives, let's follow the one proposed by Mindlin:
+This is the unforlding of the BT normal form with cubic terms added to prevent the divergence of the orbits in the form proposed by Mindlin:
 
 $\dot{x} = y$
 
@@ -64,7 +64,7 @@ end
 
 # ╔═╡ 6ed8af70-4918-4dc2-b419-d87c8f35cfb9
 md"""
-μ2 $(@bind mu_2 Slider(-0.4:0.005:0,default=-0.15;show_value=true)) 
+μ2 $(@bind mu_2 Slider(-0.4:0.005:0.05,default=-0.15;show_value=true)) 
 """
 
 # ╔═╡ 90461200-bc32-4f01-ac06-a7e9b81966df
@@ -78,15 +78,29 @@ begin
 	scene = plot(br1,xlabel="\\mu_1",title=string("BT Cubica \\mu_2 = ",mu_2));
 end
 
+# ╔═╡ 9eff4af0-8cef-4a9a-9e6c-092a1e046b96
+md"""
+1. Definition of the Bifurcation Problem, giving the out of place function, initial condition, parameters (wher we fixed μ2 value with set), and then the parameter to be explored (μ1). With `recordFromSolution = (x, p) -> (x = x[1], y = x[2])` we are recording only the variables x, y
+
+2. Options for the continuation algorithm: starting from the higher value of μ1 (0.1) with a stable fixed point and going backwards (ds<0) down to μ1=-0.2. `Detectbifurcation =3` improves accuracy and `nInversions=8` the convergence.
+
+3. Continuation algorithm using Pseudo Arc-Length Continuation with a Bordered predictor. It is based in computing the tangent to the curve of solutions in an extended plane (x,p) by solving a bordered linear system $F_x dx + F_p dp = 0$ ; $\theta dx_0 dx + (1-\theta) dp_0 dp = 1$
+"""
+
 # ╔═╡ fa557b12-9017-4166-ac5b-ead0c3e108b0
 for n = 1:(length(br1.specialpoint)-1)
 	print(BK.getNormalForm(br1, n))
 	println()
 end	
 
+# ╔═╡ 1b94418e-60b7-4da4-8720-4ac37155c909
+md"""
+The branch obtained contain information about the bifurcation points `br.specialpoints` and `getNormalForm` can compute the Normal Form at that points. 
+"""
+
 # ╔═╡ 4b0d25fc-551b-48e6-b4db-154c12b8391f
 md"""
-## Continuacion de la Saddle Node > CUSP
+## Continuation of the Fold (Saddle Node) > CUSP
 """
 
 # ╔═╡ ffb2f68b-493e-4ae9-8626-3eb5a49b0e17
@@ -96,16 +110,25 @@ begin
 	br1b = BK.continuation(prob1b, BK.PALC(tangent=BK.Bordered()),opts_br)
 	opts_br2 = BK.ContinuationPar(pMin=-0.4,pMax=0.3, ds = -0.001, dsmax = 0.02,nInversion=6)
 	# continuation of critical point 
-	br2 = BK.continuation(br1b, 1, μ2, opts_br2,detectCodim2Bifurcation=2,updateMinAugEveryStep = 1)
+	br2 = BK.continuation(br1b, 1, μ2, opts_br2,detectCodim2Bifurcation=2,bdlinsolver=BK.MatrixBLS(),updateMinAugEveryStep=1,startWithEigen=true)
 	scene2 = plot(br2);
 end
+
+# ╔═╡ ccf38f3c-d73e-4174-84bd-1399d64982f4
+md"""
+We first generate a new branch (br1b) for a fixed value of μ2=-0.1 as a starting point (-0.0841231,-0.1) in the parameter space (μ1,μ2), and then give that branch as an initial guess for a Fold point to continuation in order to calculate a curve of Fold points in parameter space based on a Minimally Augmented formulation. We have to indicate index of the critical point (1) as a second argument, the second parameter to be varied (μ2) and the options. 
+In this case the options also include the minimum and maximum value for the parameter to be varied and the initial step ds (note that in this case we are also going backwards at first).
+The Matrix based Bordered Linear Solver is used as the bordered linear solver for the constraint equation (recommended for ODEs)
+`detectCodim2Bifurcation=2` serves to detect Cusp/Bogdanov-Takens/Bautin codimension 2 critical points precisely.
+And finally `updateMinAugEveryStep=1` update vectors a, b in Minimally Formulation at each step.
+"""
 
 # ╔═╡ 29b9b64a-19fa-470f-9596-45f67b30b983
 BK.getNormalForm(br2, 1)
 
 # ╔═╡ 41f4608f-fad2-4202-a9be-c0a3dc5a379b
 md"""
-## Continuacion de la Hopf > BOGDANOV TAKENS
+## Continuation of the Hopf > BOGDANOV TAKENS
 """
 
 # ╔═╡ b5e04981-da64-4e1d-b7d5-e9a34028b26b
@@ -118,6 +141,11 @@ begin
 	br3 = BK.continuation(br1c, 3, μ2, opts_br3,detectCodim2Bifurcation=2,updateMinAugEveryStep = 1)
 end
 
+# ╔═╡ 7083a569-b724-4281-a7d9-0074a357f541
+md"""
+This case is similar to the previous one with the exception that now we start with a initial guess of the Hopf for μ2=-0.3 and go forward.
+"""
+
 # ╔═╡ b143e725-7d5f-45e1-ad32-523766b579bc
 begin
 	plot(br2,branchlabel="SN")
@@ -126,6 +154,33 @@ end
 
 # ╔═╡ 311c4ba1-be7f-465a-b38d-bbb635305ca1
 br3.specialpoint[1]
+
+# ╔═╡ ee602ea3-ea5d-478a-a1e6-276bb57b24e9
+# Discover why it is not possible to compute the normal form of the BT
+# BK.getNormalForm(br3, 1)
+
+# ╔═╡ 8ce52366-7bea-4019-89d3-dec24648dde9
+md"""
+## Periodic orbits with Parallel Standard Shooting
+"""
+
+# ╔═╡ 7f3d581d-8b12-4706-820b-a8c5e5d053de
+odeprob = ODEProblem(takens3!, copy(u0), (0., 1.), p; abstol = 1e-12, reltol = 1e-10)
+
+# ╔═╡ 9dbf38a5-e64a-4901-9374-3a499999ace0
+opts_po_cont = BK.ContinuationPar(opts_br3, maxSteps = 100, tolStability = 1e-4);
+
+# ╔═╡ 660fba6e-f7e0-4f42-a572-3507afd24a7e
+br_po = BK.continuation(br1c, 3, opts_po_cont, BK.ShootingProblem(15, odeprob, Rodas5(), parallel = true); 
+	δp = 0.0005, verbosity = 2, plot = true, callbackN = BK.cbMaxNorm(10))
+
+# ╔═╡ f96a46fc-e2a0-413f-a04c-e083ae9b5d3c
+plot(br_po)
+
+# ╔═╡ 8fc90a14-3e90-4165-9f09-59747520e6b6
+md"""
+## Periodic orbits with orthogonal collocation
+"""
 
 # ╔═╡ 4bb8c192-7dc0-4780-acfb-34f189a3df4a
 # Esto es para ensancha la caja por defecto
@@ -2213,16 +2268,27 @@ version = "1.4.1+0"
 # ╠═4380968c-9421-4c34-82bd-850c3027b676
 # ╟─e65f74c0-edf0-4378-ab3d-5e848bda5d2f
 # ╠═b4574225-ff15-44f5-82e2-5eb779a16c49
-# ╠═6ed8af70-4918-4dc2-b419-d87c8f35cfb9
+# ╟─6ed8af70-4918-4dc2-b419-d87c8f35cfb9
 # ╠═90461200-bc32-4f01-ac06-a7e9b81966df
-# ╟─fa557b12-9017-4166-ac5b-ead0c3e108b0
+# ╟─9eff4af0-8cef-4a9a-9e6c-092a1e046b96
+# ╠═fa557b12-9017-4166-ac5b-ead0c3e108b0
+# ╟─1b94418e-60b7-4da4-8720-4ac37155c909
 # ╟─4b0d25fc-551b-48e6-b4db-154c12b8391f
 # ╠═ffb2f68b-493e-4ae9-8626-3eb5a49b0e17
+# ╟─ccf38f3c-d73e-4174-84bd-1399d64982f4
 # ╠═29b9b64a-19fa-470f-9596-45f67b30b983
 # ╟─41f4608f-fad2-4202-a9be-c0a3dc5a379b
 # ╠═b5e04981-da64-4e1d-b7d5-e9a34028b26b
+# ╟─7083a569-b724-4281-a7d9-0074a357f541
 # ╠═b143e725-7d5f-45e1-ad32-523766b579bc
 # ╠═311c4ba1-be7f-465a-b38d-bbb635305ca1
+# ╠═ee602ea3-ea5d-478a-a1e6-276bb57b24e9
+# ╟─8ce52366-7bea-4019-89d3-dec24648dde9
+# ╠═7f3d581d-8b12-4706-820b-a8c5e5d053de
+# ╠═9dbf38a5-e64a-4901-9374-3a499999ace0
+# ╠═660fba6e-f7e0-4f42-a572-3507afd24a7e
+# ╠═f96a46fc-e2a0-413f-a04c-e083ae9b5d3c
+# ╟─8fc90a14-3e90-4165-9f09-59747520e6b6
 # ╟─4bb8c192-7dc0-4780-acfb-34f189a3df4a
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
