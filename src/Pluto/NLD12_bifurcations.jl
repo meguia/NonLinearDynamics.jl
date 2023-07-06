@@ -15,7 +15,7 @@ macro bind(def, element)
 end
 
 # ╔═╡ 87428079-6c7e-409a-988a-83a7bd59ae2c
-import Pkg; Pkg.add(url="https://github.com/bifurcationkit/HclinicBifurcationKit.jl"); Pkg.add("Setfield")
+import Pkg; Pkg.add(url="https://github.com/bifurcationkit/HclinicBifurcationKit.jl")
 
 # ╔═╡ 5e1d221c-18f7-11ee-20bc-b5624af0581e
 using Plots, Interact, DifferentialEquations, Setfield, ForwardDiff, PlutoUI, IntervalRootFinding, StaticArrays
@@ -28,6 +28,9 @@ import BifurcationKit as BK
 
 # ╔═╡ 244b8a5e-ae4f-4965-9dcf-df860e33015e
 import HclinicBifurcationKit as HBK
+
+# ╔═╡ 3ef551ed-71c8-4c56-8a14-46e70adbae04
+PlutoUI.TableOfContents()
 
 # ╔═╡ 77fd29b5-4cc6-4461-ab16-3f0720643dee
 md"""
@@ -61,16 +64,19 @@ md"""
 
 # ╔═╡ b4574225-ff15-44f5-82e2-5eb779a16c49
 begin
-	p = (μ1=0.1,μ2=-0.1)
+	p = (μ1=0.1,μ2=-0.2)
 	μ1 = @lens _.μ1
 	μ2 = @lens _.μ2
 	takens3(u,p) = takens3!(similar(u),u,p,0) # out of place method
 	u0 = [0.9,-0.1] #initial condition
 end	
 
+# ╔═╡ f3ad61c9-33de-45b0-bee5-89e5f86110e7
+opts_br = BK.ContinuationPar(pMin=-0.5,pMax=0.1, ds = -0.001, dsmax = 0.02, detectBifurcation=3, nInversion=8);
+
 # ╔═╡ 6ed8af70-4918-4dc2-b419-d87c8f35cfb9
 md"""
-μ2 $(@bind mu_2 Slider(-0.4:0.005:0.05,default=-0.15;show_value=true)) 
+μ2 $(@bind mu_2 Slider(-0.4:0.005:0.4,default=-0.15;show_value=true)) 
 """
 
 # ╔═╡ 90461200-bc32-4f01-ac06-a7e9b81966df
@@ -78,7 +84,6 @@ begin
 	# define the bifurcation problem
 	prob1 = BK.BifurcationProblem(takens3, u0, set(p,μ2,mu_2), μ1, recordFromSolution = (x, p) -> (x = x[1], y = x[2]))
 	# continuation options
-	opts_br = BK.ContinuationPar(pMin=-0.2,pMax=0.1, ds = -0.001, dsmax = 0.02, detectBifurcation=3, nInversion=8)
 	# continuation of equilibria
 	br1 = BK.continuation(prob1, BK.PALC(tangent=BK.Bordered()),opts_br)
 	scene = plot(br1,xlabel="\\mu_1",title=string("BT Cubica \\mu_2 = ",mu_2));
@@ -114,7 +119,7 @@ begin
 	# we generate a new branch for a fixed value of μ2
 	prob1b = BK.BifurcationProblem(takens3, u0, set(p,μ2,-0.1), μ1, recordFromSolution = (x, p) -> (x = x[1], y = x[2]))
 	br1b = BK.continuation(prob1b, BK.PALC(tangent=BK.Bordered()),opts_br)
-	opts_br2 = BK.ContinuationPar(pMin=-0.4,pMax=0.3, ds = -0.001, dsmax = 0.02,nInversion=6)
+	opts_br2 = BK.ContinuationPar(pMin=-0.4,pMax=0.4, ds = -0.001, dsmax = 0.02,nInversion=6)
 	# continuation of critical point 
 	br2 = @time BK.continuation(br1b, 1, μ2, opts_br2,detectCodim2Bifurcation=2,bdlinsolver=BK.MatrixBLS(),updateMinAugEveryStep=1,startWithEigen=true)
 	scene2 = plot(br2);
@@ -130,7 +135,10 @@ And finally `updateMinAugEveryStep=1` update vectors a, b in Minimally Formulati
 """
 
 # ╔═╡ 29b9b64a-19fa-470f-9596-45f67b30b983
-BK.getNormalForm(br2, 1)
+cusp = BK.getNormalForm(br2, 1)
+
+# ╔═╡ 831b2733-fb18-451a-8261-1a30bf71298f
+bt = BK.getNormalForm(br2, 2; lens=μ2, nev = 3, autodiff = false)
 
 # ╔═╡ 41f4608f-fad2-4202-a9be-c0a3dc5a379b
 md"""
@@ -160,9 +168,6 @@ end
 
 # ╔═╡ 311c4ba1-be7f-465a-b38d-bbb635305ca1
 br3.specialpoint[1]
-
-# ╔═╡ be1e8c2b-cd43-493d-9e59-b7a591f37749
-btpt = BK.getNormalForm(br3, 1; nev = 3, autodiff = false)
 
 # ╔═╡ 79d047e0-0660-4b27-b1c7-0c24f46ed1d4
 md"""
@@ -242,24 +247,28 @@ md"""
 """
 
 # ╔═╡ dce93919-7291-46b4-83cb-10ac297a502c
-odeprob_hc = ODEProblem(takens3!, copy(u0), (0., 1.), set(p,μ2,0.0); abstol = 1e-10, reltol = 1e-9);
+#odeprob_hc = ODEProblem(takens3!, copy(u0), (0., 1.), set(p,μ2,-0.2); abstol = 1e-10, reltol = 1e-9);
 
 # ╔═╡ c053ce00-e4bb-4f41-8323-b9ce9bc61e3f
-prob_hc = BK.BifurcationProblem(takens3, u0, set(p,μ2,0.0), μ1, recordFromSolution = (x, p) -> (x = x[1], y = x[2]))
+prob_hc = BK.BifurcationProblem(takens3, u0, set(p,μ2,0.01), μ1, recordFromSolution = (x, p) -> (x = x[1], y = x[2]))
 
 # ╔═╡ 1c2a4ece-df85-4dbb-8cc3-4a293d724b61
-opt_new = BK.NewtonPar(verbose = true, tol = 1e-9, maxIter = 9)
+opt_new = BK.NewtonPar(verbose = true, tol = 1e-9, maxIter = 12)
 
 # ╔═╡ 48829aee-b1ad-4382-b0be-bde0a9259241
-opt_hc = BK.ContinuationPar(newtonOptions = opt_new, maxSteps = 100, saveSolEveryStep = 1, dsmax = 0.01, pMin = -0.1, ds = 0.001, dsmin = 1e-5, 
-	detectEvent = 2, detectBifurcation = 0);
+opt_hc = BK.ContinuationPar(newtonOptions = opt_new, maxSteps = 300, saveSolEveryStep = 1, dsmax = 0.001, pMin = -0.157, ds = -0.0001, pMax=0.001, dsmin = 1e-5, 
+	detectEvent = 0, detectBifurcation = 0);
 
 # ╔═╡ 3599952e-d26b-4a66-856b-85ea05759a1f
-br_hom_c = BK.continuation(prob_hc, btpt, BK.PeriodicOrbitOCollProblem(50, 3; meshadapt = true, K = 100), BK.PALC(tangent = BK.Bordered()), opt_hc, 
-		 verbosity=2, ϵ0 = 1e-5, amplitude = 2e-3,  freeparams = ((@lens _.T), (@lens _.ϵ0)), updateEveryStep = 2)
+br_hom_c = @time BK.continuation(prob_hc, bt, BK.PeriodicOrbitOCollProblem(20, 3; meshadapt = true, K = 100), BK.PALC(tangent = BK.Bordered()), opt_hc, 
+		 ϵ0 = 1e-5, ϵ1 = 1e-5, amplitude = 0.01,  freeparams = ((@lens _.ϵ0), (@lens _.ϵ1)), updateEveryStep = 1)
 
 # ╔═╡ 61088c17-f8fd-4404-80e2-c9e911d5a858
-plot!(br_hom_c)
+begin
+	plot(br2,branchlabel="SN")
+	plot!(br3,branchlabel="Hopf")
+	plot!(br_hom_c,branchlabel="Homoclinic")
+end	
 
 # ╔═╡ 4bb8c192-7dc0-4780-acfb-34f189a3df4a
 # Esto es para ensancha la caja por defecto
@@ -271,6 +280,9 @@ html"""
     	padding-left: max(160px, 10%);
     	padding-right: max(160px, 10%);
 	}
+input[type*="range"] {
+	width: 40%;
+}
 </style>
 """
 
@@ -280,11 +292,13 @@ html"""
 # ╠═1e046183-5180-4e65-94ed-2ef6ee869c3c
 # ╠═244b8a5e-ae4f-4965-9dcf-df860e33015e
 # ╠═f1702b1b-4902-4e43-adb9-402adab2a4b5
+# ╠═3ef551ed-71c8-4c56-8a14-46e70adbae04
 # ╟─77fd29b5-4cc6-4461-ab16-3f0720643dee
 # ╠═4380968c-9421-4c34-82bd-850c3027b676
 # ╟─e65f74c0-edf0-4378-ab3d-5e848bda5d2f
 # ╠═b4574225-ff15-44f5-82e2-5eb779a16c49
-# ╟─6ed8af70-4918-4dc2-b419-d87c8f35cfb9
+# ╠═f3ad61c9-33de-45b0-bee5-89e5f86110e7
+# ╠═6ed8af70-4918-4dc2-b419-d87c8f35cfb9
 # ╠═90461200-bc32-4f01-ac06-a7e9b81966df
 # ╟─9eff4af0-8cef-4a9a-9e6c-092a1e046b96
 # ╠═fa557b12-9017-4166-ac5b-ead0c3e108b0
@@ -293,12 +307,12 @@ html"""
 # ╠═ffb2f68b-493e-4ae9-8626-3eb5a49b0e17
 # ╟─ccf38f3c-d73e-4174-84bd-1399d64982f4
 # ╠═29b9b64a-19fa-470f-9596-45f67b30b983
+# ╠═831b2733-fb18-451a-8261-1a30bf71298f
 # ╟─41f4608f-fad2-4202-a9be-c0a3dc5a379b
 # ╠═b5e04981-da64-4e1d-b7d5-e9a34028b26b
 # ╟─7083a569-b724-4281-a7d9-0074a357f541
 # ╠═b143e725-7d5f-45e1-ad32-523766b579bc
 # ╠═311c4ba1-be7f-465a-b38d-bbb635305ca1
-# ╠═be1e8c2b-cd43-493d-9e59-b7a591f37749
 # ╟─79d047e0-0660-4b27-b1c7-0c24f46ed1d4
 # ╠═c6175b02-6711-45c8-b499-8ef8a0a2b82e
 # ╟─548518de-0251-4bee-be0c-06a96d952e43
