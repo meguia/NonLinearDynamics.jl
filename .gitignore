@@ -4,3 +4,6 @@
 src/Pluto/Backups/Maps backup 2.jl
 src/Pluto/Backups/Maps backup 1.jl
 src/Pluto/Backups/LoveAffairs backup 1.jl
+docs/notebook-review.md
+scripts/check_notebooks.jl
+test/runtests.jl

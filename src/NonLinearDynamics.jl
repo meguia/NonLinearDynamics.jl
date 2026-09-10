@@ -17,11 +17,15 @@ module NonLinearDynamics
             phase_portrait,
             attractor_basin,
             poincare_forced,
+            poincare_forced!,
             poincare_forced_zoom,
             saddle_orbit2D,
             saddle_manifolds_forced,
-            butterfly
+            butterfly,
+            flow3d,
+            prepare_audio
 
     include("NLD_utils.jl")
+    include("audio_utils.jl")
 
 end
