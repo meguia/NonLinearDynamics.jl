@@ -19,6 +19,15 @@ md"""
 Change μ through zero: the stable origin gives way to two stable equilibria in this supercritical pitchfork.
 """
 
+# ╔═╡ f9337caa-a7bf-5ee2-89d3-c61d6fb727ff
+md"""
+```math
+\begin{aligned}
+\dot{x} &= \mu x-x^3.
+\end{aligned}
+```
+"""
+
 # ╔═╡ 254cb1bc-2bda-5ac9-8c87-74663ef288d4
 # Variables
 begin
@@ -74,6 +83,7 @@ end
 # ╔═╡ Cell order:
 # ╠═b3663b29-e52c-5f40-b346-34f42587f63c
 # ╟─1ed575ee-62ff-568c-921a-daa6eabb5528
+# ╟─f9337caa-a7bf-5ee2-89d3-c61d6fb727ff
 # ╠═254cb1bc-2bda-5ac9-8c87-74663ef288d4
 # ╠═1d8c8838-a425-515b-807b-bddb551f7b9a
 # ╠═c7dca9bd-aa8a-5739-b813-e7f976fd562e

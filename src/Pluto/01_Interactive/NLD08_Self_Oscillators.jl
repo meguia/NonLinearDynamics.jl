@@ -69,6 +69,19 @@ begin
 	plot!(sol2,idxs=(1,2))
 end
 
+# ╔═╡ 4e3286b1-0f67-5a0c-ae3f-e290ce6bb53d
+md"""
+The Rössler-type experiment below evaluates its field at scaled coordinates ``(x,y,z)=s_c(u_1,u_2,u_3)``; these are the derivatives of the stored states u.
+
+```math
+\begin{aligned}
+\dot{u}_1 &= -s_cu_2-2s_cu_3,\\
+\dot{u}_2 &= s_cu_1+a s_cu_2,\\
+\dot{u}_3 &= b+2s_cu_3(s_cu_1-c).
+\end{aligned}
+```
+"""
+
 # ╔═╡ 3817cc7f-e32f-4323-8ffb-5ef275f76f9d
 function rossler!(du,u,p,t)
     (a,b,c,sc) = p
@@ -199,6 +212,7 @@ end;
 # ╠═2cd075b8-0fd1-481b-b230-1bf3a51f2d5f
 # ╟─7557f8d7-2654-41c2-a443-9d5a76622501
 # ╠═6e5fe124-a757-4d25-a270-26941b71ece3
+# ╟─4e3286b1-0f67-5a0c-ae3f-e290ce6bb53d
 # ╠═3817cc7f-e32f-4323-8ffb-5ef275f76f9d
 # ╠═07a719c4-7a00-4260-ae4b-5d0f18a525ec
 # ╠═9522e566-d087-4ea4-8f37-438dd33ac250

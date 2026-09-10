@@ -19,6 +19,16 @@ md"""
 Integrate the unwrapped Adler phases and plot their sines to see whether the oscillators lock.
 """
 
+# ╔═╡ 1278bc7f-dbfe-5b07-906a-782c3dcc4ebf
+md"""
+```math
+\begin{aligned}
+\dot{\theta}_1 &= \omega_1-\sin\theta_1+\kappa\sin(\theta_2-\theta_1),\\
+\dot{\theta}_2 &= \omega_2-\sin\theta_2+\kappa\sin(\theta_1-\theta_2).
+\end{aligned}
+```
+"""
+
 # ╔═╡ 1ffd3f2d-1e4f-5b37-8536-84b15e1277db
 function model!(du, u, p, t)
     θ1, θ2 = u
@@ -50,6 +60,7 @@ plot(sol.t, [sin.(sol[1,:]) sin.(sol[2,:])];
 # ╔═╡ Cell order:
 # ╠═03c69f7b-1eeb-585d-a787-5f968b7eaa08
 # ╟─0e026a8c-edbd-521c-938f-421f82bb3ec1
+# ╟─1278bc7f-dbfe-5b07-906a-782c3dcc4ebf
 # ╠═1ffd3f2d-1e4f-5b37-8536-84b15e1277db
 # ╠═e45a6c49-f2f3-5598-a4d8-70c4504da728
 # ╠═1294d097-6879-58b3-98e8-20c5d7588479

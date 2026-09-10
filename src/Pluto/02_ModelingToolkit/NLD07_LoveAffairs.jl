@@ -19,6 +19,15 @@ md"""
 The coefficients a and d describe each person’s own response, while b and c describe their response to the partner.
 """
 
+# ╔═╡ cefd7e0f-2572-5ca1-90c8-c6462818d9f2
+md"""
+```math
+\begin{aligned}
+\dot{R} &= aR+bJ, & \dot{J} &= cR+dJ.
+\end{aligned}
+```
+"""
+
 # ╔═╡ d2311d25-06f9-5bf1-ad81-f2d9588c40a4
 # Variables
 begin
@@ -70,6 +79,7 @@ plot(sol; idxs=(R, J), legend=false)
 # ╔═╡ Cell order:
 # ╠═c7efb5d3-9d22-5a51-bea0-21430ae5afd6
 # ╟─35ab07b6-7d1b-5d81-8e23-eb2d0bf313db
+# ╟─cefd7e0f-2572-5ca1-90c8-c6462818d9f2
 # ╠═d2311d25-06f9-5bf1-ad81-f2d9588c40a4
 # ╠═8e118e71-cef6-51be-9955-b627fc83cd14
 # ╠═6ded1864-fa6d-5dc5-ae41-a805f32b8d2b

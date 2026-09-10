@@ -35,9 +35,9 @@ The bifurcations (of codimension 1) we have seen so far can be characterized in 
 
 Clearly the first case can happen in a 1D system (or one of higher dimension along a particular direction), while the second we need at least a 2D system to have two eigenvalues, but it takes only one parameter to control it (to move the real part). 
 
-But if we are in a 2D system, couldn't it happen that **both** eigenvalues become zero simultaneously? Clearly if we look at the eigenvalue expression we will need at least two parameters to adjust this point. On the other hand that two eigenvalues cross zero along the real axis would be something like two saddle-nodes happening at the same time, but it could also be seen as a Hopf bifurcation with imaginary part zero. That is, this type of "degenerate" bifurcation has inside it at least two saddle-nodes (like the cusp) and a Hopf. 
+But if we are in a 2D system, couldn't it happen that **both** eigenvalues become zero simultaneously? Clearly if we look at the eigenvalue expression we will need at least two parameters to adjust this point. With the usual nondegeneracy conditions and one eigenvector, this double zero gives a Bogdanov–Takens bifurcation. Its unfolding has nearby saddle-node, Hopf, and homoclinic bifurcation curves; it is distinct from a cusp.
 
-This codimension 2 bifurcation is known as double zero or Bogdanov-Takens (or Takens-Bogdanov). The normal form is characterized by having the following Jacobian:
+This codimension-two bifurcation is known as Bogdanov–Takens (or Takens–Bogdanov). The normal form is characterized by having the following Jacobian:
 
 $\begin{pmatrix}0 & 1\\0 & 0\end{pmatrix}$
 
@@ -97,7 +97,7 @@ HC: $\mu_1 \approx -\frac{6}{25}\mu_2^2$ ,  $\mu_2<0$
 
 # ╔═╡ 7dfefdc3-4d5c-4c5d-9855-66dbb2efc26c
 md"""
-## Bogdanov Takens with cubic terms
+## Bogdanov–Takens unfolding with cubic terms
 
 As can be seen the BT bifurcation presents a very interesting and varied dynamics, with minimal alterations in the parameters we can go from oscillatory behaviors, creation of pairs of fixed points and infinite period orbits (HC connections). The problem with the above system is that it has diverging trajectories, so we need to add higher order terms (which will not alter the BT bifurcation but may change the bifurcation diagram outside that point) to ensure that the trajectories do not diverge. Back there are several alternatives, let's follow the one proposed by Mindlin:
 
@@ -105,7 +105,7 @@ $\dot{x} = y$
 
 $\dot{y} = \mu_1+\mu_2x+ x^2 -xy - x^3 -x^2y$ 
 
-In this case by having cubic terms we will have in general one or three fixed points, as in the case of the cusp the fixed points go from 1 to 3 through chair node bifurcations that occur in pairs of distinct points. In fact the cubic terms introduce a cusp in addition to the Bogdanov-Takens.
+In this case by having cubic terms we will have in general one or three fixed points, as in the case of the cusp the fixed points go from 1 to 3 through saddle-node bifurcations that occur in pairs of distinct points. In fact the cubic terms introduce a cusp in addition to the Bogdanov-Takens.
 
 Let us see how the varieties are organized from these new terms.
 

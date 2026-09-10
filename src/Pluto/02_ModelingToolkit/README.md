@@ -23,5 +23,6 @@ The code follows the [MTK 9 ODE workflow](https://docs.sciml.ai/ModelingToolkit/
 - [NLD13_Reed_Resonator](NLD13_Reed_Resonator.jl)
 - [NLD14_Bowed_Resonator](NLD14_Bowed_Resonator.jl)
 - [NLD15_Struck_Resonator](NLD15_Struck_Resonator.jl)
+- [NLD16_Two_Resonators](NLD16_Two_Resonators.jl)
 
 Original exploratory material is preserved in [Extras](Extras).

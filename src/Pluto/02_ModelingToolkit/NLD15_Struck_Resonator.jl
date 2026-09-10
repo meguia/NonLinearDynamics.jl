@@ -20,6 +20,18 @@ md"""
 An initial velocity represents a strike; cubic stiffness shifts the source frequency as energy decays into a second resonant mode.
 """
 
+# ╔═╡ cf08a6f6-665d-5720-a4fb-2e87a91a547f
+md"""
+```math
+\begin{aligned}
+x' &= v, & v' &= -x-\alpha x^3-2\delta v+\kappa(q-x),\\
+q' &= w, & w' &= -\Omega^2q-2\zeta\Omega w+\kappa(x-q).
+\end{aligned}
+```
+
+Primes denote derivatives with respect to dimensionless time ``τ=2πf_0 t``.
+"""
+
 # ╔═╡ 576759a3-4d4c-5033-84b7-d3752f69b2ed
 # Variables
 begin
@@ -125,6 +137,7 @@ DownloadButton(wav_data, "struck_resonator.wav")
 # ╔═╡ Cell order:
 # ╠═b0f0ddb4-dc7a-5a33-abc0-75bbf66926da
 # ╟─82bdd92e-4573-5d9a-93f8-3ceeb546ee45
+# ╟─cf08a6f6-665d-5720-a4fb-2e87a91a547f
 # ╠═576759a3-4d4c-5033-84b7-d3752f69b2ed
 # ╠═c1669c86-73a6-5de2-9f47-3d397ddf18fb
 # ╠═8da2a20c-086e-5ec5-843f-ac406f933104

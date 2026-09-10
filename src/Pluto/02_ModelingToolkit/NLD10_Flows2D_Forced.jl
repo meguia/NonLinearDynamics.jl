@@ -19,6 +19,15 @@ md"""
 Periodic forcing sustains motion across the double well; sampling once per forcing period gives a Poincaré section.
 """
 
+# ╔═╡ c8d870e6-5d7b-514b-83b2-7a0da6067430
+md"""
+```math
+\begin{aligned}
+\dot{x} &= v, & \dot{v} &= -\gamma v+\beta x-x^3+F\cos(\omega t).
+\end{aligned}
+```
+"""
+
 # ╔═╡ 84259192-162a-5b41-bef1-26037d81f20b
 # Variables
 begin
@@ -50,10 +59,10 @@ simplified = structural_simplify(system)
 u0 = [x => 0.1, v => 0.0]
 
 # ╔═╡ 33dc34dc-dcd7-57ac-8f71-044b4811f08c
-tspan = (0.0, 200.0)
+tspan = (0.0, 2000.0)
 
 # ╔═╡ 7efc732c-7351-58b0-8389-b55b3159b1c8
-p = [γ => 0.2, β => 1.0, F => 0.3, ω => 1.2]
+p = [γ => 0.15, β => 1.0, F => 0.3, ω => 1.2]
 
 # ╔═╡ db4319a3-0a7f-577f-9b97-0d1d3167f4d8
 prob = ODEProblem(simplified, u0, tspan, p)
@@ -78,6 +87,7 @@ end
 # ╔═╡ Cell order:
 # ╠═ac7f2521-b8d4-5325-8900-741d42e907a4
 # ╟─ea6459cf-14bf-5d87-b25a-2f840c9aa640
+# ╟─c8d870e6-5d7b-514b-83b2-7a0da6067430
 # ╠═84259192-162a-5b41-bef1-26037d81f20b
 # ╠═e6ffb7b8-c5a0-581b-9dd7-5827e20d0711
 # ╠═24deb66d-6967-51ce-9ed5-7da31e47451b

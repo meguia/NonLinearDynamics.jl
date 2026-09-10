@@ -12,7 +12,8 @@ mkpath(destination)
 for (notebook, filename) in (
         ("NLD13_Reed_Resonator.jl", "reed_resonator.wav"),
         ("NLD14_Bowed_Resonator.jl", "bowed_resonator.wav"),
-        ("NLD15_Struck_Resonator.jl", "struck_resonator.wav"))
+        ("NLD15_Struck_Resonator.jl", "struck_resonator.wav"),
+        ("NLD16_Two_Resonators.jl", "two_resonators.wav"))
     lesson = Module(gensym(:AudioLesson))
     Base.include(lesson, joinpath(ROOT, "src", "Pluto", "03_ODE", notebook))
     Base.invokelatest() do

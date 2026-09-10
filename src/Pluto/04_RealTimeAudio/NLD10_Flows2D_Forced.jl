@@ -29,6 +29,15 @@ The same ODE drives `DESource`; channel mapping selects the audible state and `s
 Choose Play to start, then move the controls; uncheck it to stop. Start with a low speaker volume.
 """
 
+# ╔═╡ c17144d0-b559-5774-9c5e-08d0680864de
+md"""
+```math
+\begin{aligned}
+\dot{x} &= v, & \dot{v} &= -\gamma v+\beta x-x^3+F\cos(\omega t).
+\end{aligned}
+```
+"""
+
 # ╔═╡ 15cf10e6-1168-5130-bb25-78f02cf1321e
 function model!(du, u, p, t)
     x, v = u
@@ -98,6 +107,7 @@ md"""Uncheck Play to stop. For the struck model, stop and play again to repeat t
 # ╔═╡ Cell order:
 # ╠═8866f0ab-f466-5785-b9ae-bcbdae6a0314
 # ╟─499d1360-81da-59b8-a178-05b6171d901c
+# ╟─c17144d0-b559-5774-9c5e-08d0680864de
 # ╠═15cf10e6-1168-5130-bb25-78f02cf1321e
 # ╠═21b109e3-9147-51d4-891b-fc0edfb9e1c4
 # ╠═05b77296-0f31-539b-9abf-61f8362b1670

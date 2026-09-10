@@ -15,6 +15,19 @@ end
 # ╔═╡ a4e679e0-7436-4ddc-a104-90afd6a2b71e
 step(x,ϵ) = (x/sqrt(ϵ+x*x)+1)/2
 
+# ╔═╡ e8a77ea7-0248-5939-9e1c-5df99d8373e4
+md"""
+A moving driver pushes the mass through a smooth unilateral spring; the third state records s(t), with s(0) = 0.
+
+```math
+\begin{aligned}
+s(t) &= \sin(ct), & H_\epsilon(z) &= \frac{1}{2}\left(1+\frac{z}{\sqrt{\epsilon+z^2}}\right),\\
+\dot{q} &= v, & \dot{v} &= \frac{K}{m}H_\epsilon(s(t)-q)[s(t)-q],\\
+\dot{s} &= c\cos(ct).
+\end{aligned}
+```
+"""
+
 # ╔═╡ e64a1f29-e152-41e9-ace1-6d6466caa64e
 function facc(du,u,p,t)
 	(m,ϵ,K,c) = p
@@ -69,6 +82,7 @@ end
 # ╔═╡ Cell order:
 # ╠═8ef08220-20ff-11ee-2e03-df7546b1b262
 # ╠═a4e679e0-7436-4ddc-a104-90afd6a2b71e
+# ╟─e8a77ea7-0248-5939-9e1c-5df99d8373e4
 # ╠═e64a1f29-e152-41e9-ace1-6d6466caa64e
 # ╠═7e1110f2-8b7e-4b58-a46f-5acd7a7adcd6
 # ╠═98991644-16f7-4f41-a437-2a767c3ef797

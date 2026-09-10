@@ -23,6 +23,16 @@ begin
     using NonLinearDynamics
 end
 
+# ╔═╡ 0e01b152-bc20-5deb-ae42-3a6d6d6f4199
+md"""
+```math
+\begin{aligned}
+\dot{x} &= y-x[\eta_1+\gamma x(1+x)],\\
+\dot{y} &= -x+y(\eta_2-2\gamma y^2).
+\end{aligned}
+```
+"""
+
 # ╔═╡ fdbb3f29-8de6-49b3-99e6-6b8aede86a8d
 function ghopf!(du,u,p,t)
 	(η1,η2,γ) = p
@@ -55,6 +65,7 @@ plot(sol,idxs=(1,2), xlim=(-5,5),ylim=(-5,5), linecolor=:black,linealpha=0.05)
 
 # ╔═╡ Cell order:
 # ╠═45047118-156c-11ee-2ef1-f3e884a0906f
+# ╟─0e01b152-bc20-5deb-ae42-3a6d6d6f4199
 # ╠═fdbb3f29-8de6-49b3-99e6-6b8aede86a8d
 # ╠═69c13d15-4ee4-4961-9ec0-72825fbeef5c
 # ╠═095bd3fb-03ec-4f40-bd56-76c08e802a2a

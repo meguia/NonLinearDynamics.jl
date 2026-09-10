@@ -19,6 +19,17 @@ md"""
 Three coupled equations produce the Lorenz attractor; short-time agreement is meaningful even when long chaotic trajectories separate.
 """
 
+# ╔═╡ 2eee2597-fba3-52bc-9643-31800160a6cf
+md"""
+```math
+\begin{aligned}
+\dot{x} &= \sigma(y-x),\\
+\dot{y} &= x(\rho-z)-y,\\
+\dot{z} &= xy-\beta z.
+\end{aligned}
+```
+"""
+
 # ╔═╡ ae71c4bf-bbfb-5405-9e4b-3f1308237d5a
 # Variables
 begin
@@ -51,7 +62,7 @@ simplified = structural_simplify(system)
 u0 = [x => 1.0, y => 0.0, z => 0.0]
 
 # ╔═╡ 24c02a8c-5434-5277-bb9f-18090289521a
-tspan = (0.0, 40.0)
+tspan = (0.0, 100.0)
 
 # ╔═╡ 938b738d-611b-5422-bc7d-dfae96d4269f
 p = [σ => 10.0, ρ => 28.0, β => 8/3]
@@ -60,7 +71,7 @@ p = [σ => 10.0, ρ => 28.0, β => 8/3]
 prob = ODEProblem(simplified, u0, tspan, p)
 
 # ╔═╡ 5bfede41-9413-5413-9ae9-ae2a95043203
-sol = solve(prob, Tsit5(); abstol=1e-9, reltol=1e-7, saveat=0.02);
+sol = solve(prob, Tsit5(); abstol=1e-9, reltol=1e-7, saveat=0.01);
 
 # ╔═╡ 9957df2f-64df-5a96-a228-a607727cd274
 plot(sol; idxs=[x, y, z], xlabel="t", ylabel="state")
@@ -71,6 +82,7 @@ plot(sol; idxs=(x, y, z), legend=false)
 # ╔═╡ Cell order:
 # ╠═05c4fe8b-54ae-56ba-9f21-22ddd5de4508
 # ╟─eeb1e51a-4bc4-57b6-9eee-4cd4a56d439b
+# ╟─2eee2597-fba3-52bc-9643-31800160a6cf
 # ╠═ae71c4bf-bbfb-5405-9e4b-3f1308237d5a
 # ╠═14866df1-b0ab-5e95-ae65-9f78e349a049
 # ╠═6d626cef-b3eb-5372-9743-c46bdc8d7375

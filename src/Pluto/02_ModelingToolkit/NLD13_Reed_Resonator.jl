@@ -20,6 +20,18 @@ md"""
 A Rayleigh source exchanges energy with one damped bore mode; the resonator coordinate q is a simple sound-output proxy.
 """
 
+# ╔═╡ df88175f-43d1-5029-b203-ec81cf539c55
+md"""
+```math
+\begin{aligned}
+x' &= v, & v' &= -x+\mu(1-v^2)v+\kappa(q-x),\\
+q' &= w, & w' &= -\Omega^2q-2\zeta\Omega w+\kappa(x-q).
+\end{aligned}
+```
+
+Primes denote derivatives with respect to dimensionless time ``τ=2πf_0 t``.
+"""
+
 # ╔═╡ 80af0cd1-c678-5128-b2f3-20acd5df4e85
 # Variables
 begin
@@ -50,7 +62,7 @@ equations = [
 simplified = structural_simplify(system)
 
 # ╔═╡ 7ba8aaf4-e687-506b-ada5-bd164ceb79ab
-f0 = 220.0  # Frequency scale in Hz
+f0 = 440.0  # Frequency scale in Hz
 
 # ╔═╡ c8d0d87d-82db-5124-ba0f-d44488938635
 duration = 4.0  # Seconds
@@ -125,6 +137,7 @@ DownloadButton(wav_data, "reed_resonator.wav")
 # ╔═╡ Cell order:
 # ╠═1025b1f4-39b6-5dea-876a-1f62995e7382
 # ╟─af86684c-8b17-5257-a29a-718182cf801d
+# ╟─df88175f-43d1-5029-b203-ec81cf539c55
 # ╠═80af0cd1-c678-5128-b2f3-20acd5df4e85
 # ╠═b5a8dbc3-84a5-509c-929c-3a4b34a56605
 # ╠═ccae731f-0dd3-5332-bc0f-870eb29215aa

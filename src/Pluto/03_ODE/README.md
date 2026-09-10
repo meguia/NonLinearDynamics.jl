@@ -23,5 +23,6 @@ whole time series of state `i`, and `plot(sol; idxs=(1,2))` draws a phase portra
 - [NLD13_Reed_Resonator](NLD13_Reed_Resonator.jl)
 - [NLD14_Bowed_Resonator](NLD14_Bowed_Resonator.jl)
 - [NLD15_Struck_Resonator](NLD15_Struck_Resonator.jl)
+- [NLD16_Two_Resonators](NLD16_Two_Resonators.jl)
 
 Original exploratory material is preserved in [Extras](Extras).

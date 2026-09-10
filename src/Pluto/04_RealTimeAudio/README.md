@@ -23,6 +23,11 @@ nonlinearity can shift the resulting pitch. The introductory NLD03 uses zero
 damping to sustain a tone. The live callback uses its selected gain without the
 offline WAV filter or peak normalization.
 
+NLD16 uses `channel_map=[[4,6],[4,6]]` to send the summed modal pressures to both
+channels. Keep Ω₂ = 2.5 to compare its periodic and quasiperiodic blowing presets;
+allow the transient to settle after changing a parameter. Its source problem sets
+tighter solver tolerances before playback, using the pinned version 0.1 API.
+
 The Play cell returns a PlutoHooks cleanup function that stops its source when
 the cell is rerun or removed or the notebook is shut down. `list_devices()` and
 `get_device_index(...)` from RealTimeAudioDiffEq can be used to choose an output
@@ -37,3 +42,4 @@ and [PlutoHooks documentation](https://juliapluto.github.io/PlutoHooks.jl/src/no
 - [NLD13_Reed_Resonator](NLD13_Reed_Resonator.jl)
 - [NLD14_Bowed_Resonator](NLD14_Bowed_Resonator.jl)
 - [NLD15_Struck_Resonator](NLD15_Struck_Resonator.jl)
+- [NLD16_Two_Resonators](NLD16_Two_Resonators.jl)

@@ -24,6 +24,20 @@ begin
     using ModelingToolkit, DifferentialEquations, Plots, PlutoUI
 end
 
+# ╔═╡ b5cb9cfa-5c84-51d9-b83e-91d80e7c885d
+md"""
+The symbolic and explicit definitions below implement the same four-dimensional vector field.
+
+```math
+\begin{aligned}
+\dot{x}_1 &= \eta_1[0.5x_1+x_2-x_4-x_1(0.6x_1+x_1^2)],\\
+\dot{x}_2 &= -\eta_3x_1,\\
+\dot{x}_3 &= (1+\sqrt{2})x_4,\\
+\dot{x}_4 &= (2-\sqrt{2})(x_1-x_3-\eta_2x_4).
+\end{aligned}
+```
+"""
+
 # ╔═╡ dd568e45-8431-4032-b535-2b440b6a8fc2
 @variables t x1(t)=1 x2(t)=1 x3(t)=1 x4(t)=1
 
@@ -89,6 +103,7 @@ end
 
 # ╔═╡ Cell order:
 # ╠═66270ae2-1483-11ee-2f94-9fa61a5bff52
+# ╟─b5cb9cfa-5c84-51d9-b83e-91d80e7c885d
 # ╠═dd568e45-8431-4032-b535-2b440b6a8fc2
 # ╠═b9b0ee31-f055-40a4-85c3-109695e48f92
 # ╠═fd5bb01b-6def-434a-a777-824c2e300e67

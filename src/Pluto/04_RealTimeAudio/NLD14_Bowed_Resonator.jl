@@ -30,6 +30,19 @@ The same ODE drives `DESource`; channel mapping selects the audible state and `s
 Choose Play to start, then move the controls; uncheck it to stop. Start with a low speaker volume.
 """
 
+# ╔═╡ c808b4db-eac8-5b74-b094-a5628bd8c4f0
+md"""
+```math
+\begin{aligned}
+x' &= v, & v' &= -x-\delta v+F_b(V-v)+\kappa(q-x),\\
+q' &= w, & w' &= -\Omega^2q-2\zeta\Omega w+\kappa(x-q),\\
+F_b(s) &= F\frac{\tanh(s/\epsilon)}{1+(s/v_s)^2}.
+\end{aligned}
+```
+
+Primes denote derivatives with respect to dimensionless time ``τ=2πf_0 t``.
+"""
+
 # ╔═╡ c75d8d45-5582-5741-a873-18a8d65aec0d
 function model!(du, u, p, t)
     x, v, q, w = u
@@ -101,6 +114,7 @@ md"""Uncheck Play to stop. For the struck model, stop and play again to repeat t
 # ╔═╡ Cell order:
 # ╠═c0424ad0-c07b-518d-871f-b2e8ff9881b1
 # ╟─4d30f492-b596-5270-8636-0d3b2d123e46
+# ╟─c808b4db-eac8-5b74-b094-a5628bd8c4f0
 # ╠═c75d8d45-5582-5741-a873-18a8d65aec0d
 # ╠═41057cbe-c8bd-54ae-8f46-35521e1ad78b
 # ╠═ab373653-ae42-5693-95e6-9ea0764e5e9f

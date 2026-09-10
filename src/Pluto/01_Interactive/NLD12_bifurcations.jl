@@ -30,9 +30,9 @@ PlutoUI.TableOfContents()
 
 # ╔═╡ 77fd29b5-4cc6-4461-ab16-3f0720643dee
 md"""
-## Bogdanov Takens with cubic terms
+## Bogdanov–Takens unfolding with cubic terms
 
-This is the unfolding of the BT normal form with cubic terms added to prevent the divergence of the orbits in the form proposed by Mindlin:
+Bogdanov–Takens is a codimension-two bifurcation: at the critical equilibrium, the Jacobian has a double zero eigenvalue with one eigenvector. Here we study its two-parameter unfolding with additional cubic terms:
 
 $\dot{x} = y$
 

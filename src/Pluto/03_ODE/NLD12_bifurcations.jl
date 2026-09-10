@@ -16,7 +16,17 @@ end
 md"""
 # Bifurcations: the Bogdanov–Takens unfolding
 
-This is the model used in interactive NLD12: change μ1 to explore its trajectories, then use that lesson for numerical continuation.
+This two-parameter unfolding of the codimension-two Bogdanov–Takens bifurcation includes cubic terms, as in interactive NLD12.
+"""
+
+# ╔═╡ 72b97f9b-94e2-574a-9870-5a8c2d808db6
+md"""
+```math
+\begin{aligned}
+\dot{x} &= v,\\
+\dot{v} &= \mu_1+\mu_2x+x^2-xv-x^3-x^2v.
+\end{aligned}
+```
 """
 
 # ╔═╡ da860a78-a2d3-5d01-b0e2-3611026f6c7f
@@ -52,6 +62,7 @@ plot(sol; idxs=(1, 2), legend=false)
 # ╔═╡ Cell order:
 # ╠═ff555515-e183-5212-836c-842b5fb4e043
 # ╟─4b6c1283-065c-5492-8815-05773296f288
+# ╟─72b97f9b-94e2-574a-9870-5a8c2d808db6
 # ╠═da860a78-a2d3-5d01-b0e2-3611026f6c7f
 # ╠═1fbfcdab-37de-5762-97b8-b287998ca1eb
 # ╠═87f60eb2-2360-5c27-8256-3831e3f095eb

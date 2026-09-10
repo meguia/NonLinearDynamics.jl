@@ -19,6 +19,15 @@ md"""
 Damping turns the harmonic oscillator’s closed orbits into trajectories approaching the origin.
 """
 
+# ╔═╡ 36f31570-0571-5bc7-bbd6-72723edab481
+md"""
+```math
+\begin{aligned}
+\dot{x} &= v, & \dot{v} &= -kx-\gamma v.
+\end{aligned}
+```
+"""
+
 # ╔═╡ f2f50938-2660-5469-9566-d5f8cd81d6bc
 function model!(du, u, p, t)
     x, v = u
@@ -52,6 +61,7 @@ plot(sol; idxs=(1, 2), legend=false)
 # ╔═╡ Cell order:
 # ╠═c54bb4b0-bec2-51bb-85b2-8a3590b080a4
 # ╟─e5bb4bb8-33da-51a4-9b15-4682aaddb356
+# ╟─36f31570-0571-5bc7-bbd6-72723edab481
 # ╠═f2f50938-2660-5469-9566-d5f8cd81d6bc
 # ╠═89f5b149-ac4b-5568-9fcd-ecb7afb95d75
 # ╠═625b7408-2575-5935-aac1-ab893a7defc0

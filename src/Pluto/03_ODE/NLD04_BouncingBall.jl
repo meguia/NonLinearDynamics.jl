@@ -19,6 +19,15 @@ md"""
 A spring acts only below the floor; its finite stiffness allows a small penetration during each bounce.
 """
 
+# ╔═╡ 2b8a2280-2dd8-5d4b-924c-f9b1c09a5e16
+md"""
+```math
+\begin{aligned}
+\dot{h} &= v, & \dot{v} &= -g-K\min(h,0)-\gamma v.
+\end{aligned}
+```
+"""
+
 # ╔═╡ 89a292c1-f23c-584d-bfc7-2eea5984c3da
 function model!(du, u, p, t)
     h, v = u
@@ -52,6 +61,7 @@ plot(sol; idxs=(1, 2), legend=false)
 # ╔═╡ Cell order:
 # ╠═05aebc47-b68a-528f-91fa-606bcd7b4d7f
 # ╟─a0b70844-c2c8-55c1-a948-624f24633d00
+# ╟─2b8a2280-2dd8-5d4b-924c-f9b1c09a5e16
 # ╠═89a292c1-f23c-584d-bfc7-2eea5984c3da
 # ╠═5be6f146-d797-54ac-893b-71e830d53112
 # ╠═f13bd655-2c2a-5f7b-a5fc-a1bdac9501ce

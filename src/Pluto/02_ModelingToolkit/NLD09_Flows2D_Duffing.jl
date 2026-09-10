@@ -19,6 +19,15 @@ md"""
 A double-well potential gives two stable resting positions; change the initial state to explore their basins.
 """
 
+# ╔═╡ ed54c963-a36a-57bd-9c5c-c6c2ca6ae354
+md"""
+```math
+\begin{aligned}
+\dot{x} &= v, & \dot{v} &= -\gamma v+\beta x-x^3.
+\end{aligned}
+```
+"""
+
 # ╔═╡ fc191cf0-2cf4-566a-938a-11e78ec4fd2c
 # Variables
 begin
@@ -70,6 +79,7 @@ plot(sol; idxs=(x, v), legend=false)
 # ╔═╡ Cell order:
 # ╠═01e969ca-39f5-5a3b-894b-8e01b17f5923
 # ╟─3fe09a16-5545-5a66-aed2-8bed4f998959
+# ╟─ed54c963-a36a-57bd-9c5c-c6c2ca6ae354
 # ╠═fc191cf0-2cf4-566a-938a-11e78ec4fd2c
 # ╠═2018fff6-3db6-57cf-acc4-85e7a89a1eb5
 # ╠═8b415f2f-b81c-54b7-9391-8fa80ddaca4e

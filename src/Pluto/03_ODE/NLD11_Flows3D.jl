@@ -19,6 +19,17 @@ md"""
 Three coupled equations produce the Lorenz attractor; short-time agreement is meaningful even when long chaotic trajectories separate.
 """
 
+# ╔═╡ 59a9ae19-20f8-5ad4-8777-09f0be32063a
+md"""
+```math
+\begin{aligned}
+\dot{x} &= \sigma(y-x),\\
+\dot{y} &= x(\rho-z)-y,\\
+\dot{z} &= xy-\beta z.
+\end{aligned}
+```
+"""
+
 # ╔═╡ 122c348a-4bf4-5c4f-8f33-caabe781eb3d
 function model!(du, u, p, t)
     x, y, z = u
@@ -53,6 +64,7 @@ plot(sol; idxs=(1, 2, 3), legend=false)
 # ╔═╡ Cell order:
 # ╠═c01ad9e6-5574-520e-8444-ba5c873d4990
 # ╟─da649440-5e10-546f-ad57-4f9025ad9247
+# ╟─59a9ae19-20f8-5ad4-8777-09f0be32063a
 # ╠═122c348a-4bf4-5c4f-8f33-caabe781eb3d
 # ╠═cef048c5-9987-56a9-aa15-7ebe72f2698c
 # ╠═89f85229-c35d-5675-bbfd-0d476ad033c2

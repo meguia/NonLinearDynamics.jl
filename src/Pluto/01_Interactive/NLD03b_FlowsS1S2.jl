@@ -37,6 +37,17 @@ md"""
 ## Adler's Equation
 """
 
+# ╔═╡ e298f3c0-ecc4-53e2-a709-310b68dca883
+md"""
+Adler phase equation; the examples below use a = 1.
+
+```math
+\begin{aligned}
+\dot{\theta}=\omega-a\sin\theta.
+\end{aligned}
+```
+"""
+
 # ╔═╡ b2ea050c-7f55-48ba-a165-41709ae5f78e
 adler(u,p,t) = p[1]-p[2]*sin(u)
 
@@ -64,6 +75,18 @@ end
 # ╔═╡ 5ec39c31-afe9-41a0-8b4b-f6e68928144c
 md"""
 # Osciladores de Adler acoplados
+"""
+
+# ╔═╡ 85398bab-e2c9-565a-848f-ff022caec73d
+md"""
+Two coupled phases, each defined modulo 2π.
+
+```math
+\begin{aligned}
+\dot{\theta}_1 &= \omega_1-\sin\theta_1+k\sin(\theta_2-\theta_1),\\
+\dot{\theta}_2 &= \omega_2-\sin\theta_2+k\sin(\theta_1-\theta_2).
+\end{aligned}
+```
 """
 
 # ╔═╡ 3169f185-9d52-4a80-95a0-dde68804ac84
@@ -143,6 +166,18 @@ md"""
 
 """
 
+# ╔═╡ 5451b0b3-d3f1-51fd-88ee-cf2e7047a0c9
+md"""
+A sine vector field on the torus.
+
+```math
+\begin{aligned}
+\dot{\theta}_1 &= a\sin\theta_1+b\sin\theta_2,\\
+\dot{\theta}_2 &= c\sin\theta_1+d\sin\theta_2.
+\end{aligned}
+```
+"""
+
 # ╔═╡ a4fb3bc3-db31-4516-91b7-2c04abb169f5
 function lin_torus!(du,u,p,t)
     (a,b,c,d) = p
@@ -173,6 +208,7 @@ end
 # ╠═b15c712e-61bd-4568-8ba8-579212bb6e6c
 # ╟─57f14c67-8e05-4c8a-90e5-6a4f3377506e
 # ╟─92bbe726-f115-40fe-8a15-0c5bea8589df
+# ╟─e298f3c0-ecc4-53e2-a709-310b68dca883
 # ╠═b2ea050c-7f55-48ba-a165-41709ae5f78e
 # ╠═99f2f5e8-f91d-4de9-b0b9-3e0d1c7b2ec9
 # ╠═540a0af5-321f-41a4-8a90-756b798c84f2
@@ -180,6 +216,7 @@ end
 # ╠═416e0aed-a7bc-42e0-8a32-512471bc56f3
 # ╠═55ed709b-bc02-4752-b026-8e38e6f5d17f
 # ╟─5ec39c31-afe9-41a0-8b4b-f6e68928144c
+# ╟─85398bab-e2c9-565a-848f-ff022caec73d
 # ╠═3169f185-9d52-4a80-95a0-dde68804ac84
 # ╠═9e9dbfe7-668e-494a-8159-710ca914f2de
 # ╟─2912533c-f785-4ca2-be22-5efeb5947567
@@ -188,6 +225,7 @@ end
 # ╟─f520b8f5-cdfa-44ce-8dca-dcd8bf982111
 # ╠═66fef05b-4acb-4f13-83a1-2c46e9ead2f8
 # ╟─f67da2ec-7816-420a-96fe-aa6d72ba0aae
+# ╟─5451b0b3-d3f1-51fd-88ee-cf2e7047a0c9
 # ╠═a4fb3bc3-db31-4516-91b7-2c04abb169f5
 # ╠═16968a95-d19f-4aa1-b3f4-7932971d9796
 # ╠═a867d3fc-3373-4937-af30-fea2aab10f79

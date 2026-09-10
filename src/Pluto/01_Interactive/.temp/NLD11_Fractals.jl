@@ -25,6 +25,17 @@ end
 # ╔═╡ 4aec301f-3507-4627-b1f6-a885bfb7b593
 gr()
 
+# ╔═╡ 710c9fe1-6d3b-5987-b559-ed4a116038fa
+md"""
+This discrete map generates the Julia-set escape-time image; the code counts iterations until |z| > 2.
+
+```math
+\begin{aligned}
+z_{n+1} &= z_n^2+c, \qquad z_n,c\in\mathbb{C}.
+\end{aligned}
+```
+"""
+
 # ╔═╡ 5df1d017-97da-4085-96a5-ea0d46f1b436
 function juliaSetPixel(z0, c)
     z = z0
@@ -85,6 +96,7 @@ end
 # ╔═╡ Cell order:
 # ╠═489110e0-a3fa-47a5-a2c5-603af5563b5b
 # ╠═4aec301f-3507-4627-b1f6-a885bfb7b593
+# ╟─710c9fe1-6d3b-5987-b559-ed4a116038fa
 # ╠═5df1d017-97da-4085-96a5-ea0d46f1b436
 # ╠═9623f878-e816-49d9-a545-718ceccd8eab
 # ╠═7efd2dc2-ac71-4b69-aca1-22d4fefe9589

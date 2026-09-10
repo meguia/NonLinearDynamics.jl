@@ -143,6 +143,17 @@ begin
     plot(sol,idxs=(1,2),c=:black,arrow=true,xlims=(-1,1),ylims=(-1,1),linewidth=0.5,labels="",xlabel="x",ylabel="y",size = (400,400))
 end
 
+# ╔═╡ a17fa89b-4456-5ab3-996a-a51a4d132691
+md"""
+A stable node. Reversing the arrows illustrates the corresponding repelling flow.
+
+```math
+\begin{aligned}
+\dot{x} &= -x, & \dot{y} &= -2y.
+\end{aligned}
+```
+"""
+
 # ╔═╡ c4da9d4d-6035-4792-9e58-5006bd566441
 begin
 	function node1!(du,u,p,t)
@@ -163,6 +174,17 @@ begin
 	plot(pn1,pn2,layout=(1,2),size=(900,450))
 end	
 
+# ╔═╡ 596add4a-5124-51d2-910a-62c0626ac34e
+md"""
+A stable focus. Reversing the arrows illustrates the corresponding repelling flow.
+
+```math
+\begin{aligned}
+\dot{x} &= 2y, & \dot{y} &= -x-2y.
+\end{aligned}
+```
+"""
+
 # ╔═╡ 21b1ac8b-e2a0-416a-a84c-227152546c3e
 begin
 	function spiral1!(du,u,p,t)
@@ -181,6 +203,17 @@ begin
 	    title="Repeller Focus")
 	plot(pf1,pf2,layout=(1,2),size=(900,450))
 end	
+
+# ╔═╡ cf4aeb94-f04c-5aaf-b2e6-2b13bcd9df1d
+md"""
+A saddle.
+
+```math
+\begin{aligned}
+\dot{x} &= x, & \dot{y} &= -2y.
+\end{aligned}
+```
+"""
 
 # ╔═╡ a40cee7a-994e-4860-9c97-394d7dbfec77
 begin
@@ -246,6 +279,18 @@ md"""
 Romantic love can explode. Cycles of love and hate can end in indifference. In order to add a little more variety and realism, non-linear terms can be introduced that generate a saturation of, for example, explosive cycles of love and hate. It is not the most pleasant of the alternatives but it is one of the most interesting in its dynamics because it leads to the appearance of stable limit cycles, i.e. sustained oscillations that if disturbed return to their oscillation state.
 
 In the model below this can be observed for two narcissitic characters with a positive nonlinearity
+"""
+
+# ╔═╡ 02d87c82-7fa3-5b1d-829c-440ad3cf18f2
+md"""
+Nonlinear interaction between the two feelings.
+
+```math
+\begin{aligned}
+\dot{R} &= aR+bJ-\epsilon J^2R,\\
+\dot{J} &= cR+dJ-\epsilon R^2J.
+\end{aligned}
+```
 """
 
 # ╔═╡ d2008fc9-dd22-4725-9355-dacb7ff5821b
@@ -405,13 +450,17 @@ end
 # ╟─e9a8a3f7-065f-4a51-a688-433765742a09
 # ╟─fc617669-c8ed-47fa-a430-db6299b5cfde
 # ╟─706f8d27-9357-4e17-a288-867c08969fa2
+# ╟─a17fa89b-4456-5ab3-996a-a51a4d132691
 # ╟─c4da9d4d-6035-4792-9e58-5006bd566441
+# ╟─596add4a-5124-51d2-910a-62c0626ac34e
 # ╟─21b1ac8b-e2a0-416a-a84c-227152546c3e
+# ╟─cf4aeb94-f04c-5aaf-b2e6-2b13bcd9df1d
 # ╟─a40cee7a-994e-4860-9c97-394d7dbfec77
 # ╟─79ea20a4-44be-45f5-beab-3328d49afe6e
 # ╟─b4bf8b41-dff9-4e87-94c8-bda9365bd78e
 # ╟─4aa62401-a1c6-47f8-807f-7444d542fbde
 # ╟─17da3943-629d-49cf-88b4-febc97bb26bb
+# ╟─02d87c82-7fa3-5b1d-829c-440ad3cf18f2
 # ╠═d2008fc9-dd22-4725-9355-dacb7ff5821b
 # ╟─d622eafe-f2d5-4992-ac3f-fabb392bb12a
 # ╟─a0662db2-84d5-473c-88a7-19066f8f9de6

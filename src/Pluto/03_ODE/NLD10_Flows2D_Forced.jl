@@ -19,6 +19,15 @@ md"""
 Periodic forcing sustains motion across the double well; sampling once per forcing period gives a Poincaré section.
 """
 
+# ╔═╡ c46b85c7-8b5d-501d-b9cc-96ada7f08959
+md"""
+```math
+\begin{aligned}
+\dot{x} &= v, & \dot{v} &= -\gamma v+\beta x-x^3+F\cos(\omega t).
+\end{aligned}
+```
+"""
+
 # ╔═╡ 8094c580-0d07-55c8-8c80-613c8eb24bfc
 function model!(du, u, p, t)
     x, v = u
@@ -60,6 +69,7 @@ end
 # ╔═╡ Cell order:
 # ╠═19c8f521-0f53-5605-8d98-168c4bc62a19
 # ╟─026e2d1b-6002-5fab-86c5-9f1ab58ddeb4
+# ╟─c46b85c7-8b5d-501d-b9cc-96ada7f08959
 # ╠═8094c580-0d07-55c8-8c80-613c8eb24bfc
 # ╠═3e5e2194-e93e-53bb-b20c-c7d5f9a51871
 # ╠═afb6eb92-3047-507d-aa31-dcab7ef550df

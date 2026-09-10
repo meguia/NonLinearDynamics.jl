@@ -285,7 +285,7 @@ $\dot{x}=v$
 
 $\dot{v}=-\mu C(v-V)-x$
 
-where $\mu$ is the friction coefficient, $V$ the bow velocity, and $C$ is the functional forma of the friction.
+where $\mu$ is the friction coefficient, $V$ the bow velocity, and $C(s)=\arctan(s/0.05)e^{-2|s|}$ is the smooth friction law used below.
 """
 
 

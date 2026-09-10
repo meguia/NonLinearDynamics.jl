@@ -20,6 +20,18 @@ md"""
 A Rayleigh source exchanges energy with one damped bore mode; the resonator coordinate q is a simple sound-output proxy.
 """
 
+# ╔═╡ b925cdd8-32c6-5320-ad37-d304bec8de47
+md"""
+```math
+\begin{aligned}
+x' &= v, & v' &= -x+\mu(1-v^2)v+\kappa(q-x),\\
+q' &= w, & w' &= -\Omega^2q-2\zeta\Omega w+\kappa(x-q).
+\end{aligned}
+```
+
+Primes denote derivatives with respect to dimensionless time ``τ=2πf_0 t``.
+"""
+
 # ╔═╡ e8db5332-0778-57eb-a419-89cbb06dbd75
 function model!(du, u, p, t)
     x, v, q, w = u
@@ -107,6 +119,7 @@ DownloadButton(wav_data, "reed_resonator.wav")
 # ╔═╡ Cell order:
 # ╠═23bfa7b2-9b8f-572f-bb20-7901fdd84161
 # ╟─5813756a-2aa6-5c5a-99bb-bffd1996ed6e
+# ╟─b925cdd8-32c6-5320-ad37-d304bec8de47
 # ╠═e8db5332-0778-57eb-a419-89cbb06dbd75
 # ╠═efa1b4d5-aeef-5eb6-b5fe-aa43374f2f31
 # ╠═e1b94c94-e7cb-5c7d-8512-9ec0410d3084

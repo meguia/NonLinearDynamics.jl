@@ -19,6 +19,15 @@ md"""
 Negative damping feeds small motions and cubic damping limits their amplitude, producing self-oscillation.
 """
 
+# ╔═╡ f7e71652-3503-5e50-9997-66693bd59334
+md"""
+```math
+\begin{aligned}
+\dot{x} &= v, & \dot{v} &= -Kx+(\mu-s_c^2v^2)v.
+\end{aligned}
+```
+"""
+
 # ╔═╡ 0a72128d-f117-5d09-8fac-0050ff3d6dea
 function model!(du, u, p, t)
     x, v = u
@@ -52,6 +61,7 @@ plot(sol; idxs=(1, 2), legend=false)
 # ╔═╡ Cell order:
 # ╠═04c345c5-fd34-5830-97c4-edadbb05055c
 # ╟─79124cae-eeb5-5104-9c14-f317202308dc
+# ╟─f7e71652-3503-5e50-9997-66693bd59334
 # ╠═0a72128d-f117-5d09-8fac-0050ff3d6dea
 # ╠═30daf2b7-9d99-596e-a0fe-822e9a7fcf59
 # ╠═bf02afe1-302b-5060-abd2-0bf1eac1a3a3

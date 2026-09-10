@@ -73,6 +73,21 @@ md"""In the hard-contact example, the clapper rebounds with restitution coeffici
 # ╔═╡ b198d4d5-9e2f-4dda-93a7-145c8b37dc83
 
 
+# ╔═╡ 1191acf0-4e5d-5065-a6e4-a1fa7637f3fe
+md"""
+Hard contact uses the free-flight equations below, with ``R=r/L_c`` and ``L=L_b/L_c``.
+
+```math
+\begin{aligned}
+\dot{\theta} &= v_\theta, & \dot{v}_\theta &= -\sin\theta,\\
+\dot{\phi} &= v_\phi, & \dot{v}_\phi &= \sin\theta(1+R\cos\phi)-R\sin\phi\,v_\theta^2-L\sin(\theta+\phi),\\
+v_\phi^+ &= -0.7v_\phi^- \quad\text{at an outward impact on } |\phi|=26\pi/180.
+\end{aligned}
+```
+
+At resting contact, the implementation sets both clapper derivatives to zero while the free acceleration points into the wall. Impacts with speed below 10⁻⁷ are treated as rest; motion resumes when acceleration points inward.
+"""
+
 # ╔═╡ 6499063c-819f-4fe8-97a9-aeb2e2a3d36d
 function bell_clapper_hard!(du,u,p,t)
 	(R,L) = p
@@ -139,6 +154,7 @@ end
 # ╠═593d3f09-9a1f-4014-9282-3c86ec160428
 # ╟─8974c1c7-97e6-41db-8f1d-950ed6fbdd5d
 # ╠═b198d4d5-9e2f-4dda-93a7-145c8b37dc83
+# ╟─1191acf0-4e5d-5065-a6e4-a1fa7637f3fe
 # ╠═6499063c-819f-4fe8-97a9-aeb2e2a3d36d
 # ╠═ec45044a-7bb4-4289-b22e-f5ad85cd9f8f
 # ╠═853145f7-29cb-4f6e-afe6-347f187fd93b

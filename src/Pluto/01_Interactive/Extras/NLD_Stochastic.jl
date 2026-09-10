@@ -33,6 +33,18 @@ $dy = [\epsilon_1-y+x(1+\epsilon_2x+y-x^2)]\,dt$
 #![Bifuraction Diagram](https://i.imgur.com/jNWr2Od.png)
 """
 
+# ╔═╡ 28d3627b-4519-5cdd-ac5c-9db2f2b940e4
+md"""
+Additive noise acts on x; setting η = 0 gives the deterministic ODE.
+
+```math
+\begin{aligned}
+dx &= v\,dt+\eta\,dW,\\
+dv &= [\epsilon_1-v+x(1+\epsilon_2x+v-x^2)]\,dt.
+\end{aligned}
+```
+"""
+
 # ╔═╡ 5c859d3f-b048-40e3-bfa3-a0eade5da658
 function lff(du, u, p, t)
 	du[1] = u[2]
@@ -108,6 +120,20 @@ begin
 	plot(sol, idxs = (0,1),size=(1200,300),label="")
 end	
 
+# ╔═╡ 87f929ac-5458-5dc7-b6be-4ba62062236a
+md"""
+The same drift with a periodic path through parameter space.
+
+```math
+\begin{aligned}
+\dot{x} &= v,\\
+\dot{v} &= \epsilon_1(t)-v+x[1+\epsilon_2(t)x+v-x^2],\\
+\epsilon_1(t) &= \epsilon_{10}+\epsilon_{1A}\sin(\omega t)\cos\alpha+\epsilon_{2A}\cos(\omega t)\sin\alpha,\\
+\epsilon_2(t) &= \epsilon_{20}+\epsilon_{2A}\cos(\omega t)\cos\alpha-\epsilon_{1A}\sin(\omega t)\sin\alpha.
+\end{aligned}
+```
+"""
+
 # ╔═╡ 6ff35c81-91eb-466a-ae1a-e5c8f2172e26
 function lff_cycle(du, u, p, t)
 	(ϵ10,ϵ20,ϵ1A,ϵ2A,α,ω) = p 
@@ -159,6 +185,21 @@ md"""
 # Double Hopf
 
 "Easy Case"
+"""
+
+# ╔═╡ ce42e85e-849e-5e88-9fcc-904026da76dc
+md"""
+A double-Hopf amplitude unfolding with optional independent noises; set η₁ = η₂ = 0 for the ODE.
+
+```math
+\begin{aligned}
+r_1^2 &= x_1^2+y_1^2, & r_2^2 &= x_2^2+y_2^2,\\
+dx_1 &= [(\mu_1-r_1^2-\theta r_2^2)x_1-\omega_1y_1]dt+\eta_1dW_1,\\
+dy_1 &= [\omega_1x_1+(\mu_1-r_1^2-\theta r_2^2)y_1]dt,\\
+dx_2 &= [(\mu_2-r_2^2-\delta r_1^2)x_2-\omega_2y_2]dt+\eta_2dW_2,\\
+dy_2 &= [\omega_2x_2+(\mu_2-r_2^2-\delta r_1^2)y_2]dt.
+\end{aligned}
+```
 """
 
 # ╔═╡ 3d8d06c3-87c5-4e75-91b7-8fcf94d554dc
@@ -220,6 +261,19 @@ md"""
 ## Double Hopf standard form
 """
 
+# ╔═╡ a7bc4420-8426-5a58-88e3-87e036a015b2
+md"""
+Two second-order oscillators with nonlinear damping and cross-saturation.
+
+```math
+\begin{aligned}
+\xi_1 &= x_1^2+v_1^2, & \xi_2 &= x_2^2+v_2^2,\\
+\dot{x}_1 &= v_1, & \dot{v}_1 &= -k_1x_1+(\mu_1-\xi_1-\theta\xi_2)v_1,\\
+\dot{x}_2 &= v_2, & \dot{v}_2 &= -k_2x_2+(\mu_2-\xi_2-\delta\xi_1)v_2.
+\end{aligned}
+```
+"""
+
 # ╔═╡ 9bffe395-0595-4b46-981f-6c313e1e5512
 function dhopfs(du, u, p, t)
 	(μ1,μ2,k1,k2,θ,δ) = p
@@ -253,6 +307,7 @@ end
 # ╔═╡ Cell order:
 # ╠═a860f150-f213-11ee-183b-c5168dc31a64
 # ╠═f572cb9a-a288-47c2-8967-325707299580
+# ╟─28d3627b-4519-5cdd-ac5c-9db2f2b940e4
 # ╠═5c859d3f-b048-40e3-bfa3-a0eade5da658
 # ╠═ccc11b0a-1686-4579-99e1-f50010d78a80
 # ╠═25208988-7b14-44d4-889a-4d166424a5ab
@@ -262,12 +317,14 @@ end
 # ╠═8708d3ec-657f-4b91-905f-74ec563d2b58
 # ╟─0201ef70-5adc-4568-a364-12881d5b9163
 # ╠═0ef06404-e9fc-4688-8f24-861ea384a42d
+# ╟─87f929ac-5458-5dc7-b6be-4ba62062236a
 # ╠═6ff35c81-91eb-466a-ae1a-e5c8f2172e26
 # ╠═a441d4af-c8b8-4c75-95d5-14ba0152d223
 # ╟─4eb71e59-395c-49d4-acac-c1a2682dd676
 # ╠═50b807b7-4b9b-4f4c-aa9b-034483157ec2
 # ╟─de0d0f5d-dd4f-45da-86b7-5027d82d5ef8
 # ╟─79c4f5ef-6b20-49bb-8e3e-df390a67a88d
+# ╟─ce42e85e-849e-5e88-9fcc-904026da76dc
 # ╠═3d8d06c3-87c5-4e75-91b7-8fcf94d554dc
 # ╠═848c35f4-0ba2-4ccf-b3fb-a56eaebcb25d
 # ╟─4ae3e029-dc5f-4c37-ad89-b8c5c40ba236
@@ -275,6 +332,7 @@ end
 # ╟─71047ce7-71a6-4dea-b363-1111879ae2c0
 # ╠═1558b198-afef-4f69-bb43-6fb367561f86
 # ╟─66f9c93b-7d88-46c8-a365-1027878c50ff
+# ╟─a7bc4420-8426-5a58-88e3-87e036a015b2
 # ╠═9bffe395-0595-4b46-981f-6c313e1e5512
 # ╟─4d63ba5d-9d53-4a07-bfee-658c6cd9e9eb
 # ╠═1f40e730-0957-47cb-9bb7-175c09db8fc7

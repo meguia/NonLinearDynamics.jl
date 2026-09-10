@@ -20,6 +20,19 @@ md"""
 A smooth sliding-friction law drives a string mode coupled to a damped body mode; q is the sound-output proxy.
 """
 
+# ╔═╡ 806a68bc-d406-55fb-bbb4-1c47f49a3ef1
+md"""
+```math
+\begin{aligned}
+x' &= v, & v' &= -x-\delta v+F_b(V-v)+\kappa(q-x),\\
+q' &= w, & w' &= -\Omega^2q-2\zeta\Omega w+\kappa(x-q),\\
+F_b(s) &= F\frac{\tanh(s/\epsilon)}{1+(s/v_s)^2}.
+\end{aligned}
+```
+
+Primes denote derivatives with respect to dimensionless time ``τ=2πf_0 t``.
+"""
+
 # ╔═╡ c1a052cc-39d3-5da4-9167-4bfe18aed702
 # Variables
 begin
@@ -125,6 +138,7 @@ DownloadButton(wav_data, "bowed_resonator.wav")
 # ╔═╡ Cell order:
 # ╠═5cdebbde-2313-5da2-926d-c4c2194943c8
 # ╟─8c983280-04ec-533e-8c4c-cc96da4bd634
+# ╟─806a68bc-d406-55fb-bbb4-1c47f49a3ef1
 # ╠═c1a052cc-39d3-5da4-9167-4bfe18aed702
 # ╠═81e713b3-941e-5a94-9179-4c2b38cd35b4
 # ╠═e8914de8-fb51-5554-a17a-e51f63f23087

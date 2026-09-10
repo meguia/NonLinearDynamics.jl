@@ -19,6 +19,15 @@ md"""
 A constant harvest lowers the logistic equilibrium; this example stops at extinction instead of continuing to negative population.
 """
 
+# ╔═╡ c7e1d611-664d-517d-b9d4-5447cca130c5
+md"""
+```math
+\begin{aligned}
+\dot{N} &= rN\left(1-\frac{N}{K}\right)-H.
+\end{aligned}
+```
+"""
+
 # ╔═╡ e148d1f4-92be-5e85-a78a-3896e4825940
 function model!(du, u, p, t)
     N = only(u)
@@ -51,6 +60,7 @@ plot(sol; idxs=[1], xlabel="t", ylabel="state")
 # ╔═╡ Cell order:
 # ╠═4df18ed1-628e-546a-a9f0-44a7912b76d0
 # ╟─f1b40b34-ca27-5718-9166-0958242f6280
+# ╟─c7e1d611-664d-517d-b9d4-5447cca130c5
 # ╠═e148d1f4-92be-5e85-a78a-3896e4825940
 # ╠═a409ae6b-93fe-5b85-b2f3-28f6fa8c1aa3
 # ╠═40136758-4be9-5dae-b930-250f5463c65a
