@@ -1,70 +1,47 @@
 name = "NonLinearDynamics"
 uuid = "11c07cc8-78c6-4ce4-a9cf-bf2be0a45f25"
-authors = ["meguia <eguiamc@gmail.com>"]
 version = "0.1.0"
+authors = ["meguia <eguiamc@gmail.com>"]
 
 [deps]
 Base64 = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 BifurcationKit = "0f109fa4-8a5d-4b75-95aa-f515264e7665"
-DiffEqBase = "2b5f629d-d688-5b77-993f-72d75c75574e"
-DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
 DSP = "717857b8-e6f2-59f4-9121-6e50c889abd2"
-DynamicQuantities = "06fc5a27-2a28-4c7c-a15d-362465fb6821"
+DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 HclinicBifurcationKit = "0e751702-a6d5-4e4e-bf0f-194619fbec56"
 InteractiveUtils = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 IntervalRootFinding = "d2bf35a9-74e0-55ec-b149-d360ff49b807"
-KrylovKit = "0b1a1467-8014-51b9-945f-bf0ae24f4b77"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Markdown = "d6f4376e-aef5-505a-96c1-9c027394607a"
-ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 Pluto = "c3e4b0f8-55cb-11ea-2926-15256bba5781"
 PlutoHooks = "0ff47ea0-7a50-410d-8455-4348d5de0774"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 RealTimeAudioDiffEq = "7a3f4937-0cad-4220-a144-0330815b2118"
-SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 Setfield = "efcf1570-3423-57d1-acb7-fd33fddbac46"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 WAV = "8149f6b0-98f6-5db9-b78f-408fbbb8ef88"
 
 [compat]
 Base64 = "1"
-# The homoclinic extension uses BifurcationKit 0.3 and Setfield lenses.
 BifurcationKit = "0.3.6"
-# NonlinearSolve 3.14 needs the legacy nonlinear termination interfaces.
-DiffEqBase = "~6.155.3"
-DifferentialEquations = "7.17"
 DSP = "0.7.10"
-DynamicQuantities = "~1.1.0"
+DifferentialEquations = "7.17"
 ForwardDiff = "0.10.38"
 HclinicBifurcationKit = "0.1.1"
 InteractiveUtils = "1"
-# The lessons use the IntervalBox API (.. and ×) provided by 0.5.
 IntervalRootFinding = "0.5.11"
-# BifurcationKit 0.3 needs RecursiveVec to remain a type.
-KrylovKit = "0.7"
 LinearAlgebra = "1"
 Markdown = "1"
-ModelingToolkit = "9"
 Pkg = "1"
 Plots = "1.41"
 Pluto = "1.0"
 PlutoHooks = "0.1"
 PlutoUI = "0.7.80"
-# 0.1 shares DifferentialEquations 7 with the continuation lessons.
 RealTimeAudioDiffEq = "0.1.0"
-# Keep the nonlinear-function constructors used by BoundaryValueDiffEq 5.9.
-SciMLBase = "~2.57"
 Setfield = "1.1"
 StaticArrays = "1.9"
 WAV = "1.2"
 julia = "1.12"
-
-[extras]
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-TOML = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
-
-[targets]
-test = ["Test", "TOML"]

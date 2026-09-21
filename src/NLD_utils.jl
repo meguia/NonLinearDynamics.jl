@@ -5,41 +5,9 @@ using IntervalRootFinding
 using StaticArrays
 using LinearAlgebra
 
-# structures  
-mutable struct Flow
-    f::Function
-    x0::Number 
-    t::Number
-    xv::Array 
-end
-
-mutable struct Map
-    f::Function
-    x0::Number 
-    t::Number
-    xv::Array 
-end
-
-
-
 # utilities
 
 inbox(x,y,xlims,ylims) = (xlims[1]<x<xlims[2]) & (ylims[1]<y<ylims[2])
-
-function realplot!(p1,x,y;plotops...)    
-    idx = isreal.(x).*isreal.(y)
-    plot!(p1,real(x[idx]),real(y[idx]);plotops...)
-end    
-
-function realplot!(x,y;plotops...)    
-    idx = isreal.(x).*isreal.(y)
-    plot!(real(x[idx]),real(y[idx]);plotops...)
-end 
-
-function realplot(x,y;plotops...)    
-    p1 = plot()
-    realplot!(p1,x,y;plotops...) 
-end    
 
 # flows 1D
 
@@ -96,41 +64,6 @@ function flow1D(f::Function,x0::Float64,tmax::Float64,p,tperturb::Float64,Apertu
     dualplot_flow1D(f,x,x0,p,sol,ylims;plotops...)
 end    
 
-function potential1D(V::Function,x0::Float64,tmax::Float64,p;
-    xlims=[-1.0,1.0],ylims=:auto,size=(900,300),plotops...)
-
-    xrange = xlims[2]-xlims[1]
-    x=xlims[1]:xrange/100:xlims[2]
-    f(x,p,t) = -ForwardDiff.derivative(x -> V(x,p), x)
-    prob = ODEProblem(f,x0,(0,tmax),p)
-    sol = solve(prob)
-    p1 = plot(x,V.(x,(p,)),label="V(x)",xlabel="x",ylabel="V")
-    scatter!(p1,[x0],[V(x0,p)],label="x0")
-    plot!(p1,sol.u,V.(sol.u,(p,)),color=:black,linewidth=2,label="")
-    p2 = plot(sol,label="x(t)",ylabel="x",ylim=ylims)
-    plot(p1,p2,layout=(1,2);size=size,fmt=:png,plotops...)
-end    
-
-function potential1D(V::Function,x0::Float64,tmax::Float64,p,tperturb::Float64,Aperturb::Float64,condition::Function;
-    xlims=[-1.0,1.0],ylims=:auto,size=(900,300),plotops...)
-
-    xrange = xlims[2]-xlims[1]
-    x=xlims[1]:xrange/100:xlims[2]
-    f(x,p,t) = -ForwardDiff.derivative(x -> V(x,p), x)
-    prob = ODEProblem(f,x0,(0,tmax),p)
-    condition_terminate(u,t,integrator) = condition(u)
-    affect1!(integrator) = terminate!(integrator)
-    affect2!(integrator) = integrator.u += Aperturb
-    cb1 = DiscreteCallback(condition_terminate,affect1!)
-    cb2 = PresetTimeCallback([tperturb],affect2!)
-    sol = solve(prob,callback=CallbackSet(cb1,cb2))
-    p1 = plot(x,V.(x,(p,)),label="V(x)",xlabel="x",ylabel="V")
-    scatter!(p1,[x0],[V(x0,p)],label="x0")
-    plot!(p1,sol.u,V.(sol.u,(p,)),color=:black,linewidth=2,label="")
-    p2 = plot(sol,label="x(t)",ylabel="x",ylim=ylims)
-    plot(p1,p2,layout=(1,2);size=size,fmt=:png,plotops...)
-end    
-
 # 2D
 
 function myquiver!(p1,x, y, u, v; 
@@ -152,13 +85,6 @@ function myquiver!(p1,x, y, u, v;
         arrow0!(p1,x,y,u*scale,v*scale,arrowscale,color,linealpha)
     end
     p1
-end
-
-function myquiver(x, y, u, v; 
-    scale=0.3,arrowscale=0.07, color=:black, linealpha=1,plotops...)
-
-    p1 = plot(xlabel="x",ylabel="y",fmt=:png)
-    myquiver!(p1,x, y, u, v; scale=scale,arrowscale=arrowscale, color=color, linealpha=linealpha,plotops...)
 end
 
 function flow2d_grid(f,p,xlims,ylims,npts)
@@ -196,7 +122,6 @@ function flow2d_vectorfield(f::Function,p;
     flow2d_vectorfield!(p1,f,p;xlims=xlims,ylims=ylims,npts=npts,scale=scale,plotops...)
 end    
 
-
 function flow2d_vectorfield(f::Function,u0::Vector{Float64},tmax::Float64,p;
     xlims=[-1.0,1.0],ylims=[-1.0,1.0],npts=21,scale=1.0,size=(600,600),plotops...)
 
@@ -207,20 +132,6 @@ function flow2d_vectorfield(f::Function,u0::Vector{Float64},tmax::Float64,p;
     affect!(integrator) = terminate!(integrator)
     sol = solve(ODEProblem(f,u0,(0.0,tmax),p),callback=DiscreteCallback(condition,affect!))
     plot!(p1,sol,idxs=(1,2),c=:black,arrow=true,xlims=xlims,ylims=ylims)
-end    
-
-function flow2d_vectorfield(f::Function,u0_array::Vector{Vector{Float64}},tmax::Float64,p;
-    xlims=[-1.0,1.0],ylims=[-1.0,1.0],npts=21,scale=1.0,size=(600,600),plotops...)
-
-    xrange = xlims[2]-xlims[1]
-    yrange = ylims[2]-ylims[1]
-    p1 = flow2d_vectorfield(f,p;xlims=xlims,ylims=ylims,npts=npts,scale=scale,size=size,plotops...)
-    prob = ODEProblem(f,u0_array[1],(0.0,tmax),p)
-    ensamble_prob = EnsembleProblem(prob,prob_func=(prob,i,repeat;u0=u0_array)->(remake(prob,u0=u0[i])))
-    condition(u,t,integrator) = (u[1]*u[1]+u[2]*u[2]) > max(xrange*xrange,yrange*yrange)
-    affect!(integrator) = terminate!(integrator)
-    sol = solve(ensamble_prob,EnsembleThreads(),trajectories=length(u0_array),callback=DiscreteCallback(condition,affect!))
-    plot!(p1,sol,idxs=(1,2),arrows=true,c=:black,linewidth=0.5,xlims=xlims,ylims=ylims)
 end    
 
 function flow2d_nullclines(f::Function,p;
@@ -254,50 +165,6 @@ function flow2d_nullclines(f::Function,u0::Vector{Float64},tmax::Float64,p;
     sol = solve(ODEProblem(f,u0,(0.0,tmax),p),callback=DiscreteCallback(condition,affect!))
     plot!(p1,sol,idxs=(1,2),c=:black,arrow=true,xlims=xlims,ylims=ylims)
 end    
-
-function flow2d_nullclines(f::Function,u0_array::Vector{Vector{Float64}},tmax::Float64,p;
-    xlims=[-1.0,1.0],ylims=[-1.0,1.0],npts=21,regions=true,vectorfield=false,size=(700,500),plotops...)
-    xrange = xlims[2]-xlims[1]
-    yrange = ylims[2]-ylims[1]
-    #u0_arr = vec([[xlims[1]+i*xrange/Ngrid,ylims[1]+j*yrange/Ngrid] for i=0:Ngrid, j=0:Ngrid])
-    p1 = flow2d_nullclines(f,p;xlims=xlims,ylims=ylims,npts=npts,regions=regions,vectorfield=vectorfield,size=size,plotops...)
-    prob = ODEProblem(f,u0_array[1],(0.0,tmax),p)
-    ensamble_prob = EnsembleProblem(prob,prob_func=(prob,i,repeat;u0=u0_array)->(remake(prob,u0=u0[i])))
-    condition(u,t,integrator) = (u[1]*u[1]+u[2]*u[2]) > max(xrange*xrange,yrange*yrange)
-    affect!(integrator) = terminate!(integrator)
-    sol = solve(ensamble_prob,EnsembleThreads(),trajectories=length(u0_array),callback=DiscreteCallback(condition,affect!))
-    plot!(p1,sol,idxs=(1,2),arrows=true,c=:black,linewidth=0.5,xlims=xlims,ylims=ylims)
-end    
-
-function flow2d_animated(f::Function,p,N::Int64,dt::Float64;
-    Ngrid=10,fps=15,xlims=[-1.0,1.0],ylims=[-1.0,1.0],size=(400,400),nullclines=false,fname="")
-
-    if isempty(fname)
-        fname = string(Symbol(f))
-        if fname[end] == '!'
-            fname = chop(fname)
-        end  
-    end      
-    xrange = xlims[2]-xlims[1]
-    yrange = ylims[2]-ylims[1]
-    u0_arr = vec([[xlims[1]+i*xrange/Ngrid,ylims[1]+j*yrange/Ngrid] for i=0:Ngrid, j=0:Ngrid])
-    prob = ODEProblem(f,u0_arr[1],(0.0,N*dt),p)
-    ensamble_prob = EnsembleProblem(prob,prob_func=(prob,i,repeat;u0=u0_arr)->(remake(prob,u0=u0[i])))
-    sol = solve(ensamble_prob,EnsembleThreads(),trajectories=length(u0_arr))
-    x = reduce(hcat,[sol[n](0:dt:N*dt,idxs=1).u for n=1:length(sol)])
-    y = reduce(hcat,[sol[n](0:dt:N*dt,idxs=2).u for n=1:length(sol)])
-    if (nullclines)
-        p1 = flow2d_nullclines(f,p;xlims=xlims,ylims=ylims,size=size) 
-    else    
-        p1 = plot([x[1:2,:]],[y[1:2,:]],color=:black,xlims=xlims,ylims=ylims,legend=false,size=size)
-    end  
-    # make animation 
-    anim = @animate for n=3:N
-        plot!(p1,x[n-1:n,:],y[n-1:n,:],color=:black)
-    end
-    print("Saving animation ...")
-    gif(anim, fname * "_fps_" * string(fps) * ".gif", fps=fps)
-end       
 
 function classification_linear(A::Matrix{Float64};
     Ngrid=5,tmax=2.0,xlims=[-1.2,1.2],ylims=[-1.2,1.2],circular=true)
@@ -567,7 +434,6 @@ function saddle_orbit2D(f::Function,u0::Vector{Float64},p,period::Float64;
     return fp,converged
 end
 
-
 # Linearization of the return map at phase zero, obtained from the variational ODE.
 function poincare_jacobian(f,f_jac,us,p,period)
     initial = [us[1],us[2],0.0,1.0,0.0,0.0,1.0]
@@ -609,58 +475,3 @@ function saddle_manifolds_forced(f::Function,f_jac::Function,us::Vector{Float64}
     ylims!(p1,ylims)
     p1
 end
-
-
-function butterfly(f::Function,u0::Vector{Float64},p; 
-    tmax=50.0,plotops...)
-
-    butterfly(f,u0,p,Float64(tmax);plotops...)
-end
-
-function butterfly(f::Function,u0::Vector{Float64},p,tmax::Float64; 
-    dim=length(u0),dt=0.001,delta=1e-12,size=(900,400),xlims=false,ylims=false,plotops...)
-    
-    u1=copy(u0)
-    u1[1]=u1[1]+delta
-    ts = range(0.0,stop=tmax,step=dt)
-    sol0 = solve(ODEProblem(f,u0,(0.0,tmax),p))
-    sol1 = solve(ODEProblem(f,u1,(0.0,tmax),p))
-    if dim == 2
-        p1 = plot(sol0,idxs=(1,2),c=:red,xlabel="x",ylabel="y",label="u0")
-        plot!(p1,sol1,idxs=(1,2),c=:blue,label="u1")
-    elseif dim == 3
-        p1 = plot(sol0,idxs=(1,2,3),c=:red,xlabel="x",ylabel="y",label="u0")
-        plot!(p1,sol1,idxs=(1,2,3),c=:blue,label="u1")  
-    end    
-    dim in (2,3) || throw(ArgumentError("dim must be 2 or 3"))
-    xlims === false || xlims!(p1,xlims)
-    ylims === false || ylims!(p1,ylims)
-    distance = [norm(sol0(t)-sol1(t)) for t in ts]
-    p2 = plot(ts,log10.(max.(distance,floatmin(Float64))),xlabel="t",ylabel="log10(d)",label="")
-    plot(p1,p2,layout=(1,2);size=size,plotops...)
-end        
-
-function flow3d(f::Function,u0::Vector{Float64},tmax::Float64,p; 
-    size=(900,400),xlims=false,ylims=false,zlims=false,twoplots=true,plotops...)
-    
-    sol = solve(ODEProblem(f,u0,(0.0,tmax),p))
-    p1 = plot(sol,idxs=(1,2,3),legend=false,plotops...)
-	p2 = plot(sol,idxs=(0,1),label="x")
-	p3 = plot(sol,idxs=(0,2),label="y")
-	p4 = plot(sol,idxs=(0,3),label="z")
-    if xlims isa Tuple
-        xlims!(p1,xlims)
-    end    
-    if ylims isa Tuple
-        ylims!(p1,ylims)
-    end    
-    if zlims isa Tuple
-        zlims!(p1,zlims)
-    end    
-    if (twoplots)
-        plot(p1,p2,p3,p4,layout=@layout[a{0.6w} grid(3,1)];size=size)
-    else
-        plot(p1;size=size)    # for plotly()
-    end    
-end    
-;
